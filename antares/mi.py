@@ -5,6 +5,7 @@ import numpy as np
 import time
 from tabulate import tabulate
 import public_function as pb_func
+import calculation as cclt
 
 
 class MI:
@@ -206,6 +207,21 @@ class MI:
             mi_input = input("cmd >> MI >> BY_CODE >> " + code + " >> ")
         pass
 
+    # add mi by H5
+    def mi_by_h5(self):
+        print("-- Please input the Hierarchy_5 name: --")
+        h5_input = input("cmd >> MI >> BY_H5 >> ")
+        infocheck = cclt.InfoCheck(self.__class__.bu_name)
+        h5_result = infocheck.get_h5_name(h5_input)
+        if h5_result == "NULL":
+            print("No Similar H5, Please re-input")
+            return
+        else:
+            print("--Please input ratio (%) (float number)--")
+            h5_ratio = input("cmd >> MI >> " + h5_result + " >> ")
+
+        pass
+
     # submit MI, add mi to final forecast
     def submit_mi(self):
         # define database and filename
@@ -303,4 +319,4 @@ class MI:
 if __name__ == '__main__':
     test = MI("TU")
     # test.get_statistical_forecast(["2019-09", "2019-10", "2019-11"], "by_code", "111")
-    test.mi_start()
+    test.mi_by_h5()
