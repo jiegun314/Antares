@@ -217,10 +217,44 @@ class MI:
             print("No Similar H5, Please re-input")
             return
         else:
+            # get code list in this hierarchy:
+            code_list = self.get_code_list_in_h5(h5_result)
             print("--Please input ratio (%) (float number)--")
-            h5_ratio = input("cmd >> MI >> " + h5_result + " >> ")
+            h5_ratio_input = input("cmd >> MI >> " + h5_result + " >> ")
+            try:
+                h5_ratio = float(h5_ratio_input)
+            except ValueError:
+                print("Not correct Number, Plz re-input")
+                return
+            print(h5_ratio)
 
         pass
+
+    # get code list in forecast of one H5
+    def get_code_list_in_h5(self, h5_name):
+        # get code list in forecast
+        statis_fcst_dbname = self.__class__.db_path + self.__class__.bu_name + "_Statistical_Forecast.db"
+        statis_fcst_filename = self.__class__.bu_name + "_Statistical_Forecast_" + \
+                               time.strftime("%Y%m", time.localtime())
+        conn = sqlite3.connect(statis_fcst_dbname)
+        c = conn.cursor()
+        c.execute("SELECT DISTINCT(Material) FROM " + statis_fcst_filename)
+        fcst_code_list = [item[0] for item in c.fetchall()]
+        conn.commit()
+        conn.close()
+        # get code list in this h5 in master file
+        master_data_dbname = self.__class__.db_path + self.__class__.bu_name + "_Master_Data.db"
+        master_data_filename = self.__class__.bu_name + "_Master_Data"
+        conn = sqlite3.connect(master_data_dbname)
+        c = conn.cursor()
+        c.execute("SELECT Material from " + master_data_filename + " WHERE Hierarchy_5 = \'" + h5_name + "\'")
+        master_code_list = [item[0] for item in c.fetchall()]
+        # mapping forecast code list with h5 list
+        code_list_result = []
+        for item in master_code_list:
+            if item in fcst_code_list:
+                code_list_result.append(item)
+        return code_list_result
 
     # submit MI, add mi to final forecast
     def submit_mi(self):
@@ -319,4 +353,4 @@ class MI:
 if __name__ == '__main__':
     test = MI("TU")
     # test.get_statistical_forecast(["2019-09", "2019-10", "2019-11"], "by_code", "111")
-    test.mi_by_h5()
+    print(test.get_code_list_in_h5("VA Hand"))
