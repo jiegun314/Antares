@@ -219,6 +219,7 @@ class MI:
         else:
             # get code list in this hierarchy:
             code_list = self.get_code_list_in_h5(h5_result)
+            month_list, statis_fcst = self.get_code_statistical_fcst(code_list)
             print("--Please input ratio (%) (float number)--")
             h5_ratio_input = input("cmd >> MI >> " + h5_result + " >> ")
             try:
@@ -226,9 +227,47 @@ class MI:
             except ValueError:
                 print("Not correct Number, Plz re-input")
                 return
-            print(h5_ratio)
+            mi_result = []
+            for statis_fcst_code in statis_fcst:
+                mi_result.append([round(item * h5_ratio / 100) for item in statis_fcst_code])
+            # change data format to [Code, [[YYYYMM, Qty],]], and delete zero value
+            # change month_list format
+            month_list_no_slash = [item.replace("-", "") for item in month_list]
+            # change format
+            index_code = 0
+            # initiate final format to update mi
+            mi_final_output = []
+            for mi_by_code in mi_result:
+                # get code name
+                mi_output = [code_list[index_code]]
+                # combine value
+                index_month = 0
+                for mi_by_month in mi_by_code:
+                    if mi_by_month != 0:
+                        mi_output.append([month_list_no_slash[index_month], mi_by_month])
+                    else:
+                        pass
+                    index_month += 1
+                # append if output is not zero
+                if len(mi_output) > 1:
+                    mi_final_output.append(mi_output)
+                index_code += 1
+            print(mi_final_output)
+            # write into database
+            for item in mi_final_output:
+                pb_func.upload_mi_data(item[0], self.__class__.bu_name, item[1])
+            print("---MI Updated---")
 
-        pass
+    # get code statistical forecast of one code
+    def get_code_statistical_fcst(self, code_list, month_qty=24):
+        # Instantiate getting statistical forecast
+        fcst_result = []
+        info_check = cclt.InfoCheck(self.__class__.bu_name)
+        for code_item in code_list:
+            fcst_temp = info_check.get_code_forecast(code_item, 'Final', month_qty)
+            month_list = fcst_temp[0]
+            fcst_result.append(fcst_temp[1])
+        return month_list, fcst_result
 
     # get code list in forecast of one H5
     def get_code_list_in_h5(self, h5_name):
@@ -353,4 +392,4 @@ class MI:
 if __name__ == '__main__':
     test = MI("TU")
     # test.get_statistical_forecast(["2019-09", "2019-10", "2019-11"], "by_code", "111")
-    print(test.get_code_list_in_h5("VA Hand"))
+    test.mi_by_h5()
