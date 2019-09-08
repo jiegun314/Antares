@@ -144,10 +144,15 @@ class InfoShow:
             output_inv[2].extend(infocheck.data_mapping(lp_inv_result, self.get_current_month(), -24))
             self.format_output(cmd_list, output_inv)
             # 显示Statistical Forecast
+            print("--Next 12 Months Statistical Forecast--")
+            forecast_quantity = infocheck.get_code_forecast(material_code, "Statistical", 12)
+            if forecast_quantity != "Fail":
+                self.format_output("Statistical Forecast", forecast_quantity)
+            # 显示Final Forecast
             print("--Next 12 Months Final Forecast--")
             forecast_quantity = infocheck.get_code_forecast(material_code, "Final", 12)
             if forecast_quantity != "Fail":
-                self.format_output("Statistical Forecast", forecast_quantity)
+                self.format_output("Final Forecast", forecast_quantity)
             # 显示ESO
             infocheck.get_code_eso(material_code)
             print("-----------END-----------")
