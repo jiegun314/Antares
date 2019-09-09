@@ -239,17 +239,17 @@ class MI:
             mi_final_output = []
             for mi_by_code in mi_result:
                 # get code name
-                mi_output = [code_list[index_code]]
+                mi_output = [code_list[index_code], []]
                 # combine value
                 index_month = 0
                 for mi_by_month in mi_by_code:
                     if mi_by_month != 0:
-                        mi_output.append([month_list_no_slash[index_month], mi_by_month])
+                        mi_output[1].append([month_list_no_slash[index_month], mi_by_month])
                     else:
                         pass
                     index_month += 1
                 # append if output is not zero
-                if len(mi_output) > 1:
+                if len(mi_output[1]) > 1:
                     mi_final_output.append(mi_output)
                 index_code += 1
             print(mi_final_output)
@@ -376,6 +376,9 @@ class MI:
                     self.mi_by_code(cmd_mi_code[5:].replace(' ', ''))
                 else:
                     self.mi_by_code()
+            elif cmd_mi_code.upper() == "H5":
+                print("==Start to MI with Hierarchy_5==")
+                self.mi_by_h5()
             elif cmd_mi_code.upper() == "SUBMIT":
                 print("==Start to update final forecast==")
                 self.submit_mi()
@@ -392,4 +395,4 @@ class MI:
 if __name__ == '__main__':
     test = MI("TU")
     # test.get_statistical_forecast(["2019-09", "2019-10", "2019-11"], "by_code", "111")
-    test.mi_by_h5()
+    test.mi_start()

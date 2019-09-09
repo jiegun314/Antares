@@ -63,6 +63,21 @@ def upload_mi_data(code_name, bu_name, lst_data):
     filename = bu_name + "_MI_" + time.strftime("%Y%m", time.localtime())
     conn = sqlite3.connect(db_fullname)
     c = conn.cursor()
+    # judge if the mi file for this month exist or not
+    sql_cmd = "SELECT count(*) FROM sqlite_master WHERE type=\"table\" AND name = \"" + filename + "\""
+    c.execute(sql_cmd)
+    table_exit_result = c.fetchall()[0][0]
+    # if no such table
+    if table_exit_result == 0:
+        sql_cmd = '''CREATE TABLE ''' + filename + '''
+                        (Material TEXT NOT NULL,
+                        Hierarchy_5 TEXT NOT NULL,
+                        Month TEXT NOT NULL,
+                        Quantity INTEGER NOT NULL,
+                        Value_SAP_Price REAL NOT NULL
+                        )'''
+        c.execute(sql_cmd)
+        conn.commit()
     c.executemany("INSERT INTO " + filename + " VALUES(?, ?, ?, ?, ?)", final_list)
     conn.commit()
     conn.close()

@@ -216,5 +216,5 @@ class MonthlyUpdate:
 
 if __name__ == "__main__":
     data_import = MonthlyUpdate("TU")
-    data_import.data_update_entrance("903")
+    data_import.data_update_entrance("906")
     pass
