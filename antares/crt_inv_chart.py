@@ -6,8 +6,8 @@ import os
 
 # draw line charter
 def line_chart(code_name, x_value, y_value, x_label, y_label, chart_ttl):
-
-    file_name = "../data/_Charter/" + code_name.replace(" ", "_") + ".html"
+    sys_path = os.path.abspath('..')
+    file_name = sys_path + "/data/_Charter/" + code_name.replace(" ", "_") + ".html"
     c = (
         Line(init_opts=opts.InitOpts(theme=ThemeType.LIGHT))
         .add_xaxis(x_value)
