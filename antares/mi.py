@@ -308,7 +308,9 @@ class MI:
         # get all mi data
         conn = sqlite3.connect(mi_dbname)
         c = conn.cursor()
-        c.execute("SELECT * FROM " + mi_filename)
+        sql_cmd = "SELECT Material, Hierarchy_5, Month, sum(Quantity), sum(Value_SAP_Price) FROM " \
+                  + mi_filename + " GROUP by Material, Month"
+        c.execute(sql_cmd)
         # mi_result, [Material, Hierarchy_5, Month, Quantity, Value_SAP_Price]
         mi_result = c.fetchall()
         conn.commit()
@@ -344,18 +346,26 @@ class MI:
                                time.strftime("%Y%m", time.localtime())
         final_fcst_dbname = self.__class__.db_path + self.__class__.bu_name + "_Final_Forecast.db"
         final_fcst_filename = self.__class__.bu_name + "_Final_Forecast_" + time.strftime("%Y%m", time.localtime())
-
+        mi_dbname = self.__class__.db_path + self.__class__.bu_name + "_MI.db"
+        mi_filename = self.__class__.bu_name + "_MI_" + time.strftime("%Y%m", time.localtime())
+        # get raw data from statisticcal forecast
         conn = sqlite3.connect(statis_fcst_dbname)
         c = conn.cursor()
         c.execute("SELECT * FROM " + statis_fcst_filename)
         fcst_result = c.fetchall()
         conn.commit()
         conn.close()
-
+        # copy statistical forecast to final forecast
         conn = sqlite3.connect(final_fcst_dbname)
         c = conn.cursor()
         c.execute("DELETE FROM " + final_fcst_filename)
         c.executemany("INSERT INTO " + final_fcst_filename + " VALUES(?, ?, ?, ?, ?) ", fcst_result)
+        conn.commit()
+        conn.close()
+        # delete MI file
+        conn = sqlite3.connect(mi_dbname)
+        c = conn.cursor()
+        c.execute("DELETE FROM " + mi_filename)
         conn.commit()
         conn.close()
 
