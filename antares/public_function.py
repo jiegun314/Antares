@@ -58,6 +58,8 @@ def upload_mi_data(code_name, bu_name, lst_data):
     while j < len(lst_qty):
         final_list.append([code_name, h5, lst_month[j], lst_qty[j], lst_qty[j] * sap_price])
         j += 1
+    conn.commit()
+    conn.close()
     # upload to database
     db_fullname = db_path + bu_name + "_MI.db"
     filename = bu_name + "_MI_" + time.strftime("%Y%m", time.localtime())
