@@ -388,7 +388,7 @@ class InfoShow:
         foreast_month_list = infocheck.get_time_list(self.get_current_month(), fcst_month)
         final_month_list = historical_month_list + foreast_month_list
         # draw the chart
-        fig, ax1 = plt.subplots()
+        fig, ax1 = plt.subplots(figsize=(15, 4))
         color = 'tab:red'
         ind = np.arange(len(jnj_inv_month))
         width = 0.35
