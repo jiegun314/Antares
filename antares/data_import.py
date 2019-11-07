@@ -79,6 +79,27 @@ class DataInput:
             conn.executemany("INSERT INTO " + self.file_name + " values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",data)
             conn.commit()
             conn.close()
+
+    def eso_input(self):
+        # 29 个元素
+        file_name = self.__class__.bu_name + "_ESO"
+        file_fullname = self.__class__.file_path + file_name + ".xlsx"
+        db_fullname = self.__class__.db_path + file_name + ".db"
+        print("Start to read the Excel file")
+        start_time = datetime.now()
+        df_eso = pd.read_excel(file_fullname)
+        eso_data = df_eso.values
+        stop_time = datetime.now()
+        print("FIle is read by using %s seconds" % (stop_time - start_time).seconds)
+        conn = sqlite3.connect(db_fullname)
+        sql_cmd = "INSERT INTO " + file_name + " values("
+        for i in range(28):
+            sql_cmd = sql_cmd + "?,"
+        sql_cmd = sql_cmd + "?)"
+        conn.executemany(sql_cmd, eso_data)
+        conn.commit()
+        conn.close()
+        print("ESO File is imported")
     
     def get_active_codes(self):
         file_name = self.__class__.bu_name + "_Active_Codes"
@@ -125,8 +146,8 @@ class DataInput:
 
 
 if __name__ == "__main__":
-    data_input = DataInput("MT")
-    data_input.import_master_data()
+    data_input = DataInput("TU")
+    data_input.eso_input()
     # cmd = int(input("选择需要导入的数据，1 - GTS，2 - LP Sales， 3 - IMS, 4 - LP_INV: "))
     # if cmd == 1:
     #     data_input.sales_input ("GTS")
