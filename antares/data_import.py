@@ -8,7 +8,7 @@ from datetime import datetime
 class DataInput:
     bu_name = ""
     file_path = "../data/_Source_Data/"
-    update_patch = "../data/_Update/"
+    update_path = "../data/_Update/"
     db_path = "../data/_DB/"
 
     def __init__(self, bu):
@@ -19,7 +19,7 @@ class DataInput:
         self.cal_type = inv_type
         # 如果更新则不删除原有数据
         if model =="Update":
-            self.route_path = self.__class__.update_patch
+            self.route_path = self.__class__.update_path
         # 如果刷新则删除原有数据
         else:
             self.route_path = self.__class__.file_path

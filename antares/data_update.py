@@ -5,6 +5,7 @@ import calculation as cclt
 # import math
 # import data_import as dtimp
 import numpy as np
+from datetime import datetime
 
 
 class MonthlyUpdate:
@@ -199,6 +200,28 @@ class MonthlyUpdate:
         conn.close()
         print("===== <JNJ Inventory Import Successfully!> =====")
 
+    def update_eso(self):
+        # 29 个元素
+        file_name = self.__class__.bu_name + "_ESO"
+        file_fullname = self.__class__.update_path + "Update_" + file_name + ".xlsx"
+        db_fullname = self.__class__.db_path + file_name + ".db"
+        print("Start to read the Excel file")
+        start_time = datetime.now()
+        df_eso = pd.read_excel(file_fullname)
+        eso_data = df_eso.values
+        stop_time = datetime.now()
+        print("FIle is read by using %s seconds" % (stop_time - start_time).seconds)
+        conn = sqlite3.connect(db_fullname)
+        sql_cmd = "INSERT INTO " + file_name + " values("
+        for i in range(28):
+            sql_cmd = sql_cmd + "?,"
+        sql_cmd = sql_cmd + "?)"
+        conn.executemany(sql_cmd, eso_data)
+        conn.commit()
+        conn.close()
+        print("ESO File is updated")
+        pass
+
     def data_update_entrance(self, cmd):
         if cmd == "901":
             self.update_sales("GTS")
@@ -210,11 +233,13 @@ class MonthlyUpdate:
             self.update_jnj_inv()
         elif cmd == "906":
             self.update_lp_inv()
+        elif cmd == "909":
+            self.update_eso()
         else:
             pass
 
 
 if __name__ == "__main__":
     data_import = MonthlyUpdate("TU")
-    data_import.data_update_entrance("906")
+    data_import.data_update_entrance("909")
     pass
