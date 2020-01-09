@@ -113,7 +113,7 @@ class SystemIndex:
                 cmd_info_index.show_h5_all_info()
             elif cmd_code in ["300g", "300G"]:
                 cmd_info_index.show_h5_chart()
-            elif cmd_code in ["901", "902", "903", "905", "906"]:
+            elif cmd_code in ["901", "902", "903", "905", "906", "909"]:
                 data_input = update.MonthlyUpdate(self.__class__.bu_name)
                 data_input.data_update_entrance(cmd_code)
             elif cmd_code in ["400g", "400G"]:
