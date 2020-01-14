@@ -344,7 +344,10 @@ class CurrentInventory():
                     (GIT_4_Week + Open_PO) AS not_delivered_qty FROM ''' + table_name + ''' 
                     WHERE Current_Backorder_Qty > 0 ORDER by bo_value DESC'''
         df = pd.read_sql(sql=sql_cmd, con=conn)
-        df.drop(columns=["bo_value", ])
+        df = df.drop(columns=["bo_value", ])
+        df = df.rename(columns={"Material": "代码", "Description": "英文描述", "Hierarchy_5": "产品分类",
+                                "Current_Backorder_Qty": "缺货数量", "GIT_1_Week": "2周左右", "GIT_2_Week": "3-4周",
+                                "GIT_3_Week": "6-8周", "not_delivered_qty": "已下订单"})
         backorder_file = self.__class__.backorder_path + "Backorder_" + table_name[3:] +".xlsx"
         df.to_excel(backorder_file, index=False)
 
