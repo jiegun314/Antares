@@ -155,7 +155,8 @@ class SNOPExport:
         # 生成两个命名列表
         value_type = ["GTS", "LPSales", "IMS", "JNJ_INV", "LP_INV"]
         price_type = ["Quantity", "Standard_Cost", "SAP_Price"]
-        fcst_type = ["Statistical_Forecast", "Final_Forecast"]
+        # fcst_type = ["Statistical_Forecast", "Final_Forecast"]
+        fcst_type = ["Final_Forecast", ]
         fcst_unit = ["Quantity", "SAP_Price"]
         for value_item in value_type:
             for price_item in price_type:
@@ -229,7 +230,7 @@ class SNOPExport:
             code_result.extend(
                 self.get_list_data(code_item, list_lp_inv, current_month))
             # 获得Forecast
-            code_result.extend(self.get_forecast_list(code_item, "Statistical"))
+            # code_result.extend(self.get_forecast_list(code_item, "Statistical"))
             code_result.extend(self.get_forecast_list(code_item, "Final"))
             # if len(code_result) != 455:
             #     print(code_item)
@@ -486,7 +487,7 @@ class SNOPExport:
 
 if __name__ == '__main__':
     export_test = SNOPExport("TU")
-    # export_test.snop_summary_generation()
-    export_test.snop_export_entrance()
+    export_test.snop_summary_generation()
+    # export_test.snop_export_entrance()
     # export_test.get_forecast_fulllist("Final")
 

@@ -6,11 +6,13 @@ import crt_inv_chart as chart
 import time
 import os, sys
 import calculation
+import pandas as pd
 
 
 class CurrentInventory():
     bu_name = ""
     db_path = "../data/_DB/"
+    backorder_path = "../data/_Backorder/"
     
     def __init__(self, bu):
         self.__class__.bu_name = bu
@@ -306,8 +308,8 @@ class CurrentInventory():
         self.conn = sqlite3.connect(self.db_name)
         self.c = self.conn.cursor()
         self.sql_cmd = '''select Material, Description, Hierarchy_5, CSC, Current_Backorder_Qty,
-                        (Current_Backorder_Qty * Standard_Cost) AS bo_value, GIT_1_Week, GIT_2_Week, GIT_3_Week, GIT_4_Week
-                        from ''' + self.tbl_name + ''' 
+                        (Current_Backorder_Qty * Standard_Cost) AS bo_value, GIT_1_Week, GIT_2_Week, GIT_3_Week, 
+                        GIT_4_Week, Open_PO from ''' + self.tbl_name + ''' 
                         WHERE Current_Backorder_Qty > 0 ORDER by CSC DESC, bo_value DESC'''
         self.c.execute(self.sql_cmd)
         self.bo_result = self.c.fetchall()
@@ -318,11 +320,33 @@ class CurrentInventory():
             self.bo_value_sum += self.item[5]
         print("=== Current Backorder Quantity %s, Value RMB %s ==="%(self.bo_qty_sum, format(self.bo_value_sum,",.0f")))
         # 输入表格
-        self.title = [('Material','Decription','Hierarchy_5','CSC','Qty','Value','GIT_1','GIT_2','GIT_3','GIT_4')]
+        self.title = [('Material', 'Decription', 'Hierarchy_5', 'CSC', 'Qty', 'Value', 'GIT_1', 'GIT_2', 'GIT_3',
+                       'GIT_4', 'Open_PO')]
         self.result = self.title + self.bo_result
         print (tabulate(self.result, headers="firstrow", tablefmt="github", showindex=range(1,len(self.result)), floatfmt=",.0f"))
         self.conn.commit()
         self.conn.close()
+
+    # 导出backorder给平台
+    def export_backorder_data(self):
+        # print title
+        print("===Export Backorder Detail List===")
+        # get data
+        inventory_date = input("Inventory Data (YYYYMMDD, Press Enter to get newest) : ")
+        if inventory_date == "":
+            table_name = self._get_newest_date()
+        else:
+            table_name = "INV" + inventory_date
+        db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
+        conn = sqlite3.connect(db_name)
+        sql_cmd = '''SELECT Material, Description, Hierarchy_5, Current_Backorder_Qty,
+                    (Current_Backorder_Qty * Standard_Cost) AS bo_value, GIT_1_Week, GIT_2_Week, GIT_3_Week, 
+                    (GIT_4_Week + Open_PO) AS not_delivered_qty FROM ''' + table_name + ''' 
+                    WHERE Current_Backorder_Qty > 0 ORDER by bo_value DESC'''
+        df = pd.read_sql(sql=sql_cmd, con=conn)
+        df.drop(columns=["bo_value", ])
+        backorder_file = self.__class__.backorder_path + "Backorder_" + table_name[3:] +".xlsx"
+        df.to_excel(backorder_file, index=False)
 
     # Pending库存趋势分析
     def get_pending_trend(self):
@@ -486,5 +510,5 @@ class CurrentInventory():
 
 if __name__ == "__main__":
     test = CurrentInventory("TU")
-    test.h5_inv_trend()
+    test.export_backorder_data()
     # test.inv_data_sync(50)
