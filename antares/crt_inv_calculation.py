@@ -94,10 +94,10 @@ class CurrentInventory():
     def check_code (self, code):
         self.material_code = code
         self.db_name = self.__class__.db_path + self.__class__.bu_name + "_Master_Data.db"
-        self.tbl_name = self.__class__.bu_name + "_Master_Data"
+        self.table_name = self.__class__.bu_name + "_Master_Data"
         self.conn = sqlite3.connect(self.db_name)
         self.c = self.conn.cursor()
-        self.sql_cmd = "SELECT count(Material) from " +self.tbl_name + " WHERE Material = \'" + self.material_code + "\'"
+        self.sql_cmd = "SELECT count(Material) from " + self.table_name + " WHERE Material = \'" + self.material_code + "\'"
         self.c.execute(self.sql_cmd)
         for self. item in self.c.fetchall():
             if self.item[0] == 0:
@@ -125,15 +125,15 @@ class CurrentInventory():
         return self.h5_list
 
     def __remove_inv_tbl(self, db_date):
-        self.tbl_name = "INV" + db_date
+        self.table_name = "INV" + db_date
         self.db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
         self.conn = sqlite3.connect(self.db_name)
         self.c = self.conn.cursor()
-        self.sql_cmd = "DROP TABLE " + self.tbl_name
+        self.sql_cmd = "DROP TABLE " + self.table_name
         self.c.execute(self.sql_cmd)
         self.conn.commit()
         self.conn.close()
-        print (">> Table %s is deleted."%self.tbl_name)
+        print (">> Table %s is deleted." % self.table_name)
 
     def insert_inv_table(self, db_date):
         self.str_date = db_date
@@ -156,7 +156,6 @@ class CurrentInventory():
         self.fo.close()
         print (">>Read %s successfully."%self.str_date)
         self.__db_insert(self.str_date, self.lst_data)
-        
 
     def __str_transfer(self, str_data):
         self.str_input = str_data
@@ -171,16 +170,16 @@ class CurrentInventory():
         return self.str_result
 
     def __db_insert(self, date, data):
-        self.tbl_name =  "INV" + date
+        self.table_name = "INV" + date
         self.str_data = data
         # 连接数据库
         self.db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
         self.conn = sqlite3.connect(self.db_name)
         # 删除重名表格
-        self.conn.execute("DROP TABLE IF EXISTS " + self.tbl_name)
+        self.conn.execute("DROP TABLE IF EXISTS " + self.table_name)
         self.c = self.conn.cursor()
         # 创建表格
-        self.sql_cmd = '''CREATE TABLE '''+ self.tbl_name +'''
+        self.sql_cmd = '''CREATE TABLE ''' + self.table_name + '''
             (Material CHAR(50) NOT NULL,
             Description TEXT  NOT NULL,
             EMG_Description TEXT  NOT NULL,
@@ -252,9 +251,9 @@ class CurrentInventory():
             Demand_Qty_T5  INT  NOT NULL,
             Demand_Qty_T6  INT  NOT NULL);'''
         self.c.execute(self.sql_cmd)
-        print (">>Creat new table successfully!")
+        print (">>Create new table successfully!")
         # 开始插入数据
-        self.sql_cmd = "INSERT INTO " + self.tbl_name + " VALUES (?"
+        self.sql_cmd = "INSERT INTO " + self.table_name + " VALUES (?"
         self.cnt = 1
         while self.cnt <=69:
             self.sql_cmd += ",?"
@@ -264,20 +263,20 @@ class CurrentInventory():
         self.c.executemany (self.sql_cmd, self.str_data)
         self.conn.commit()
         self.conn.close()
-        print (">>Import %s successfully"%self.tbl_name)
+        print (">>Import %s successfully" % self.table_name)
 
     # 获取当天库存
     def today_inv(self):
         self.title = "===Current Inventory List by Hierarchy_5==="
         print (self.title)
         # 获取日期
-        self.inv_date = input ("Inventory Data (YYYYMMDD, Press Enter to get newest) : ")
-        if self.inv_date == "":
-            self.tbl_name = self._get_newest_date()
+        self.inventory_date = input ("Inventory Data (YYYYMMDD, Press Enter to get newest) : ")
+        if self.inventory_date == "":
+            self.table_name = self._get_newest_date()
         else:
-            self.tbl_name = "INV" + self.inv_date
-        print ("===== <Result of %s> ====="%self.tbl_name.lstrip("INV"))
-        self.h5_list = self._get_h5_list(self.tbl_name)
+            self.table_name = "INV" + self.inventory_date
+        print ("===== <Result of %s> =====" % self.table_name.lstrip("INV"))
+        self.h5_list = self._get_h5_list(self.table_name)
         # 基本思路：用sql语句计算所有的结果
         self.db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
         self.conn = sqlite3.connect(self.db_name)
@@ -285,7 +284,7 @@ class CurrentInventory():
         self.sql_cmd = '''SELECT Hierarchy_5, sum(Available_Stock * Standard_Cost) AS onhand_inv, 
                         sum((GIT_1_Week + GIT_2_Week) * Standard_Cost) AS GIT_inv, 
                         sum(Pending_Inventory_Bonded_Total_Qty * Standard_Cost) AS BD_Pending_Value,
-                        sum(Pending_Inventory_NonB_Total_Qty * Standard_Cost) AS NB_Pending_Value from ''' + self.tbl_name + ''' 
+                        sum(Pending_Inventory_NonB_Total_Qty * Standard_Cost) AS NB_Pending_Value from ''' + self.table_name + ''' 
                         WHERE (Available_Stock + GIT_1_Week + GIT_2_Week + Pending_Inventory_Bonded_Total_Qty + Pending_Inventory_NonB_Total_Qty) > 0  
                         GROUP BY Hierarchy_5 ORDER BY onhand_inv DESC'''
         self.c.execute(self.sql_cmd)
@@ -294,38 +293,54 @@ class CurrentInventory():
         print (tabulate(self.result, headers="firstrow", tablefmt="github", showindex=range(1,len(self.result)), floatfmt=",.0f"))
 
     # 获取当前BO
-    def get_current_bo (self):
-        self.title = "===Current Backorder List==="
-        print (self.title)
+    def get_current_bo(self):
+        print("===Current Backorder List===")
         # 获取日期
-        self.inv_date = input ("Inventory Data (YYYYMMDD, Press Enter to get newest) : ")
-        if self.inv_date == "":
-            self.tbl_name = self._get_newest_date()
+        inventory_date = input("Inventory Data (YYYYMMDD, Press Enter to get newest) : ")
+        if inventory_date == "":
+            table_name = self._get_newest_date()
         else:
-            self.tbl_name = "INV" + self.inv_date
-        print ("===== <Result of %s> ====="%self.tbl_name.lstrip("INV"))
-        self.db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
-        self.conn = sqlite3.connect(self.db_name)
-        self.c = self.conn.cursor()
-        self.sql_cmd = '''select Material, Description, Hierarchy_5, CSC, Current_Backorder_Qty,
-                        (Current_Backorder_Qty * Standard_Cost) AS bo_value, GIT_1_Week, GIT_2_Week, GIT_3_Week, 
-                        GIT_4_Week, Open_PO from ''' + self.tbl_name + ''' 
+            table_name = "INV" + inventory_date
+        print("===== <Result of %s> =====" % table_name.lstrip("INV"))
+        db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
+        conn = sqlite3.connect(db_name)
+        c = conn.cursor()
+        sql_cmd = '''select Material, Description, Hierarchy_5, CSC, Current_Backorder_Qty, 
+                        (Current_Backorder_Qty * Standard_Cost) as bo_value, GIT_1_Week, GIT_2_Week, GIT_3_Week, 
+                        GIT_4_Week, Open_PO from ''' + table_name + ''' 
                         WHERE Current_Backorder_Qty > 0 ORDER by CSC DESC, bo_value DESC'''
-        self.c.execute(self.sql_cmd)
-        self.bo_result = self.c.fetchall()
+        c.execute(sql_cmd)
+        bo_output = c.fetchall()
+        # 连接master data数据库
+        master_data_db_name = self.__class__.db_path + self.__class__.bu_name + "_Master_Data.db"
+        master_data_table_name = self.__class__.bu_name + "_Master_Data"
+        conn = sqlite3.connect(master_data_db_name)
+        c = conn.cursor()
+        # 读取SAP Price并计算价格
+        bo_result=[]
+        for bo_item in bo_output:
+            bo_material = bo_item[0]
+            sql_cmd = "SELECT SAP_Price from " + master_data_table_name + " WHERE Material = \'" + bo_material + "\'"
+            c.execute(sql_cmd)
+            bo_price = c.fetchall()[0][0]
+            if bo_price is None:
+                bo_price = 0
+            bo_item_list = list(bo_item)
+            bo_item_list[5] = bo_item_list[4] * bo_price
+            bo_result.append(tuple(bo_item_list))
         # 输出总数
-        self.bo_qty_sum, self.bo_value_sum = 0 , 0
-        for self.item in self.bo_result:
-            self.bo_qty_sum += self.item[4]
-            self.bo_value_sum += self.item[5]
-        print("=== Current Backorder Quantity %s, Value RMB %s ==="%(self.bo_qty_sum, format(self.bo_value_sum,",.0f")))
+        bo_qty_sum, bo_value_sum = 0, 0
+        for item in bo_result:
+            bo_qty_sum += item[4]
+            bo_value_sum += item[5]
+        print("=== Current Backorder Quantity %s, Value RMB %s ===" %(bo_qty_sum, format(bo_value_sum,",.0f")))
         # 输入表格
-        self.title = [('Material', 'Decription', 'Hierarchy_5', 'CSC', 'Qty', 'Value', 'GIT_1', 'GIT_2', 'GIT_3',
-                       'GIT_4', 'Open_PO')]
-        self.result = self.title + self.bo_result
-        print (tabulate(self.result, headers="firstrow", tablefmt="github", showindex=range(1,len(self.result)), floatfmt=",.0f"))
-        self.conn.commit()
-        self.conn.close()
+        title = [('Material', 'Description', 'Hierarchy_5', 'CSC', 'Qty', 'Value', 'GIT_1', 'GIT_2', 'GIT_3', 'GIT_4',
+                  'Open_PO')]
+        final_result = title + bo_result
+        print(tabulate(final_result, headers="firstrow", tablefmt="github", showindex=range(1, len(final_result)), floatfmt=",.0f"))
+        conn.commit()
+        conn.close()
 
     # 导出backorder给平台
     def export_backorder_data(self):
@@ -350,6 +365,7 @@ class CurrentInventory():
                                 "GIT_3_Week": "6-8周", "not_delivered_qty": "已下订单"})
         backorder_file = self.__class__.backorder_path + "Backorder_" + table_name[3:] +".xlsx"
         df.to_excel(backorder_file, index=False)
+        print("Backorder detail exported to " + backorder_file)
 
     # Pending库存趋势分析
     def get_pending_trend(self):
@@ -363,13 +379,13 @@ class CurrentInventory():
         self.sql_cmd = "SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name"
         self.c.execute(self.sql_cmd)
         self.tbl_list = self.c.fetchall()
-        for self.tbl_name in self.tbl_list:
+        for self.table_name in self.tbl_list:
             self.sql_cmd = '''SELECT sum(Pending_Inventory_Bonded_Total_Qty), sum(Pending_Inventory_NonB_Total_Qty), 
                                 sum((Standard_Cost * Pending_Inventory_Bonded_Total_Qty)) As Pending_BD_Value, 
-                                sum((Standard_Cost * Pending_Inventory_NonB_Total_Qty)) As Pending_NB_Value from ''' + self.tbl_name[0]
+                                sum((Standard_Cost * Pending_Inventory_NonB_Total_Qty)) As Pending_NB_Value from ''' + self.table_name[0]
             self.c.execute(self.sql_cmd)
             self.tmp_result = self.c.fetchall()
-            self.pending_result.append (self.tbl_name + self.tmp_result[0])
+            self.pending_result.append (self.table_name + self.tmp_result[0])
         self.tbl_title = [["Date", "Bonded_Pending_QTY", "Nonboned_Pending_Qty","Bonded_Pending_Value", "Nonboned_Pending_Value"]]
         self.pending_output = self.tbl_title + self.pending_result
         print (tabulate(self.pending_output, headers="firstrow", tablefmt="github", showindex=range(1,len(self.pending_output)), floatfmt=",.0f"))
@@ -386,20 +402,20 @@ class CurrentInventory():
             self.data_ready = True
             self.str_input = input ("Please input date (YYYYMMDD) OR press Enter to get most fresh date: ")
             if self.str_input == "":
-                self.tbl_name = self._get_newest_date()
+                self.table_name = self._get_newest_date()
             else:
-                self.tbl_name = "INV" + self.str_input
-                if self._check_date_availability(self.tbl_name) == False:
+                self.table_name = "INV" + self.str_input
+                if self._check_date_availability(self.table_name) == False:
                     print ("!!Error - Wrong date, Please re-input! ")
                     self.data_ready = False
             if self.data_ready:
-                print ("===== <Result of %s> ====="%self.tbl_name.lstrip("INV"))
+                print ("===== <Result of %s> =====" % self.table_name.lstrip("INV"))
                 self.db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
                 self.conn = sqlite3.connect(self.db_name)
                 self.c = self.conn.cursor()
                 self.sql_cmd = '''SELECT Material, Description, Hierarchy_5, Available_Stock, Pending_Inventory_Bonded_Total_Qty, 
                                     Pending_Inventory_NonB_Total_Qty, CSC, GIT_1_Week, GIT_2_Week, GIT_3_Week, GIT_4_Week, 
-                                    Standard_Cost, Average_Selling_Price from ''' + self.tbl_name + ' where Material = \"' + self.code_name + '\"'
+                                    Standard_Cost, Average_Selling_Price from ''' + self.table_name + ' where Material = \"' + self.code_name + '\"'
                 self.c.execute(self.sql_cmd)
                 self.result = self.c.fetchall()[0]
                 self.title = ["Material","Descritpion","Hierarachy_5","Available_Stock","Pending_Qty_BD", "Pending_Qty_NB", "CSC", "GIT_1_Qty", "GIT_2_Qty","GIT_3_Qty", "GIT_4_Qty", "Std Cost", "AVG Selling Price"]
@@ -513,5 +529,5 @@ class CurrentInventory():
 
 if __name__ == "__main__":
     test = CurrentInventory("TU")
-    test.export_backorder_data()
+    test.get_current_bo()
     # test.inv_data_sync(50)
