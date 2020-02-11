@@ -459,7 +459,10 @@ class InfoCheck:
             sql_cmd = "SELECT Quantity FROM " + tbl_name + " WHERE Material = \'" + code_name + \
                       "\' AND Month = \'" + month_item + "\'"
             c.execute(sql_cmd)
-            forecast_result.append(c.fetchall()[0][0])
+            try:
+                forecast_result.append(c.fetchall()[0][0])
+            except IndexError:
+                forecast_result.append(0)
         return [month_list, forecast_result]
 
     # 读取某个h5的代码和销售价格

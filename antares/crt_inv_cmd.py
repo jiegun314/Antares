@@ -9,13 +9,12 @@ class CurrentInventoryMenu:
         self.__class__.bu_name = bu
     
     def __welcome_page(self):
-
         print("_______                  __________      ______      ________     ")
         print("__  __ \____________________  /__(_)________  /__    ___  __ \____________    ")
         print("_  / / /_  __ \  _ \  ___/_  /__  /_  ___/_  //_/    __  /_/ /_  ___/  __ \   ")
         print("/ /_/ /_  / / /  __/ /__ _  / _  / / /__ _  ,<       _  ____/_  /   / /_/ /__ ")
         print("\____/ /_/ /_/\___/\___/ /_/  /_/  \___/ /_/|_|      /_/     /_/    \____/_(_)")       
-        print ("=========================<Please Input CMD Code>=============================")
+        print("=========================<Please Input CMD Code>=============================")
 
     def crt_inv_entrance(self):
         # self.db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
@@ -28,6 +27,8 @@ class CurrentInventoryMenu:
                 crt_inv_cclt.today_inv()
             elif cmd_code == "bo":
                 crt_inv_cclt.get_current_bo()
+            elif cmd_code == "bo_export":
+                crt_inv_cclt.export_backorder_data()
             elif cmd_code == "pending":
                 crt_inv_cclt.get_pending_trend()
             elif cmd_code == "check":

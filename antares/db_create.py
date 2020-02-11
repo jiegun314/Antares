@@ -92,22 +92,22 @@ class DatabaseSetup:
         c = conn.cursor()
         c.execute(''' CREATE TABLE ''' + file_name + '''
             (Material CHAR(20) NOT NULL,
-            Description   CHAR(150) NOT NULL,
+            Description   CHAR(150),
             CN_Description   CHAR(150),
-            Hierarchy_3   CHAR(50) NOT NULL,
-            Hierarchy_4   CHAR(50) NOT NULL,
-            Hierarchy_5   CHAR(150) NOT NULL,
+            Hierarchy_3   CHAR(50),
+            Hierarchy_4   CHAR(50),
+            Hierarchy_5   CHAR(150),
             PM   CHAR(50) NOT NULL,
             Suzhou   CHAR(2) NOT NULL,
-            Sales_Status   CHAR(10) NOT NULL,
-            Purchase_Status   CHAR(10) NOT NULL,
+            Sales_Status   CHAR(10),
+            Purchase_Status   CHAR(10),
             Standard_Cost   REAL,
             SAP_Price   REAL,
             Phoenix CHAR(2) NOT NULL,
             Phoenix_Wave CHAR(100),
             Phoenix_Stop_MNFC_Date  CHAR(30),
             Phoenix_Target_SKU CHAR(30),
-            Instrument CHAR(2) NOT NULL);''')
+            Instrument CHAR(2));''')
         conn.commit()
         conn.close()
 
