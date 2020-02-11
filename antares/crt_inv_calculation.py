@@ -142,7 +142,7 @@ class CurrentInventory():
         try:
             self.fo = open(self.file_path,"r")
         except FileNotFoundError:
-            print ("!!ERROR, file does NOT exist. "+ self.str_date + "import fail.")
+            print ("!!ERROR, file does NOT exist. " + self.str_date + " import fail.")
             return
         print(">>Start to read ",self.fo.name)
         # 创建数组
@@ -502,10 +502,14 @@ class CurrentInventory():
         # 设置例外清单
         self.lst_xcpt = ['20190118',]
         self.onclick_path = "L:\\COMPASS\\Oneclick Inventory Report\\Output\\"
+        path = self.onclick_path
         self.lst_folder_temp=[]
         # 读取oneclick目录下文件夹清单
         for self.file_name in os.listdir(self.onclick_path):
-            self.lst_folder_temp.append(self.file_name)
+            if os.path.isdir(self.onclick_path + self.file_name):
+                self.lst_folder_temp.append(self.file_name)
+        # 排序
+        self.lst_folder_temp.sort()
         # 读取后N天, lst_folder为共享盘上数据
         self.lst_folder = self.lst_folder_temp[0-self.sync_days:]
         # 读取现有数据
@@ -524,10 +528,10 @@ class CurrentInventory():
         for self.item in self.lst_folder:
             if (self.item not in self.crt_list) and (self.item not in self.lst_xcpt):
                 self.insert_inv_table(self.item)
-        print (">> Synchronization sucess!")
+        print (">> Synchronization succeed!")
 
 
 if __name__ == "__main__":
     test = CurrentInventory("TU")
-    test.get_current_bo()
+    test.inv_data_sync(50)
     # test.inv_data_sync(50)
