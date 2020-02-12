@@ -37,6 +37,8 @@ class CurrentInventoryMenu:
                 crt_inv_cclt.code_inv_trend()
             elif cmd_code == "bu_trend":
                 crt_inv_cclt.h5_inv_trend()
+            elif cmd_code == "h5_detail":
+                crt_inv_cclt.display_h5_inv_detail()
             elif cmd_code == "sync":
                 crt_inv_cclt.inv_data_sync(50)
             else:

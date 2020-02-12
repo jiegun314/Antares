@@ -493,7 +493,44 @@ class CurrentInventory():
         # print charter
         x_value = [item[-4:] for item in tbl_list]
         chart.line_chart(h5_result, x_value, h5_inv_result, "Date", "Value", "Value by Std. Cost of " + h5_result)
-    
+
+    # 显示某个H5的库存明细
+    def display_h5_inv_detail(self):
+        print("===Hierarchy_5 Inventory Detail List===")
+        # Get H5 Name
+        h5_input = input("Input Hierarchy_5 Name : ")
+        h5_infocheck = calculation.InfoCheck(self.__class__.bu_name)
+        h5_name = h5_infocheck.get_h5_name(h5_input)
+        # if not right h5 name, return
+        if h5_name == "NULL":
+            print("No such Hierarchy_5 name and please try again!~")
+            return
+        # get the date
+        inventory_date = input("Inventory Data (YYYYMMDD, Press Enter to get newest) : ")
+        if inventory_date == "":
+            table_name = self._get_newest_date()
+        else:
+            table_name = "INV" + inventory_date
+        # generate title
+        table_title = [("Material", "Description", "CSC", "Available Stock", "Onhand_INV_Value"),]
+        # Connect to database
+        db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
+        conn = sqlite3.connect(db_name)
+        c = conn.cursor()
+        sql_cmd = "SELECT Material, Description, CSC, Available_Stock, (Standard_Cost * Inventory_OnHand) as Onhand_INV_Value FROM " \
+                  + table_name + " WHERE Hierarchy_5 = \"" + h5_name.upper() + "\" AND Available_Stock != 0 ORDER by Material"
+        c.execute(sql_cmd)
+        result = c.fetchall()
+        # calculate total inventory value
+        total_inv_value = 0
+        for item in result:
+            total_inv_value += item[4]
+        print("Total Inventory Value of " + h5_name + " is %s" % (format(total_inv_value, ",.0f")))
+        # print the list
+        result_to_print = table_title + result
+        print(tabulate(result_to_print, headers="firstrow", tablefmt="github", showindex=range(1, len(result_to_print)),
+                       floatfmt=",.0f"))
+
     # 数据同步
     def inv_data_sync(self, days):
         self.sync_days = days
@@ -533,5 +570,5 @@ class CurrentInventory():
 
 if __name__ == "__main__":
     test = CurrentInventory("TU")
-    test.inv_data_sync(50)
+    test.display_h5_inv_detail()
     # test.inv_data_sync(50)
