@@ -157,7 +157,7 @@ class SystemIndex:
 
 if __name__ == "__main__":
     name = input("Please input your name: ")
-    if name == "Jeffrey":
+    if name.upper() == "JEFFREY":
         str_bu_name = "TU"
         login_status = True
     else:

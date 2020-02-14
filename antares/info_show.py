@@ -120,7 +120,7 @@ class InfoShow:
             license_info = [["License", "Start", 'End']] + infocheck.get_code_rag(material_code)
             self.format_output("License", license_info)
             # 开始输出销售量
-            print("--24 Month Historical Sales Data --")
+            print("--%s Months Historical Sales Data --" % month_number)
             output_sales = [["Month", ], ["GTS", ], ["LP Sales", ], ["IMS", ]]
             # 写入日期列表
             output_sales[0].extend(infocheck.get_time_list(self.get_current_month(), 0 - month_number))
@@ -133,7 +133,7 @@ class InfoShow:
                 index += 1
             self.format_output(cmd_list, output_sales)
             # 开始输出库存历史量
-            print("--24 Month Historical Inventory Data --")
+            print("--%s Months Historical Inventory Data --" % month_number)
             output_inv = [["Month", ], ["JNJ_INV", ], ["LP_INV", ]]
             # 写入日期列表
             output_inv[0].extend(infocheck.get_time_list(self.get_current_month(), 0 - month_number))
