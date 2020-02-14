@@ -13,6 +13,7 @@ class CurrentInventory():
     bu_name = ""
     db_path = "../data/_DB/"
     backorder_path = "../data/_Backorder/"
+    inventory_path = "../data/_INV_Export/"
     
     def __init__(self, bu):
         self.__class__.bu_name = bu
@@ -366,6 +367,26 @@ class CurrentInventory():
         backorder_file = self.__class__.backorder_path + "Backorder_" + table_name[3:] +".xlsx"
         df.to_excel(backorder_file, index=False)
         print("Backorder detail exported to " + backorder_file)
+
+    # export inventory file
+    def export_inventory_data(self):
+        # print title
+        print("===Export Inventory Detail List===")
+        # get data
+        inventory_date = input("Inventory Data (YYYYMMDD, Press Enter to get newest) : ")
+        if inventory_date == "":
+            table_name = self._get_newest_date()
+        else:
+            table_name = "INV" + inventory_date
+        db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
+        conn = sqlite3.connect(db_name)
+        sql_cmd = '''SELECT Material, Description, Available_Stock FROM ''' + table_name + ''' WHERE Available_Stock !=0'''
+        df = pd.read_sql(sql=sql_cmd, con=conn)
+        df = df.rename(columns={"Material": "代码", "Description": "英文描述", "Available_Stock": "可用数量"})
+        inventory_file = self.__class__.inventory_path + "Inventory_" + table_name[3:] +".xlsx"
+        df.to_excel(inventory_file, index=False)
+        print("Inventory detail exported to " + inventory_file)
+        pass
 
     # Pending库存趋势分析
     def get_pending_trend(self):

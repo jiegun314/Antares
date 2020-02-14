@@ -25,6 +25,8 @@ class CurrentInventoryMenu:
         while cmd_code != "exit":
             if cmd_code == "inv":
                 crt_inv_cclt.today_inv()
+            elif cmd_code == "inv_export":
+                crt_inv_cclt.export_inventory_data()
             elif cmd_code == "bo":
                 crt_inv_cclt.get_current_bo()
             elif cmd_code == "bo_export":
