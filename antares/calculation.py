@@ -98,7 +98,7 @@ class InfoCheck:
         filename = "GTIN"
         conn = sqlite3.connect(db_fullname)
         c = conn.cursor()
-        c.execute("SELECT [Barcode Number] from " + filename + " WHERE Material = \'" + code_name + "\'")
+        c.execute("SELECT Barcode from " + filename + " WHERE [Material code] = \'" + code_name + "\'")
         return c.fetchall()[0][0]
 
     # get RAG by code

@@ -9,7 +9,7 @@ import calculation
 import pandas as pd
 
 
-class CurrentInventory():
+class CurrentInventory:
     bu_name = ""
     db_path = "../data/_DB/"
     backorder_path = "../data/_Backorder/"
