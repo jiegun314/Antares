@@ -132,6 +132,36 @@ class DataInput:
         conn.executemany("INSERT INTO " + file_name + " values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", data)
         conn.commit()
         conn.close()
+
+    def import_public_master_data(self):
+        # print title
+        print("==Import General Master Data==")
+        print("Please Choose Master Data Type (1 - Material Master, 2 - RAG Report, 3 - GTIN)")
+        # define source data route
+        master_data_path = self.__class__.update_path + "Public/"
+        # define file name list
+        master_data_filename_list = ["", "MATERIAL_MASTER", "RAG_Report", "GTIN"]
+        cmd_code = input("cmd >> master_data >> ")
+        if cmd_code == "exit":
+            return
+        if cmd_code not in ["1", "2", "3"]:
+            print("Wrong Code. Please Try Again.")
+            return
+        master_data_filename = master_data_filename_list[int(cmd_code)]
+        master_data_file = master_data_path + master_data_filename + ".xlsx"
+        print("!Make sure you have put file %s in %s" % (master_data_filename, master_data_path))
+        # start to read file
+        print("Start to read data file.")
+        if cmd_code == "2":
+            df = pd.read_excel(master_data_file, sheet_name="REPORT")
+        else:
+            df = pd.read_excel(master_data_file)
+        print("Start to import into database.")
+        database_name = self.__class__.db_path + "Master_Data.db"
+        conn = sqlite3.connect(database_name)
+        df.to_sql(name=master_data_filename, con=conn, if_exists='replace', index=False)
+        print("%s imported" % master_data_filename)
+        pass
     
     def get_H5_list(self):
         self.file_name = self.__class__.bu_name + "_Master_Data"
@@ -147,7 +177,7 @@ class DataInput:
 
 if __name__ == "__main__":
     data_input = DataInput("TU")
-    data_input.import_master_data()
+    data_input.import_public_master_data()
     # cmd = int(input("选择需要导入的数据，1 - GTS，2 - LP Sales， 3 - IMS, 4 - LP_INV: "))
     # if cmd == 1:
     #     data_input.sales_input ("GTS")

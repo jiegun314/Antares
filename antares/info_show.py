@@ -93,7 +93,7 @@ class InfoShow:
             self.format_output(self.cmd_type, self.output)
 
     # 显示单个代码全部信息
-    def show_code_all_info(self):
+    def show_code_all_info(self, month_number=12):
         # 打印标题
         print("---- Overall Information for Single Code---")
         material_code = input ("Material code : ")
@@ -120,28 +120,28 @@ class InfoShow:
             license_info = [["License", "Start", 'End']] + infocheck.get_code_rag(material_code)
             self.format_output("License", license_info)
             # 开始输出销售量
-            print("--24 Month Historical Sales Data --")
+            print("--%s Months Historical Sales Data --" % month_number)
             output_sales = [["Month", ], ["GTS", ], ["LP Sales", ], ["IMS", ]]
             # 写入日期列表
-            output_sales[0].extend(infocheck.get_time_list(self.get_current_month(), -24))
+            output_sales[0].extend(infocheck.get_time_list(self.get_current_month(), 0 - month_number))
             # 读取数据
             cmd_list = ("GTS", "LPSales", "IMS")
             index = 1
             for cmd_item in cmd_list:
                 sales_result = infocheck.get_code_sales(cmd_item, material_code)
-                output_sales[index].extend(infocheck.data_mapping(sales_result, self.get_current_month(), -24))
+                output_sales[index].extend(infocheck.data_mapping(sales_result, self.get_current_month(), 0 - month_number))
                 index += 1
             self.format_output(cmd_list, output_sales)
             # 开始输出库存历史量
-            print("--24 Month Historical Inventory Data --")
+            print("--%s Months Historical Inventory Data --" % month_number)
             output_inv = [["Month", ], ["JNJ_INV", ], ["LP_INV", ]]
             # 写入日期列表
-            output_inv[0].extend(infocheck.get_time_list(self.get_current_month(), -24))
+            output_inv[0].extend(infocheck.get_time_list(self.get_current_month(), 0 - month_number))
             # 读取数据
             jnj_inv_result = infocheck.get_code_jnj_inv(material_code)
-            output_inv[1].extend(infocheck.data_mapping(jnj_inv_result, self.get_current_month(), -24))
+            output_inv[1].extend(infocheck.data_mapping(jnj_inv_result, self.get_current_month(), 0 - month_number))
             lp_inv_result = infocheck.get_code_lp_inv(material_code)
-            output_inv[2].extend(infocheck.data_mapping(lp_inv_result, self.get_current_month(), -24))
+            output_inv[2].extend(infocheck.data_mapping(lp_inv_result, self.get_current_month(), 0 - month_number))
             self.format_output(cmd_list, output_inv)
             # 显示Statistical Forecast
             print("--Next 12 Months Statistical Forecast--")
@@ -242,7 +242,7 @@ class InfoShow:
             self.format_output("Statistical Forecast", forecast_quantity)
 
     # Show all information of one Hierarchy_5
-    def show_h5_all_info(self):
+    def show_h5_all_info(self, month_number=12):
         # Print title
         cmd_title = "---- Overall Information for Hierarchy_5 Level----"
         print(cmd_title)
@@ -252,32 +252,32 @@ class InfoShow:
         if h5_name != "NULL":
             # 开始输出历史库存量
             print("====================================================================")
-            print("--24 Month Historical Inventory for %s (RMB) --" % h5_name)
+            print("--%s Month Historical Inventory for %s (RMB) --" % (month_number, h5_name))
             # 读取数据
             price_type = ["Standard_Cost", "SAP_Price"]
             inv_type = ["JNJ", "LP"]
             for price_item in price_type:
                 # Get month list
-                month_list = h5_info_check.get_time_list(self.get_current_month(), -24)
+                month_list = h5_info_check.get_time_list(self.get_current_month(), 0 - month_number)
                 h5_inv_result = [[price_item] + month_list]
                 # get inventory list
                 for inv_item in inv_type:
                     h5_temp = h5_info_check.get_H5_hstr_inv(inv_item, price_item, h5_name)
-                    h5_inv_value = h5_info_check.data_mapping(h5_temp, self.get_current_month(), -24)
+                    h5_inv_value = h5_info_check.data_mapping(h5_temp, self.get_current_month(), 0 - month_number)
                     h5_inv_result.append([inv_item] + h5_inv_value)
                 self.format_output(price_item, h5_inv_result)
             # 开始输出历史销量
             # 打印标题
-            print("--24 Month Historical Sales Data for %s--" % h5_name + " (RMB)")
+            print("--%s Month Historical Sales Data for %s-- (RMB)" % (month_number, h5_name))
             # 读取数据
             sales_type = ["GTS", "LPSales", "IMS"]
             for price_item in price_type:
-                month_list = h5_info_check.get_time_list(self.get_current_month(), -24)
+                month_list = h5_info_check.get_time_list(self.get_current_month(), 0 - month_number)
                 h5_sales_result = [[price_item] + month_list]
                 # 写入日期列表
                 for sales_item in sales_type:
                     h5_temp = h5_info_check.get_H5_sales(sales_item, price_item, h5_name)
-                    h5_sales_value = h5_info_check.data_mapping(h5_temp, self.get_current_month(), -24)
+                    h5_sales_value = h5_info_check.data_mapping(h5_temp, self.get_current_month(), 0 - month_number)
                     h5_sales_result.append([sales_item] + h5_sales_value)
                 self.format_output(price_item, h5_sales_result)
         else:

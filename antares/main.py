@@ -1,8 +1,8 @@
-import info_show
-import data_update as update
-import crt_inv_cmd as crt
-import statis_fcst as fcst
-import mi
+# import info_show
+# import data_update as update
+# import crt_inv_cmd as crt
+# import statis_fcst as fcst
+# import mi
 
 
 class SystemIndex:
@@ -49,6 +49,7 @@ class SystemIndex:
         print("        ================= Project Dragon =================")
         print("        ==================================================")
         print("        ** Welcome %s. Now you are working for %s **" %(self.__class__.user_name, self.__class__.bu_name))
+        print("        ==================================================")
 
     def __exit_page(self):
         print('''               .o oOOOOOOOo                                            OOOo
@@ -92,15 +93,23 @@ class SystemIndex:
     # 0. Overall Information
 
     def _command_center(self):
+        print("        ==Please wait a few seconds for module loading.===")
+        import info_show
         # 实例化显示信息的类
         cmd_info_index = info_show.InfoShow(self.__class__.bu_name, self.__class__.user_name)
-        cmd_crt_inv = crt.CurrentInventoryMenu(self.__class__.bu_name)
         cmd_code = input("cmd >> ")
         while cmd_code != "exit":
             if cmd_code == "411" or cmd_code == "412" or cmd_code == "413":
                 cmd_info_index.show_code_sales_data(cmd_code)
-            elif cmd_code == "400":
-                cmd_info_index.show_code_all_info()
+            elif cmd_code[0:3] == "400":
+                if cmd_code.lstrip("400").lstrip().lstrip("-").lstrip().rstrip().isnumeric():
+                    month_number = int(cmd_code.lstrip("400").lstrip().lstrip("-").lstrip().rstrip())
+                    if month_number <= 24:
+                        cmd_info_index.show_code_all_info(month_number)
+                elif cmd_code.lstrip("400").lstrip().lstrip("-").lstrip().rstrip() == "":
+                    cmd_info_index.show_code_all_info()
+                else:
+                    print("!!ERROR: Wrong CMD code. Plz input right cmd code, or input exit to quit.")
             elif cmd_code == "421" or cmd_code == "422" or cmd_code == "424":
                 cmd_info_index.show_code_hstr_inv(cmd_code)
             elif cmd_code == "427":
@@ -109,23 +118,39 @@ class SystemIndex:
                 cmd_info_index.show_h5_sales_data(cmd_code)
             elif cmd_code in ["321", "322", "324"]:
                 cmd_info_index.show_h5_inv(cmd_code)
-            elif cmd_code == "300":
-                cmd_info_index.show_h5_all_info()
+            elif cmd_code[0:3] == "300":
+                if cmd_code.lstrip("300").lstrip().lstrip("-").lstrip().rstrip().isnumeric():
+                    month_number = int(cmd_code.lstrip("300").lstrip().lstrip("-").lstrip().rstrip())
+                    if month_number <= 24:
+                        cmd_info_index.show_h5_all_info(month_number)
+                elif cmd_code.lstrip("300").lstrip().lstrip("-").lstrip().rstrip() == "":
+                    cmd_info_index.show_h5_all_info()
+                else:
+                    print("!!ERROR: Wrong CMD code. Plz input right cmd code, or input exit to quit.")
             elif cmd_code in ["300g", "300G"]:
                 cmd_info_index.show_h5_chart()
             elif cmd_code in ["901", "902", "903", "905", "906", "909"]:
+                import data_update as update
                 data_input = update.MonthlyUpdate(self.__class__.bu_name)
                 data_input.data_update_entrance(cmd_code)
+            elif cmd_code == "900":
+                import data_import
+                data_input = data_import.DataInput(self.__class__.bu_name)
+                data_input.import_public_master_data()
             elif cmd_code in ["400g", "400G"]:
                 cmd_info_index.show_code_chart()
             elif cmd_code == "450":
                 cmd_info_index.show_code_eso()
             elif cmd_code == "000":
+                import crt_inv_cmd as crt
+                cmd_crt_inv = crt.CurrentInventoryMenu(self.__class__.bu_name)
                 cmd_crt_inv.crt_inv_entrance()
             elif cmd_code == "888":
+                import statis_fcst as fcst
                 forecast_view = fcst.GetStatisticalForecast(self.__class__.bu_name)
                 forecast_view.get_forecast_entrance()
             elif cmd_code == "999":
+                import mi
                 add_mi = mi.MI(self.__class__.bu_name)
                 add_mi.mi_start()
             else:
@@ -136,7 +161,7 @@ class SystemIndex:
 
 if __name__ == "__main__":
     name = input("Please input your name: ")
-    if name == "Jeffrey":
+    if name.upper() == "JEFFREY":
         str_bu_name = "TU"
         login_status = True
     else:
