@@ -107,7 +107,8 @@ class InfoCheck:
         filename = "RAG_Report"
         conn = sqlite3.connect(db_fullname)
         c = conn.cursor()
-        c.execute("SELECT REGLICNO, REGAPDATE, REGEXDATE from " + filename + " WHERE MATNR = \'" + code_name + "\'")
+        c.execute("SELECT REGLICNO, REGAPDATE, REGEXDATE from " + filename + " WHERE MATNR = \'" + code_name +
+                  "\' ORDER by REGAPDATE")
         return c.fetchall()
 
     # by code的销量数据
