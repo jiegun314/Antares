@@ -17,7 +17,10 @@ class InfoShow:
     
     def get_current_month(self):
         return time.strftime("%Y-%m", time.localtime())
-    
+
+    def show_command_list(self):
+        pb_func.display_command_list("Main")
+
     # 数据的表格化输出
     def format_output(self, data_name, data):
         name_list = data_name

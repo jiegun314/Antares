@@ -153,6 +153,8 @@ class SystemIndex:
                 import mi
                 add_mi = mi.MI(self.__class__.bu_name)
                 add_mi.mi_start()
+            elif cmd_code == "111":
+                cmd_info_index.show_command_list()
             else:
                 print("!!ERROR: Wrong CMD code. Plz input right cmd code, or input exit to quit.")
             cmd_code = input("cmd >> ")

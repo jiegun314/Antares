@@ -1,5 +1,6 @@
 import sqlite3
 import time
+from tabulate import tabulate
 
 db_path = "../data/_DB/"
 
@@ -27,6 +28,18 @@ def check_future_month(month_item, month_quantity):
         time_1 = time.strftime("%Y%m", time.localtime(secs))
         forecast_month_list.append(time_1)
     return True if month_item in forecast_month_list else False
+
+
+# display the command list
+def display_command_list(command_type):
+    db_fullname = db_path + "Master_Data.db"
+    conn = sqlite3.connect(db_fullname)
+    sql_cmd = "SELECT Command_Code, Description from Command_List WHERE Type = \'" + command_type + "\'"
+    c = conn.cursor()
+    c.execute(sql_cmd)
+    final_display_result = [("Code", "Command_Detail"), ] + c.fetchall()
+    print(tabulate(final_display_result, tablefmt="psql", headers="firstrow", colalign=("left","left")))
+    pass
 
 
 # input MI data to database, data format [[YYYYMM, Qty],]
@@ -86,5 +99,5 @@ def upload_mi_data(code_name, bu_name, lst_data):
 
 
 if __name__ == '__main__':
-    # upload_mi_data("440.834", "TU", [["201909", 100], ["202001", -15], ["202002", 35], ["201909", 40]])
+    display_command_list("Main")
     pass

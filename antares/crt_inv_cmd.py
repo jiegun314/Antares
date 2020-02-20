@@ -43,6 +43,8 @@ class CurrentInventoryMenu:
                 crt_inv_cclt.display_h5_inv_detail()
             elif cmd_code == "sync":
                 crt_inv_cclt.inv_data_sync(50)
+            elif cmd_code == "cmd":
+                crt_inv_cclt.show_command_list()
             else:
                 print("!!ERROR: Wrong CMD code. Plz input correct cmd code, or type \"exit\" to quit.")
             cmd_code = input("cmd >> crt_inv >> ")
