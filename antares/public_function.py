@@ -34,7 +34,8 @@ def check_future_month(month_item, month_quantity):
 def display_command_list(command_type):
     db_fullname = db_path + "Master_Data.db"
     conn = sqlite3.connect(db_fullname)
-    sql_cmd = "SELECT Command_Code, Description from Command_List WHERE Type = \'" + command_type + "\'"
+    sql_cmd = "SELECT Command_Code, Description from Command_List WHERE Type = \'" + command_type \
+              + "\' ORDER by Command_Code"
     c = conn.cursor()
     c.execute(sql_cmd)
     final_display_result = [("Code", "Command_Detail"), ] + c.fetchall()
