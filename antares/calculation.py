@@ -15,25 +15,24 @@ class InfoCheck:
         self.__class__.bu_name = bu
 
     # 读取单个代码全部的master data
-    def get_master_data(self, material):
-        self.code = material
+    def get_master_data(self, code):
         # 设置空数组
-        self.empty_result = ['NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'N', 'NA', 'NA', 0, 0, 'N', None, None, None, 'N']
+        empty_result = ['NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'N', 'NA', 'NA', 0, 0, 'N', None, None, None, 'N']
         # 文件名，无后缀
-        self.file_name = self.__class__.bu_name + "_Master_Data"
+        file_name = self.__class__.bu_name + "_Master_Data"
         # 数据库完整路径加名称
-        self.db_fullname = self.__class__.db_path + self.file_name + ".db"
+        db_fullname = self.__class__.db_path + file_name + ".db"
         # 表格名称，等于文件名称
-        self.tbl_name = self.file_name
-        conn = sqlite3.connect(self.db_fullname)
+        tbl_name = file_name
+        conn = sqlite3.connect(db_fullname)
         c = conn.cursor()
-        self.str_cmd = "SELECT * from " + self.tbl_name + " WHERE material = \'" + self.code + "\' "
-        self.result = c.execute(self.str_cmd)
-        self.row = self.result.fetchall()
-        if len(self.row) == 0:
-            self.row = (self.empty_result,)
+        str_cmd = "SELECT * from " + tbl_name + " WHERE material = \'" + code + "\' "
+        c.execute(str_cmd)
+        row = c.fetchall()
+        if len(row) == 0:
+            row = (empty_result,)
         conn.close()
-        return list(self.row[0])
+        return list(row[0])
 
     # 读取全部的master data list
     def get_master_data_list(self):
@@ -68,28 +67,23 @@ class InfoCheck:
         else:
             str_cmd = "SELECT month, sum(Value_SAP_Price) from " + tbl_name + " WHERE Hierarchy_5 = \'" + \
                       hierarchy + "\' GROUP BY month ORDER BY month"
-        result = c.execute(str_cmd)
-        lst_result = []
-        for item in result:
-            lst_result.append(item)
-        conn.close()
-        return lst_result
+        c.execute(str_cmd)
+        result = c.fetchall()
+        return result
     
-    def get_H5_hstr_inv(self, type, price, name):
-        self.inv_type = type
-        self.price_type = price
-        self.h5_name = name
+    def get_H5_hstr_inv(self, inv_type, price_type, h5_name):
         # 文件名，无后缀
-        self.file_name = self.__class__.bu_name + "_" +self.inv_type + "_INV"
+        file_name = self.__class__.bu_name + "_" + inv_type + "_INV"
         # 数据库完整路径加名称
-        self.db_fullname = self.__class__.db_path + self.file_name + ".db"
+        db_fullname = self.__class__.db_path + file_name + ".db"
         # 表格名称，等于文件名称
-        self.tbl_name = self.file_name
-        conn = sqlite3.connect(self.db_fullname)
+        tbl_name = file_name
+        conn = sqlite3.connect(db_fullname)
         c = conn.cursor()
-        self.str_cmd = "SELECT month, SUM(Value_" + self.price_type + ") from " + self.tbl_name + " WHERE Hierarchy_5 = \'" + self.h5_name + "\' GROUP BY month"
-        self.h5_inv_result = c.execute(self.str_cmd).fetchall()
-        return self.h5_inv_result
+        str_cmd = "SELECT month, SUM(Value_" + price_type + ") from " + tbl_name + " WHERE Hierarchy_5 = \'" \
+                  + h5_name + "\' GROUP BY month"
+        h5_inv_result = c.execute(str_cmd).fetchall()
+        return h5_inv_result
 
     # get gtin by code
     def get_code_gtin(self, code_name):
@@ -111,24 +105,21 @@ class InfoCheck:
         return c.fetchall()
 
     # by code的销量数据
-    def get_code_sales(self, type, material):
-        self.code = material
-        self.data_type = type
+    def get_code_sales(self, data_type, code):
         # 文件名，无后缀
-        self.file_name = self.__class__.bu_name + "_" + self.data_type
+        file_name = self.__class__.bu_name + "_" + data_type
         # 数据库完整路径加名称
-        self.db_fullname = self.__class__.db_path + self.file_name + ".db"
+        db_fullname = self.__class__.db_path + file_name + ".db"
         # 表格名称，等于文件名称
-        self.tbl_name = self.file_name
-        conn = sqlite3.connect(self.db_fullname)
+        tbl_name = file_name
+        conn = sqlite3.connect(db_fullname)
         c = conn.cursor()
-        str_cmd = "SELECT month, SUM(quantity) from " + self.tbl_name + " WHERE material = \'" + self.code + "\' GROUP BY month ORDER BY month"
-        result = c.execute(str_cmd)
-        self.lst_result = []
-        for item in result:
-            self.lst_result.append(item)
+        str_cmd = "SELECT month, SUM(quantity) from " + tbl_name + " WHERE material = \'" + code \
+                  + "\' GROUP BY month ORDER BY month"
+        c.execute(str_cmd)
+        result = c.fetchall()
         conn.close()
-        return self.lst_result
+        return result
 
     # 返回销量数据总表 - 方法2
     def get_code_sales_list(self, type):
@@ -164,7 +155,7 @@ class InfoCheck:
         self.result = c.execute(str_cmd).fetchall()
         return self.result
 
-    #获取单个代码的LP库存
+    # 获取单个代码的LP库存
     def get_code_lp_inv(self, material):
         self.code = material
         # 文件名，无后缀
@@ -183,7 +174,7 @@ class InfoCheck:
         conn.close()
         return self.lst_result
 
-    #获取单个代码的JNJ库存
+    # 获取单个代码的JNJ库存
     def get_code_jnj_inv(self, material):
         self.code = material
         # 文件名，无后缀
@@ -225,12 +216,12 @@ class InfoCheck:
         # 如果返回是单值
         elif len(self.h5_output) == 1:
             self.h5_result = self.h5_output[0]
-        #如果有多个返回值
+        # 如果有多个返回值
         else:
-            print("More than 1 similiar output as below：")
+            print("More than 1 similar output as below：")
             self.item = iter(self.h5_output)
-            for self.i in range(1,len(self.h5_output)):
-                print(self.i," - ", next(self.item))
+            for self.i in range(1, len(self.h5_output)):
+                print(self.i, " - ", next(self.item))
             self.index_no = input("Plz input the NO of H5 you need：")
             if int(self.index_no) < len(self.h5_output):
                 self.h5_result = self.h5_output[int(self.index_no) - 1]
