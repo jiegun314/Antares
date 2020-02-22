@@ -75,7 +75,6 @@ class CurrentInventory:
         else:
             return True
 
-
     # 获取所有表格的列表
     def get_tbl_list(self):
         self.db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
@@ -108,7 +107,6 @@ class CurrentInventory:
         self.conn.commit()
         self.conn.close()
         return self.trigger
-
 
     # 获取H5信息
     def _get_h5_list(self, table):
@@ -591,8 +589,13 @@ class CurrentInventory:
                 self.insert_inv_table(self.item)
         print (">> Synchronization succeed!")
 
+    # Display command list
+    @staticmethod
+    def show_command_list():
+        import public_function
+        public_function.display_command_list("CRT_INV")
 
 if __name__ == "__main__":
     test = CurrentInventory("TU")
-    test.display_h5_inv_detail()
+    test.show_command_list()
     # test.inv_data_sync(50)

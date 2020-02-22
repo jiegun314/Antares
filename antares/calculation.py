@@ -52,29 +52,28 @@ class InfoCheck:
         return list(self.row)
 
     # by H5的销量数据
-    def get_H5_sales(self, type, price, h5):
-        self.hierarchy = h5
-        self.data_type = type
-        self.price_type = price
+    def get_H5_sales(self, data_type, price_type, hierarchy):
         # 文件名，无后缀
-        self.file_name = self.__class__.bu_name + "_" + self.data_type
+        file_name = self.__class__.bu_name + "_" + data_type
         # 数据库完整路径加名称
-        self.db_fullname = self.__class__.db_path + self.file_name + ".db"
+        db_fullname = self.__class__.db_path + file_name + ".db"
         # 表格名称，等于文件名称
-        self.tbl_name = self.file_name
-        conn = sqlite3.connect(self.db_fullname)
+        tbl_name = file_name
+        conn = sqlite3.connect(db_fullname)
         c = conn.cursor()
         # 创建命令
-        if self.price_type == "Standard_Cost":
-            self.str_cmd = "SELECT month, sum(Value_Standard_Cost) from " + self.tbl_name + " WHERE Hierarchy_5 = '" + self.hierarchy + "\' GROUP BY month ORDER BY month"
+        if price_type == "Standard_Cost":
+            str_cmd = "SELECT month, sum(Value_Standard_Cost) from " + tbl_name + " WHERE Hierarchy_5 = '" + \
+                      hierarchy + "\' GROUP BY month ORDER BY month"
         else:
-            self.str_cmd = "SELECT month, sum(Value_SAP_Price) from " + self.tbl_name + " WHERE Hierarchy_5 = \'" + self.hierarchy + "\' GROUP BY month ORDER BY month"
-        self.result = c.execute(self.str_cmd)
-        self.lst_result = []
-        for self.item in self.result:
-            self.lst_result.append(self.item)
+            str_cmd = "SELECT month, sum(Value_SAP_Price) from " + tbl_name + " WHERE Hierarchy_5 = \'" + \
+                      hierarchy + "\' GROUP BY month ORDER BY month"
+        result = c.execute(str_cmd)
+        lst_result = []
+        for item in result:
+            lst_result.append(item)
         conn.close()
-        return self.lst_result
+        return lst_result
     
     def get_H5_hstr_inv(self, type, price, name):
         self.inv_type = type

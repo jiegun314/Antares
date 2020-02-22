@@ -8,13 +8,10 @@ class CurrentInventoryMenu:
     def __init__(self, bu):
         self.__class__.bu_name = bu
     
-    def __welcome_page(self):
-        print("_______                  __________      ______      ________     ")
-        print("__  __ \____________________  /__(_)________  /__    ___  __ \____________    ")
-        print("_  / / /_  __ \  _ \  ___/_  /__  /_  ___/_  //_/    __  /_/ /_  ___/  __ \   ")
-        print("/ /_/ /_  / / /  __/ /__ _  / _  / / /__ _  ,<       _  ____/_  /   / /_/ /__ ")
-        print("\____/ /_/ /_/\___/\___/ /_/  /_/  \___/ /_/|_|      /_/     /_/    \____/_(_)")       
-        print("=========================<Please Input CMD Code>=============================")
+    @staticmethod
+    def __welcome_page():
+        import public_function
+        public_function.display_ascii_graph("crt_inv")
 
     def crt_inv_entrance(self):
         # self.db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
@@ -43,10 +40,12 @@ class CurrentInventoryMenu:
                 crt_inv_cclt.display_h5_inv_detail()
             elif cmd_code == "sync":
                 crt_inv_cclt.inv_data_sync(50)
+            elif cmd_code == "cmd":
+                crt_inv_cclt.show_command_list()
             else:
                 print("!!ERROR: Wrong CMD code. Plz input correct cmd code, or type \"exit\" to quit.")
             cmd_code = input("cmd >> crt_inv >> ")
-        print("==================================<Back to Main Menu>==================================")
+        print("==============================<Back to Main Menu>==============================")
         pass
 
 
