@@ -20,60 +20,14 @@ class SystemIndex:
 
     # 欢迎页面/home/jeffrey
     def __welcome_page(self):
-        print('''        $$$$$$$$$$$$$$$$""$o$o$o$o$o$oo$$""$$$$$$$$$$$$$$$
-        $$$$$$$$$$$$""o$$$$$$$$$$"$"$$$$$$$o$"$$$$$$$$$$$$
-        $$$$$$$$$"$o$$$$""$oo $ ""      """$$$oo"$$$$$$$$$
-        $$$$$$$"o$$$$"   ""o  $oo o o       ""$$$o"$$$$$$$
-        $$$$$"o$$$"       oo$$$$$$$$$$o        "$$$o"$$$$$
-        $$$$"o$$$  $  o$$$$$$$$$$$$$$"$$oo       "$$$ $$$$
-        $$$"$$$"   "$$$$$$$$$$$$$$$$o$o$$$"        $$$o$$$
-        $$ $$$    o$$$$$$$$$$$$$$$$$$$$$$$$o o   o  "$$o"$
-        $"$$$"    o$$$$$$$$$"$$$$$$"" "$$$$$$"$$$$$  $$$"$
-        $o$$"    o$$$$$$$$$$o""$$$""""ooo"$$$$$$$$"   $$$"
-        $o$$"    o$$$$$$$$$$            ""oo"$"$o""   $$$o
-        o$$$     o$$$$$$$$$$                """""$    o$$o
-        o$$$    o$$$$$$$$$$$$o                   "o "oo$$o
-        o$$$  oo$$$$$$$$$$$$$$$$ooooooo$$$$$oo    $"$ "$$o
-        o$$$"  ""  $$$$$$$$$$$$$$$$$$$$$$$$$$$$o    " $$$
-        $ $$$       "$$$$$$$$$$$$$$$$$$$$$$$$$$$o    o$$"$
-        $$"$$o       "$$$$$$$$$$$$$$$$$$$$$$$$$$$o   $$$o$
-        $$o$$$o       $$""$$$$$$$$$$$$$$$$$$$$$$$o  $$$ $$
-        $$$o"$$o    "$""  "$""$$$$$$$$$$$$$$$$$$$oo$$$"$$$
-        $$$$o"$$$o        "     $$$$$$$$$$$$$$$$$o$$"o$$$$
-        $$$$$$o"$$$o         oo$$$$$$$$$$$$$$$$$$$$"o$$$$$
-        $$$$$$$$o"$$$$ooooo$$$$$$$$$$$$$$$$$$$$$$"o$$$$$$$
-        $$$$$$$$$$o""$$$$$$$$$$$$$$$$$$$$$$$$$"oo$$$$$$$$$
-        $$$$$$$$$$$$$o$""$$$$$$$$$$$$$$$$$""oo$$$$$$$$$$$$
-        $$$$$$$$$$$$$$$$$$o$o$"$"$"$"$oo$o$$$$$$$$$$$$$$$$''')
-        print("        ==================================================")
-        print("        ================= Project Dragon =================")
-        print("        ==================================================")
-        print("        ** Welcome %s. Now you are working for %s **" %(self.__class__.user_name, self.__class__.bu_name))
-        print("        ==================================================")
+        import public_function
+        public_function.display_ascii_graph("welcome")
+        print("** Welcome %s. Now you are working for %s **" % (self.__class__.user_name, self.__class__.bu_name))
 
     def __exit_page(self):
-        print('''               .o oOOOOOOOo                                            OOOo
-                Ob.OOOOOOOo  OOOo.      oOOo.                      .adOOOOOOO
-                OboO"""""""""""".OOo. .oOOOOOo.    OOOo.oOOOOOo.."""""""""'OO
-                OOP.oOOOOOOOOOOO "POOOOOOOOOOOo.   `"OOOOOOOOOP,OOOOOOOOOOOB'
-                `O'OOOO'     `OOOOo"OOOOOOOOOOO` .adOOOOOOOOO"oOOO'    `OOOOo
-                .OOOO'            `OOOOOOOOOOOOOOOOOOOOOOOOOO'            `OO
-                OOOOO                 '"OOOOOOOOOOOOOOOO"`                oOO
-               oOOOOOba.                .adOOOOOOOOOOba               .adOOOOo.
-              oOOOOOOOOOOOOOba.    .adOOOOOOOOOO@^OOOOOOOba.     .adOOOOOOOOOOOO
-             OOOOOOOOOOOOOOOOO.OOOOOOOOOOOOOO"`  '"OOOOOOOOOOOOO.OOOOOOOOOOOOOO
-             "OOOO"       "YOoOOOOMOIONODOO"`  .   '"OOROAOPOEOOOoOY"     "OOO"
-                Y           'OOOOOOOOOOOOOO: .oOOo. :OOOOOOOOOOO?'         :`
-                :            .oO%OOOOOOOOOOo.OOOOOO.oOOOOOOOOOOOO?         .
-                .            oOOP"%OOOOOOOOoOOOOOOO?oOOOOO?OOOO"OOo
-                             '%o  OOOO"%OOOO%"%OOOOO"OOOOOO"OOO':
-                                  `$"  `OOOO' `O"Y ' `OOOO'  o             .
-                .                  .     OP"          : o     .
-                                          :
-                                          .
-                ''')
-        print("                 ==================<Copyright by Jeffrey>=================")
-        self.cmd_exit = input("                 ==================<Press Enter to Exit>==================")
+        import public_function
+        public_function.display_ascii_graph("goodbye")
+        self.cmd_exit = input()
 
     # 命令接收及跳转中心
     # 命令设计逻辑：
@@ -93,13 +47,13 @@ class SystemIndex:
     # 0. Overall Information
 
     def _command_center(self):
-        print("        ==Please wait a few seconds for module loading.===")
+        print("==Please wait a few seconds for module loading.===")
         import info_show
         # 实例化显示信息的类
         cmd_info_index = info_show.InfoShow(self.__class__.bu_name, self.__class__.user_name)
         cmd_code = input("cmd >> ")
         while cmd_code != "exit":
-            if cmd_code == "411" or cmd_code == "412" or cmd_code == "413":
+            if cmd_code in ["411", "412", "413"]:
                 cmd_info_index.show_code_sales_data(cmd_code)
             elif cmd_code[0:3] == "400":
                 if cmd_code.lstrip("400").lstrip().lstrip("-").lstrip().rstrip().isnumeric():
@@ -110,7 +64,7 @@ class SystemIndex:
                     cmd_info_index.show_code_all_info()
                 else:
                     print("!!ERROR: Wrong CMD code. Plz input right cmd code, or input exit to quit.")
-            elif cmd_code == "421" or cmd_code == "422" or cmd_code == "424":
+            elif cmd_code in ["421", "422", "424"]:
                 cmd_info_index.show_code_hstr_inv(cmd_code)
             elif cmd_code == "427":
                 cmd_info_index.show_code_statistical_forecast(24)

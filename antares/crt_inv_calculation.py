@@ -590,7 +590,8 @@ class CurrentInventory:
         print (">> Synchronization succeed!")
 
     # Display command list
-    def show_command_list(self):
+    @staticmethod
+    def show_command_list():
         import public_function
         public_function.display_command_list("CRT_INV")
 

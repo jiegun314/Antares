@@ -99,6 +99,17 @@ def upload_mi_data(code_name, bu_name, lst_data):
     conn.close()
 
 
+# show ascii graph
+def display_ascii_graph(title):
+    file_fullname = db_path + "graph_" + title + ".txt"
+    f = open(file_fullname)
+    line = f.readline()
+    while line:
+        print(line,end="")
+        line = f.readline()
+    pass
+
+
 if __name__ == '__main__':
-    display_command_list("Main")
+    display_ascii_graph("welcome")
     pass

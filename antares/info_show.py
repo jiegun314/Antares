@@ -14,11 +14,12 @@ class InfoShow:
     def __init__(self, bu, name):
         self.__class__.bu_name = bu
         self.__class__.user_name = name
-    
+
     def get_current_month(self):
         return time.strftime("%Y-%m", time.localtime())
 
-    def show_command_list(self):
+    @staticmethod
+    def show_command_list():
         pb_func.display_command_list("Main")
 
     # 数据的表格化输出

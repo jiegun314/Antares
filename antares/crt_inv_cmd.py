@@ -8,13 +8,10 @@ class CurrentInventoryMenu:
     def __init__(self, bu):
         self.__class__.bu_name = bu
     
-    def __welcome_page(self):
-        print("_______                  __________      ______      ________     ")
-        print("__  __ \____________________  /__(_)________  /__    ___  __ \____________    ")
-        print("_  / / /_  __ \  _ \  ___/_  /__  /_  ___/_  //_/    __  /_/ /_  ___/  __ \   ")
-        print("/ /_/ /_  / / /  __/ /__ _  / _  / / /__ _  ,<       _  ____/_  /   / /_/ /__ ")
-        print("\____/ /_/ /_/\___/\___/ /_/  /_/  \___/ /_/|_|      /_/     /_/    \____/_(_)")       
-        print("=========================<Please Input CMD Code>=============================")
+    @staticmethod
+    def __welcome_page():
+        import public_function
+        public_function.display_ascii_graph("crt_inv")
 
     def crt_inv_entrance(self):
         # self.db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
