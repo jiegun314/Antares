@@ -45,7 +45,7 @@ class CurrentInventoryMenu:
             else:
                 print("!!ERROR: Wrong CMD code. Plz input correct cmd code, or type \"exit\" to quit.")
             cmd_code = input("cmd >> crt_inv >> ")
-        print("==================================<Back to Main Menu>==================================")
+        print("==============================<Back to Main Menu>==============================")
         pass
 
 
