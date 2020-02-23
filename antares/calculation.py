@@ -1,9 +1,5 @@
 import sqlite3
-from datetime import datetime 
 import time
-import data_import
-import math
-from openpyxl import Workbook
 from tabulate import tabulate
 
 
@@ -11,7 +7,7 @@ class InfoCheck:
     bu_name = ""
     db_path = "../data/_DB/"
 
-    def __init__ (self, bu):
+    def __init__(self, bu):
         self.__class__.bu_name = bu
 
     # 读取单个代码全部的master data
@@ -121,115 +117,73 @@ class InfoCheck:
         conn.close()
         return result
 
-    # 返回销量数据总表 - 方法2
-    def get_code_sales_list(self, type):
-        self.data_type = type
-        # 文件名，无后缀
-        self.file_name = self.__class__.bu_name + "_" + self.data_type
-        # 数据库完整路径加名称
-        self.db_fullname = self.__class__.db_path + self.file_name + ".db"
-        # 表格名称，等于文件名称
-        self.tbl_name = self.file_name
-        conn = sqlite3.connect(self.db_fullname)
-        c = conn.cursor()
-        str_cmd = "SELECT material, month, SUM(quantity) from " + self.tbl_name + " GROUP BY material, month ORDER BY month"
-        self.result = c.execute(str_cmd).fetchall()
-        conn.close()
-        return self.result
-
-    # 返回库存数据表总表
-    def get_code_inv_list(self, type):
-        self.data_type = type
-        # 文件名，无后缀
-        self.file_name = self.__class__.bu_name + "_" +self.data_type
-        # 数据库完整路径加名称
-        self.db_fullname = self.__class__.db_path + self.file_name + ".db"
-        # 表格名称，等于文件名称
-        self.tbl_name = self.file_name
-        conn = sqlite3.connect(self.db_fullname)
-        c = conn.cursor()
-        if type == "JNJ_INV":
-            str_cmd = "SELECT material, month, SUM(Inventory_Onhand) from " + self.tbl_name + " GROUP BY material, month ORDER BY month"
-        else:
-            str_cmd = "SELECT material, month, SUM(quantity) from " + self.tbl_name + " GROUP BY material, month ORDER BY month"
-        self.result = c.execute(str_cmd).fetchall()
-        return self.result
-
     # 获取单个代码的LP库存
-    def get_code_lp_inv(self, material):
-        self.code = material
+    def get_code_lp_inv(self, code):
         # 文件名，无后缀
-        self.file_name = self.__class__.bu_name + "_LP_INV"
+        file_name = self.__class__.bu_name + "_LP_INV"
         # 数据库完整路径加名称
-        self.db_fullname = self.__class__.db_path + self.file_name + ".db"
+        db_fullname = self.__class__.db_path + file_name + ".db"
         # 表格名称，等于文件名称
-        self.tbl_name = self.file_name
-        conn = sqlite3.connect(self.db_fullname)
+        tbl_name = file_name
+        conn = sqlite3.connect(db_fullname)
         c = conn.cursor()
-        str_cmd = "SELECT month, SUM(quantity) from " + self.tbl_name + " WHERE Material = \'" + self.code + "\' GROUP BY month ORDER BY month"
-        result = c.execute(str_cmd)
-        self.lst_result = []
-        for item in result:
-            self.lst_result.append(item)
+        str_cmd = "SELECT month, SUM(quantity) from " + tbl_name + " WHERE Material = \'" + code \
+                  + "\' GROUP BY month ORDER BY month"
+        c.execute(str_cmd)
+        result = c.fetchall()
         conn.close()
-        return self.lst_result
+        return result
 
     # 获取单个代码的JNJ库存
-    def get_code_jnj_inv(self, material):
-        self.code = material
+    def get_code_jnj_inv(self, code):
         # 文件名，无后缀
-        self.file_name = self.__class__.bu_name + "_JNJ_INV"
+        file_name = self.__class__.bu_name + "_JNJ_INV"
         # 数据库完整路径加名称
-        self.db_fullname = self.__class__.db_path + self.file_name + ".db"
+        db_fullname = self.__class__.db_path + file_name + ".db"
         # 表格名称，等于文件名称
-        self.tbl_name = self.file_name
-        conn = sqlite3.connect(self.db_fullname)
+        tbl_name = file_name
+        conn = sqlite3.connect(db_fullname)
         c = conn.cursor()
-        str_cmd = "SELECT month, SUM(Available_Stock) from " + self.tbl_name + " WHERE Material = \'" + self.code + "\' GROUP BY month ORDER BY month"
-        result = c.execute(str_cmd)
-        self.lst_result = []
-        for item in result:
-            self.lst_result.append(item)
+        str_cmd = "SELECT month, SUM(Available_Stock) from " + tbl_name + " WHERE Material = \'" + code \
+                  + "\' GROUP BY month ORDER BY month"
+        c.execute(str_cmd)
+        result = c.fetchall()
         conn.close()
-        return self.lst_result
+        return result
 
     # 返回有效的H5名称
-    def get_h5_name(self, name):
-        self.h5_name = name
+    def get_h5_name(self, h5_name):
         # 文件名，无后缀
-        self.file_name = self.__class__.bu_name + "_Master_Data"
+        tbl_name = self.__class__.bu_name + "_Master_Data"
         # 数据库完整路径加名称
-        self.db_fullname = self.__class__.db_path + self.file_name + ".db"
-        # 表格名称，等于文件名称
-        self.tbl_name = self.file_name
-        conn = sqlite3.connect(self.db_fullname)
+        db_fullname = self.__class__.db_path + tbl_name + ".db"
+        conn = sqlite3.connect(db_fullname)
         c = conn.cursor()
-        str_cmd = "SELECT distinct Hierarchy_5 from " + self.tbl_name + " WHERE Hierarchy_5 LIKE \'%" + self.h5_name + "%\'"
-        result = c.execute(str_cmd)
-        self.h5_output = []
-        for item in result:
-            self.h5_output.append(item[0])
+        str_cmd = "SELECT distinct Hierarchy_5 from " + tbl_name + " WHERE Hierarchy_5 LIKE \'%" + h5_name + "%\'"
+        c.execute(str_cmd)
+        result = c.fetchall()
+        h5_output = [item[0] for item in result]
         # 如果返回是空结果
-        if len(self.h5_output) == 0:
+        if len(h5_output) == 0:
             print("No related H5 name, please check.")
-            self.h5_result = "NULL"
+            h5_result = "NULL"
         # 如果返回是单值
-        elif len(self.h5_output) == 1:
-            self.h5_result = self.h5_output[0]
+        elif len(h5_output) == 1:
+            h5_result = h5_output[0]
         # 如果有多个返回值
         else:
             print("More than 1 similar output as below：")
-            self.item = iter(self.h5_output)
-            for self.i in range(1, len(self.h5_output)):
-                print(self.i, " - ", next(self.item))
-            self.index_no = input("Plz input the NO of H5 you need：")
-            if int(self.index_no) < len(self.h5_output):
-                self.h5_result = self.h5_output[int(self.index_no) - 1]
+            item = iter(h5_output)
+            for i in range(1, len(h5_output) + 1):
+                print(i, " - ", next(item))
+            index_no = input("Plz input the NO of H5 you need：")
+            if int(index_no) <= len(h5_output):
+                h5_result = h5_output[int(index_no) - 1]
             else:
                 print("Wrong No, Please re-input！")
-                self.h5_result = "NULL"
+                h5_result = "NULL"
         conn.close()
-        return self.h5_result
+        return h5_result
 
     # 获取月份列表
     # 默认输入月份为当前月，则过去月份不包含当月，将来月份包含当月
@@ -291,17 +245,6 @@ class InfoCheck:
                 forecast_result.append(0)
         return [month_list, forecast_result]
 
-    # 读取某个h5的代码和销售价格
-    def get_h5_code_price_list(self, h5_name):
-        db_fullname = self.__class__.db_path + self.__class__.bu_name + "_Master_Data.db"
-        tbl_name = self.__class__.bu_name + "_Master_Data"
-        conn = sqlite3.connect(db_fullname)
-        c = conn.cursor()
-        # 获取某个h5的代码和销售价格
-        c.execute("SELECT Material, SAP_Price from " + tbl_name + " WHERE Hierarchy_5 = \'" + h5_name + "\'")
-        result = c.fetchall()
-        return result
-
     # get forecast of one hierarchy, set fcst_type as Statistical or Final
     def get_h5_forecast(self, h5_name, fcst_type, month_quantity):
         # Get future month list
@@ -352,12 +295,6 @@ class InfoCheck:
 
 if __name__ == "__main__":
     info_check = InfoCheck("TU")
-    result = info_check.get_code_gtin("440.834")
-    print(result)
-    # 方法2获取所有的代码信息并导出到excel
-    # result = info_check.generate_code_detail_v2()
-    # info_check.export_to_excel(result)
-    # 方法1获取所有的代码信息并导出到excel
-    # result = info_check.generate_code_detail()
-    # info_check.export_to_excel(result)
+    info_check.get_h5_name("PFNA")
+
 
