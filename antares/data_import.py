@@ -1,6 +1,7 @@
 import pandas as pd
 import sqlite3
 # import time
+import numpy as np
 import db_create as db
 from datetime import datetime 
 
@@ -122,7 +123,10 @@ class DataInput:
         db_fullname = self.__class__.db_path + self.__class__.bu_name + "_Master_Data.db"
         print("~ Start to read the data file %s" %file_name)
         start_time = datetime.now()
-        df = pd.read_excel(file_fullname, na_values="0")
+        if data_type == "Master_Data":
+            df = pd.read_excel(file_fullname, na_values="0", dtype={'SAP_Price': np.float64})
+        else:
+            df = pd.read_excel(file_fullname, na_values="0")
         # data = df.values
         stop_time = datetime.now()
         print("~ File reading complete，with time of %s seconds" % (stop_time-start_time).seconds)

@@ -312,17 +312,19 @@ class CurrentInventory:
         bo_output = c.fetchall()
         # 连接master data数据库
         master_data_db_name = self.__class__.db_path + self.__class__.bu_name + "_Master_Data.db"
-        master_data_table_name = self.__class__.bu_name + "_Master_Data"
+        master_data_table_name = self.__class__.bu_name + "_SAP_Price"
         conn = sqlite3.connect(master_data_db_name)
         c = conn.cursor()
         # 读取SAP Price并计算价格
         bo_result=[]
         for bo_item in bo_output:
             bo_material = bo_item[0]
-            sql_cmd = "SELECT SAP_Price from " + master_data_table_name + " WHERE Material = \'" + bo_material + "\'"
+            sql_cmd = "SELECT Price from " + master_data_table_name + " WHERE Material = \'" + bo_material + "\'"
             c.execute(sql_cmd)
-            bo_price = c.fetchall()[0][0]
-            if bo_price is None:
+            result = c.fetchall()
+            try:
+                bo_price = result[0][0]
+            except IndexError:
                 bo_price = 0
             bo_item_list = list(bo_item)
             bo_item_list[5] = bo_item_list[4] * bo_price
@@ -595,7 +597,8 @@ class CurrentInventory:
         import public_function
         public_function.display_command_list("CRT_INV")
 
+
 if __name__ == "__main__":
     test = CurrentInventory("TU")
-    test.show_command_list()
+    test.get_current_bo()
     # test.inv_data_sync(50)
