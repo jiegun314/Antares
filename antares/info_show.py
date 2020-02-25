@@ -109,7 +109,7 @@ class InfoShow:
             mm_result = infocheck.get_master_data(material_code)
             # get master_data
             # 输出基本信息
-            print("======= <Detail Information for %s> =======" % material_code)
+            print("======= <Detail Information> =======")
             print("Description: ", mm_result[1])
             print("CN Description: ", mm_result[2])
             print("Hierarchy_4: ", mm_result[4])
@@ -119,8 +119,14 @@ class InfoShow:
             print("Standard_Cost: ", mm_result[10])
             print("SAP_Price: ", mm_result[11])
             print("GTIN: ", infocheck.get_code_gtin(material_code))
+            # show Phoenix information
+            phoenix_result = infocheck.get_code_phoenix_result(material_code)
+            print("======= <Phoenix Information> =======")
+            print("Phoenix Stutus: ", phoenix_result[0])
+            print("Stop Manufacturing Date: ", phoenix_result[1])
+            print("Target SKU: ", phoenix_result[2])
             # show the RAG license information
-            print("====License Information====")
+            print("======= <License Information> =======" )
             license_info = [["License", "Start", 'End']] + infocheck.get_code_rag(material_code)
             self.format_output("License", license_info)
             # 开始输出销售量

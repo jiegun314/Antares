@@ -100,6 +100,21 @@ class InfoCheck:
                   "\' ORDER by REGAPDATE")
         return c.fetchall()
 
+    # get Phoenix Project Status by code
+    def get_code_phoenix_result(self, material_code):
+        db_fullname = self.__class__.db_path + self.__class__.bu_name + "_Master_Data.db"
+        filename = "TU_Phoenix_List"
+        conn = sqlite3.connect(db_fullname)
+        c = conn.cursor()
+        sql_cmd = "SELECT Month, [Target SKU] FROM " + filename + " WHERE [Exit SKU] = \'" + material_code + "\'"
+        c.execute(sql_cmd)
+        phoenix_result = c.fetchall()
+        if len(phoenix_result) ==0:
+            return ["Non-Phoenix Product", "None", "None"]
+        else:
+            return (["Phoenix Product", ] + list(phoenix_result[0]))
+        pass
+
     # by code的销量数据
     def get_code_sales(self, data_type, code):
         # 文件名，无后缀
@@ -295,6 +310,7 @@ class InfoCheck:
 
 if __name__ == "__main__":
     info_check = InfoCheck("TU")
-    info_check.get_h5_name("PFNA")
+    # info_check.get_code_phoenix_result("689.893")
+    print(info_check.get_code_phoenix_result("689.893"))
 
 

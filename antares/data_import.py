@@ -117,7 +117,7 @@ class DataInput:
 
     # import BU base master data
     def import_master_data(self, data_type):
-        # for TU. data_type = {"Master_Data", "SAP_Price", "Phoenix_List"}
+        # for TU. data_type = {"Master_Data", "SAP_Price", "c"}
         file_name = self.__class__.bu_name + "_" + data_type
         file_fullname = self.__class__.file_path + file_name + ".xlsx"
         db_fullname = self.__class__.db_path + self.__class__.bu_name + "_Master_Data.db"
@@ -187,7 +187,7 @@ class DataInput:
 
 if __name__ == "__main__":
     data_input = DataInput("TU")
-    data_input.import_master_data("Master_Data")
+    data_input.import_master_data("Phoenix_List")
     # cmd = int(input("选择需要导入的数据，1 - GTS，2 - LP Sales， 3 - IMS, 4 - LP_INV: "))
     # if cmd == 1:
     #     data_input.sales_input ("GTS")
