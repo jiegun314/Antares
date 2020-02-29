@@ -266,30 +266,38 @@ class CurrentInventory:
 
     # 获取当天库存
     def today_inv(self):
-        self.title = "===Current Inventory List by Hierarchy_5==="
-        print (self.title)
+        print("===Current Inventory List by Hierarchy_5===")
         # 获取日期
-        self.inventory_date = input ("Inventory Data (YYYYMMDD, Press Enter to get newest) : ")
-        if self.inventory_date == "":
-            self.table_name = self._get_newest_date()
+        inventory_date = input("Inventory Data (YYYYMMDD, Press Enter to get newest) : ")
+        if inventory_date == "":
+            table_name = self._get_newest_date()
         else:
-            self.table_name = "INV" + self.inventory_date
-        print ("===== <Result of %s> =====" % self.table_name.lstrip("INV"))
-        self.h5_list = self._get_h5_list(self.table_name)
+            table_name = "INV" + inventory_date
+        print("===== <Result of %s> =====" % table_name.lstrip("INV"))
+        h5_list = self._get_h5_list(table_name)
         # 基本思路：用sql语句计算所有的结果
-        self.db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
-        self.conn = sqlite3.connect(self.db_name)
-        self.c = self.conn.cursor()
-        self.sql_cmd = '''SELECT Hierarchy_5, sum(Available_Stock * Standard_Cost) AS onhand_inv, 
-                        sum((GIT_1_Week + GIT_2_Week) * Standard_Cost) AS GIT_inv, 
+        db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
+        conn = sqlite3.connect(db_name)
+        c = conn.cursor()
+        sql_cmd = '''SELECT Hierarchy_5, sum(Available_Stock * Standard_Cost) AS onhand_inv, 
+                        sum((GIT_1_Week + GIT_2_Week + GIT_3_Week + GIT_4_Week) * Standard_Cost) AS GIT_inv,
+                        sum(Open_PO * Standard_Cost) As Open_PO_inv, 
                         sum(Pending_Inventory_Bonded_Total_Qty * Standard_Cost) AS BD_Pending_Value,
-                        sum(Pending_Inventory_NonB_Total_Qty * Standard_Cost) AS NB_Pending_Value from ''' + self.table_name + ''' 
+                        sum(Pending_Inventory_NonB_Total_Qty * Standard_Cost) AS NB_Pending_Value from ''' + table_name + ''' 
                         WHERE (Available_Stock + GIT_1_Week + GIT_2_Week + Pending_Inventory_Bonded_Total_Qty + Pending_Inventory_NonB_Total_Qty) > 0  
                         GROUP BY Hierarchy_5 ORDER BY onhand_inv DESC'''
-        self.c.execute(self.sql_cmd)
-        self.title = [("Hierarchy_5", "Onhand Inventory", "GIT Inventory", "Bonded Pending", "Non-bonded Pending")]
-        self.result = self.title + self.c.fetchall()
-        print (tabulate(self.result, headers="firstrow", tablefmt="github", showindex=range(1,len(self.result)), floatfmt=",.0f"))
+        c.execute(sql_cmd)
+        inventory_output = c.fetchall()
+        # calculate inventory total value.
+        total_available_stock_value, total_overall_stock_value = 0, 0
+        for item in inventory_output:
+            total_available_stock_value += item[1]
+            total_overall_stock_value += item[1] + item[2] + item[3]
+        title = [("Hierarchy_5", "Available Stock", "GIT Inventory", "Open PO Value", "Bonded Pending", "Non-bonded Pending")]
+        result = title + inventory_output
+        print(tabulate(result, headers="firstrow", tablefmt="github", showindex=range(1, len(result)), floatfmt=",.0f"))
+        print("Total Available Stock Value (RMB): %s" % format(total_available_stock_value, ",.0f"))
+        print("Total Overall Stock Value (RMB): %s" % format(total_overall_stock_value, ',.0f'))
 
     # 获取当前BO
     def get_current_bo(self):
@@ -386,6 +394,39 @@ class CurrentInventory:
         inventory_file = self.__class__.inventory_path + "Inventory_" + table_name[3:] +".xlsx"
         df.to_excel(inventory_file, index=False)
         print("Inventory detail exported to " + inventory_file)
+        pass
+
+    # display backorder value trend by day
+    def display_backorder_trend(self):
+        # print title
+        print("===Display Backorder Trend===")
+        # get table list
+        print("---Get Backorder Data---")
+        db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
+        conn = sqlite3.connect(db_name)
+        c = conn.cursor()
+        c.execute("SELECT name FROM sqlite_master WHERE type=\"table\" ORDER BY name")
+        table_list = [item[0] for item in c.fetchall()]
+        # generate backorder summary data from every table
+        daily_backorder_summary = []
+        for table_name in table_list:
+            sql_cmd = "SELECT Material, CSC, Current_Backorder_Qty FROM " + table_name + \
+                      " WHERE Current_Backorder_Qty > 0"
+            c.execute(sql_cmd)
+            daily_backorder_summary.append(c.fetchall())
+        conn.close()
+        # get selling price
+        print("---Generate Value with Selling Price---")
+        db_name = self.__class__.db_path + self.__class__.bu_name + "_Master_Data.db"
+        data_table_name = self.__class__.bu_name + "_SAP_Price"
+        conn = sqlite3.connect(db_name)
+        c = conn.cursor()
+        for item_day in daily_backorder_summary:
+            for item_code in item_day:
+                material_code = item_code[0]
+                sql_cmd = "SELECT Price FROM " + data_table_name + " WHERE Material = \"" + material_code + "\""
+                c.execute(sql_cmd)
+                item_code = item_code + tuple(c.fetchall()[0][0] * item_code[2])
         pass
 
     # Pending库存趋势分析
@@ -600,5 +641,5 @@ class CurrentInventory:
 
 if __name__ == "__main__":
     test = CurrentInventory("TU")
-    test.get_current_bo()
+    test.display_backorder_trend()
     # test.inv_data_sync(50)
