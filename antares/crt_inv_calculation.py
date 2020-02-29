@@ -1,9 +1,9 @@
 import sqlite3
-import pandas as pd
-import numpy as np
+# import pandas as pd
+# import numpy as np
 from tabulate import tabulate
 import crt_inv_chart as chart
-import time
+# import time
 import os, sys
 import calculation
 import pandas as pd
@@ -407,6 +407,7 @@ class CurrentInventory:
         c = conn.cursor()
         c.execute("SELECT name FROM sqlite_master WHERE type=\"table\" ORDER BY name")
         table_list = [item[0] for item in c.fetchall()]
+        date_list = [item[-4:] for item in table_list]
         # generate backorder summary data from every table
         daily_backorder_summary = []
         for table_name in table_list:
@@ -416,17 +417,37 @@ class CurrentInventory:
             daily_backorder_summary.append(c.fetchall())
         conn.close()
         # get selling price
+        # generate final list for backorder value
+        backorder_value_summary = [[], [], []]
         print("---Generate Value with Selling Price---")
         db_name = self.__class__.db_path + self.__class__.bu_name + "_Master_Data.db"
         data_table_name = self.__class__.bu_name + "_SAP_Price"
         conn = sqlite3.connect(db_name)
         c = conn.cursor()
         for item_day in daily_backorder_summary:
+            # initiate daily backorder value summary dict
+            daily_backorder_total_value = {'ROP': 0, 'IND': 0, 'ND': 0}
             for item_code in item_day:
                 material_code = item_code[0]
                 sql_cmd = "SELECT Price FROM " + data_table_name + " WHERE Material = \"" + material_code + "\""
                 c.execute(sql_cmd)
-                item_code = item_code + tuple(c.fetchall()[0][0] * item_code[2])
+                try:
+                    item_backorder_value = int(c.fetchall()[0][0] * item_code[2])
+                # if cannot find price
+                except IndexError:
+                    item_backorder_value = 0
+                # sum up backorder value based on CSC
+                if item_code[1] == "IND":
+                    daily_backorder_total_value['IND'] += item_backorder_value
+                elif item_code[1] == "ROP":
+                    daily_backorder_total_value['ROP'] += item_backorder_value
+                else:
+                    daily_backorder_total_value['ND'] += item_backorder_value
+            # sum up to summary list with daily value
+            backorder_value_summary[0].append(daily_backorder_total_value['IND'])
+            backorder_value_summary[1].append(daily_backorder_total_value['ROP'])
+            backorder_value_summary[2].append(daily_backorder_total_value['ND'])
+        chart.backorder_trend_chart(date_list, backorder_value_summary)
         pass
 
     # Pending库存趋势分析
@@ -486,7 +507,7 @@ class CurrentInventory:
                 while self.index < len(self.result):
                     self.code_inv_output.append([self.title[self.index], self.result[self.index]])
                     self.index += 1
-                print (tabulate(self.code_inv_output, headers="firstrow", floatfmt=",.0f", tablefmt="grid"))
+                print (tabulate(self.code_inv_output, headers="firstrow", floatfmt=",.0f", tablefmt="github"))
         else:
             print ("!!Error - This Material Code does NOT exist, Please re-input! ")
     
@@ -597,40 +618,41 @@ class CurrentInventory:
                        floatfmt=",.0f"))
 
     # 数据同步
-    def inv_data_sync(self, days):
-        self.sync_days = days
-        self.title = "===Sync Current Inventory Data from Oneclick==="
-        print(self.title)
+    def inv_data_sync(self, sync_days):
+        print("===Sync Current Inventory Data from Oneclick===")
         # 设置例外清单
-        self.lst_xcpt = ['20190118',]
-        self.onclick_path = "L:\\COMPASS\\Oneclick Inventory Report\\Output\\"
-        path = self.onclick_path
-        self.lst_folder_temp=[]
+        lst_xcpt = ['20190118', ]
+        onclick_path = "L:\\COMPASS\\Oneclick Inventory Report\\Output\\"
+        lst_folder_temp=[]
         # 读取oneclick目录下文件夹清单
-        for self.file_name in os.listdir(self.onclick_path):
-            if os.path.isdir(self.onclick_path + self.file_name):
-                self.lst_folder_temp.append(self.file_name)
+        try:
+            for file_name in os.listdir(onclick_path):
+                if os.path.isdir(onclick_path + file_name):
+                    lst_folder_temp.append(file_name)
+        except FileNotFoundError:
+            print("!Error, the sharefolder cannot be opened. Make sure you've connected to JNJ network and try again.")
+            return
         # 排序
-        self.lst_folder_temp.sort()
+        lst_folder_temp.sort()
         # 读取后N天, lst_folder为共享盘上数据
-        self.lst_folder = self.lst_folder_temp[0-self.sync_days:]
+        lst_folder = lst_folder_temp[0 - sync_days:]
         # 读取现有数据
-        self.lst_db_date = self.get_tbl_list()
+        lst_db_date = self.get_tbl_list()
         # crt_list为现有数据
-        self.crt_list = []
-        for self.item in self.lst_db_date:
-            self.crt_list.append(self.item.lstrip("INV"))
+        crt_list = []
+        for item in lst_db_date:
+            crt_list.append(item.lstrip("INV"))
         # 开始对比数据
         # 删除过期数据
-        for self.item in self.crt_list:
-            if self.item not in self.lst_folder:
-                self.__remove_inv_tbl(self.item)
-                self.crt_list.remove(self.item)
+        for item in crt_list:
+            if item not in lst_folder:
+                self.__remove_inv_tbl(item)
+                self.crt_list.remove(item)
         # 导入新的数据
-        for self.item in self.lst_folder:
-            if (self.item not in self.crt_list) and (self.item not in self.lst_xcpt):
-                self.insert_inv_table(self.item)
-        print (">> Synchronization succeed!")
+        for item in lst_folder:
+            if (item not in crt_list) and (item not in lst_xcpt):
+                self.insert_inv_table(item)
+        print(">> Synchronization succeed!")
 
     # Display command list
     @staticmethod
