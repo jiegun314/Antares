@@ -450,28 +450,38 @@ class CurrentInventory:
         chart.backorder_trend_chart(date_list, backorder_value_summary)
         pass
 
-    # Pending库存趋势分析
-    def get_pending_trend(self):
-        self.title = "===Single Code Inventory==="
-        print (self.title)
-        self.pending_result = []
+    # Daily pending inventory trend display
+    def get_pending_trend(self, data_type="value"):
+        print("===Display Pending Inventory Trend===")
+        pending_result = []
         # 链接数据库
-        self.db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
-        self.conn = sqlite3.connect(self.db_name)
-        self.c = self.conn.cursor()
-        self.sql_cmd = "SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name"
-        self.c.execute(self.sql_cmd)
-        self.tbl_list = self.c.fetchall()
-        for self.table_name in self.tbl_list:
-            self.sql_cmd = '''SELECT sum(Pending_Inventory_Bonded_Total_Qty), sum(Pending_Inventory_NonB_Total_Qty), 
-                                sum((Standard_Cost * Pending_Inventory_Bonded_Total_Qty)) As Pending_BD_Value, 
-                                sum((Standard_Cost * Pending_Inventory_NonB_Total_Qty)) As Pending_NB_Value from ''' + self.table_name[0]
-            self.c.execute(self.sql_cmd)
-            self.tmp_result = self.c.fetchall()
-            self.pending_result.append (self.table_name + self.tmp_result[0])
-        self.tbl_title = [["Date", "Bonded_Pending_QTY", "Nonboned_Pending_Qty","Bonded_Pending_Value", "Nonboned_Pending_Value"]]
-        self.pending_output = self.tbl_title + self.pending_result
-        print (tabulate(self.pending_output, headers="firstrow", tablefmt="github", showindex=range(1,len(self.pending_output)), floatfmt=",.0f"))
+        db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
+        conn = sqlite3.connect(db_name)
+        c = conn.cursor()
+        c.execute("SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name")
+        tbl_list = c.fetchall()
+        # generate date list in MMDD format for following chart display
+        date_list = [item[0][-4:] for item in tbl_list]
+        for table_name in tbl_list:
+            sql_cmd = '''SELECT sum(Pending_Inventory_Bonded_Total_Qty), sum(Pending_Inventory_NonB_Total_Qty), 
+            sum((Standard_Cost * Pending_Inventory_Bonded_Total_Qty)) As Pending_BD_Value, 
+            sum((Standard_Cost * Pending_Inventory_NonB_Total_Qty)) As Pending_NB_Value from ''' + table_name[0]
+            c.execute(sql_cmd)
+            pending_result.append(c.fetchall()[0])
+        # group data with different category
+        pending_summary_bonded_qty = [item[0] for item in pending_result]
+        pending_summary_nonbonded_qty = [item[1] for item in pending_result]
+        pending_summary_bonded_value = [int(item[2]) for item in pending_result]
+        pending_summary_nonbonded_value = [int(item[3]) for item in pending_result]
+        # call chart
+        if data_type == "value":
+            chart.pending_inventory_trend_chart(date_list,
+                                                [pending_summary_bonded_value, pending_summary_nonbonded_value],
+                                                "Pending Inventory Trend (Value in RMB)")
+        else:
+            chart.pending_inventory_trend_chart(date_list,
+                                                [pending_summary_bonded_qty, pending_summary_nonbonded_qty],
+                                                "Pending Inventory Trend (by Quantity)")
 
     # 查询单个代码
     def get_code_inv (self):
@@ -663,5 +673,5 @@ class CurrentInventory:
 
 if __name__ == "__main__":
     test = CurrentInventory("TU")
-    test.display_backorder_trend()
+    test.get_pending_trend()
     # test.inv_data_sync(50)

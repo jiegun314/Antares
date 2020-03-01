@@ -47,7 +47,7 @@ class SystemIndex:
     # 0. Overall Information
 
     def _command_center(self):
-        print("==Please wait a few seconds for module loading.===")
+        print("===Please wait a few seconds for module loading===")
         import info_show
         # 实例化显示信息的类
         cmd_info_index = info_show.InfoShow(self.__class__.bu_name, self.__class__.user_name)
@@ -120,6 +120,7 @@ if __name__ == "__main__":
     if name.upper() == "JEFFREY":
         str_bu_name = "TU"
         login_status = True
+        name = name.capitalize()
     else:
         login_status = False
     if login_status:

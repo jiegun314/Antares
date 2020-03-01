@@ -30,6 +30,8 @@ class CurrentInventoryMenu:
                 crt_inv_cclt.export_backorder_data()
             elif cmd_code == "pending":
                 crt_inv_cclt.get_pending_trend()
+            elif cmd_code == "pending -q":
+                crt_inv_cclt.get_pending_trend("quantity")
             elif cmd_code == "check":
                 crt_inv_cclt.get_code_inv()
             elif cmd_code == "trend":
