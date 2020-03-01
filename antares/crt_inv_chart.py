@@ -8,9 +8,9 @@ import os
 # draw line charter
 def line_chart(code_name, x_value, y_value, x_label, y_label, chart_ttl):
     sys_path = os.path.abspath('..')
-    file_name = sys_path + "/data/_Charter/" + code_name.replace(" ", "_") + ".html"
+    file_name = sys_path + "/data/_Charter/" + code_name.replace(" ", "_").replace("/", "_") + ".html"
     c = (
-        Line(init_opts=opts.InitOpts(theme=ThemeType.CHALK, width="1500px"))
+        Line(init_opts=opts.InitOpts(theme=ThemeType.ROMA, width="1500px"))
         .add_xaxis(x_value)
         .add_yaxis(y_label, y_value, is_smooth=True)
         .set_series_opts(
@@ -25,7 +25,7 @@ def line_chart(code_name, x_value, y_value, x_label, y_label, chart_ttl):
             datazoom_opts=[opts.DataZoomOpts(), opts.DataZoomOpts(type_="inside")],)
     )
     c.render(file_name)
-    os.system(file_name)
+    os.startfile(file_name)
 
 
 # draw stack bar chart for backorder daily trend
@@ -33,7 +33,7 @@ def backorder_trend_chart(date_list, backorder_value):
     sys_path = os.path.abspath('..')
     file_name = sys_path + "/data/_Charter/Backorder_trend.html"
     c = (
-        Bar(init_opts=opts.InitOpts(theme=ThemeType.VINTAGE, width="1500px"))
+        Bar(init_opts=opts.InitOpts(theme=ThemeType.ROMA, width="1500px"))
         .add_xaxis(date_list)
         .add_yaxis("ND", backorder_value[2], stack="stack1")
         .add_yaxis("ROP", backorder_value[1], stack="stack1")
@@ -43,7 +43,7 @@ def backorder_trend_chart(date_list, backorder_value):
                          datazoom_opts=[opts.DataZoomOpts(), opts.DataZoomOpts(type_="inside")],)
     )
     c.render(file_name)
-    os.system(file_name)
+    os.startfile(file_name)
 
 
 # draw stack bar chart for pending inventory trend
@@ -51,7 +51,7 @@ def pending_inventory_trend_chart(date_list, pending_inventory_data, title_name)
     sys_path = os.path.abspath('..')
     file_name = sys_path + "/data/_Charter/pending_inventory_trend.html"
     c = (
-        Bar(init_opts=opts.InitOpts(theme=ThemeType.VINTAGE, width="1500px"))
+        Bar(init_opts=opts.InitOpts(theme=ThemeType.ROMA, width="1500px"))
         .add_xaxis(date_list)
         .add_yaxis("Nonbonded", pending_inventory_data[1], stack="stack1")
         .add_yaxis("Bonded", pending_inventory_data[0], stack="stack1")
@@ -60,4 +60,4 @@ def pending_inventory_trend_chart(date_list, pending_inventory_data, title_name)
                          datazoom_opts=[opts.DataZoomOpts(), opts.DataZoomOpts(type_="inside")],)
     )
     c.render(file_name)
-    os.system(file_name)
+    os.startfile(file_name)

@@ -542,7 +542,6 @@ class CurrentInventory:
                     inv_result.append(0)
                 else:
                     inv_result.append(result[0])
-            print(inv_result)
         else:
             print("!!Error - This Material Code does NOT exist, Please re-input! ")
         conn.commit()
