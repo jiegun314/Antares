@@ -484,42 +484,42 @@ class CurrentInventory:
                                                 "Pending Inventory Trend (by Quantity)")
 
     # 查询单个代码
-    def get_code_inv (self):
-        self.title = "===Single Code Inventory==="
-        print (self.title)
+    def get_code_inv(self):
+        print("===Single Code Inventory===")
         # 获取日期
-        self.code_name = input ("Input Material Code: ")
-        while self._check_code_availability(self.code_name) == False:
-            self.code_name = input ("Wrong code, please re-input: ")
-        if self.check_code(self.code_name) :
-            self.data_ready = True
-            self.str_input = input ("Please input date (YYYYMMDD) OR press Enter to get most fresh date: ")
-            if self.str_input == "":
-                self.table_name = self._get_newest_date()
+        code_name = input("Input Material Code: ")
+        while not self._check_code_availability(code_name):
+            code_name = input("Wrong code, please re-input: ")
+        if self.check_code(code_name):
+            data_ready = True
+            str_input = input("Please input date (YYYYMMDD) OR press Enter to get most fresh date: ")
+            if str_input == "":
+                table_name = self._get_newest_date()
             else:
-                self.table_name = "INV" + self.str_input
-                if self._check_date_availability(self.table_name) == False:
-                    print ("!!Error - Wrong date, Please re-input! ")
-                    self.data_ready = False
-            if self.data_ready:
-                print ("===== <Result of %s> =====" % self.table_name.lstrip("INV"))
-                self.db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
-                self.conn = sqlite3.connect(self.db_name)
-                self.c = self.conn.cursor()
-                self.sql_cmd = '''SELECT Material, Description, Hierarchy_5, Available_Stock, Pending_Inventory_Bonded_Total_Qty, 
-                                    Pending_Inventory_NonB_Total_Qty, CSC, GIT_1_Week, GIT_2_Week, GIT_3_Week, GIT_4_Week, 
-                                    Standard_Cost, Average_Selling_Price from ''' + self.table_name + ' where Material = \"' + self.code_name + '\"'
-                self.c.execute(self.sql_cmd)
-                self.result = self.c.fetchall()[0]
-                self.title = ["Material","Descritpion","Hierarachy_5","Available_Stock","Pending_Qty_BD", "Pending_Qty_NB", "CSC", "GIT_1_Qty", "GIT_2_Qty","GIT_3_Qty", "GIT_4_Qty", "Std Cost", "AVG Selling Price"]
-                self.index = 0
-                self.code_inv_output = [["Item", "Value"]]
-                while self.index < len(self.result):
-                    self.code_inv_output.append([self.title[self.index], self.result[self.index]])
-                    self.index += 1
-                print (tabulate(self.code_inv_output, headers="firstrow", floatfmt=",.0f", tablefmt="github"))
+                table_name = "INV" + str_input
+                if not self._check_date_availability(table_name):
+                    print("!!Error - Wrong date, Please re-input! ")
+                    data_ready = False
+            if data_ready:
+                print("===== <Result of %s> =====" % table_name.lstrip("INV"))
+                db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
+                conn = sqlite3.connect(db_name)
+                c = conn.cursor()
+                sql_cmd = '''SELECT Material, Description, Hierarchy_5, Available_Stock, 
+                Pending_Inventory_Bonded_Total_Qty, Pending_Inventory_NonB_Total_Qty, CSC, GIT_1_Week, GIT_2_Week, 
+                GIT_3_Week, GIT_4_Week, Standard_Cost, Average_Selling_Price from ''' + table_name + \
+                          ' where Material = \"' + code_name + '\"'
+                c.execute(sql_cmd)
+                result = c.fetchall()[0]
+                title = ["Material", "Description", "Hierarchy_5", "Available_Stock", "Pending_Qty_BD",
+                         "Pending_Qty_NB", "CSC", "GIT_1_Qty", "GIT_2_Qty","GIT_3_Qty", "GIT_4_Qty", "Std Cost",
+                         "AVG Selling Price"]
+                code_inv_output = [["Item", "Value"]]
+                for i in range(len(result)):
+                    code_inv_output.append([title[i], result[i]])
+                print(tabulate(code_inv_output, headers="firstrow", floatfmt=",.0f", tablefmt="github"))
         else:
-            print ("!!Error - This Material Code does NOT exist, Please re-input! ")
+            print("!!Error - This Material Code does NOT exist, Please re-input! ")
     
     # 查询单个代码可用库存趋势
     def code_inv_trend(self):
@@ -604,16 +604,16 @@ class CurrentInventory:
         else:
             table_name = "INV" + inventory_date
         # generate title
-        table_title = [("Material", "Description", "CSC", "Available Stock", "Onhand_INV_Value", "GIT_1_Week",
-                        "GIT_2_Week", "GIT_3_Week", "GIT_4_Week"),]
+        table_title = [("Material", "Description", "CSC", "Available Stock", "Onhand_INV_Value", "Bonded Pending",
+                        "GIT_1_Week", "GIT_2_Week", "GIT_3_Week", "GIT_4_Week"),]
         # Connect to database
         db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
         conn = sqlite3.connect(db_name)
         c = conn.cursor()
         sql_cmd = "SELECT Material, Description, CSC, Available_Stock, (Standard_Cost * Inventory_OnHand) as " \
-                  "Onhand_INV_Value, GIT_1_Week, GIT_2_Week, GIT_3_Week, GIT_4_Week FROM " \
-                  + table_name + " WHERE Hierarchy_5 = \"" + h5_name.upper() + "\" AND Available_Stock != 0 " \
-                                                                               "ORDER by Material"
+                  "Onhand_INV_Value, Pending_Inventory_Bonded_Total_Qty, GIT_1_Week, GIT_2_Week, GIT_3_Week, " \
+                  "GIT_4_Week FROM " + table_name + " WHERE Hierarchy_5 = \"" + h5_name.upper() + \
+                  "\" AND Available_Stock != 0 ORDER by Material"
         c.execute(sql_cmd)
         result = c.fetchall()
         # calculate total inventory value

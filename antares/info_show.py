@@ -32,69 +32,65 @@ class InfoShow:
         print(tabulate(data_list, tablefmt="psql", headers="firstrow", floatfmt=",.0f"))
 
     # 显示单个代码销量数据
-    def show_code_sales_data(self,code):
-        self.cmd_code = code
-        #获取销量种类
-        if self.cmd_code == "411":
-            self.cmd_type = "GTS"
-        elif self.cmd_code == "412":
-            self.cmd_type = "LPSales"
+    def show_code_sales_data(self, cmd_code):
+        # get sales type
+        if cmd_code == "411":
+            cmd_type = "GTS"
+        elif cmd_code == "412":
+            cmd_type = "LPSales"
         else:
-            self.cmd_type ="IMS"
-        #打印标题    
-        self.cmd_title = "---- -24M " + self.cmd_type + " List for Single Code---"
-        print(self.cmd_title)
-        self.material_code = input ("Material code : ")
-        #读取Master Data
-        self.infocheck = calculation.InfoCheck(self.__class__.bu_name)
-        self.mm_result =self.infocheck.get_master_data(self.material_code)
-        if self.mm_result[0] == 0:
-            print ("!!ERROR, This code does NOT exist.")
+            cmd_type = "IMS"
+        # print title
+        print("---- -24M " + cmd_type + " List for Single Code---")
+        material_code = input("Material code: ")
+        # Get master data
+        infocheck = calculation.InfoCheck(self.__class__.bu_name)
+        mm_result = infocheck.get_master_data(material_code)
+        if mm_result[0] == 0:
+            print("!!ERROR, This code does NOT exist.")
         else:
             print("====================================================================")
-            print(self.mm_result[0], " - ", self.mm_result[1])
-            self.sales_result = self.infocheck.get_code_sales(self.cmd_type,self.material_code)
-            self.output = self.infocheck.data_mapping(self.sales_result,self.get_current_month(),-24)
-            # self.format_output(self.cmd_type, self.output)
+            print(mm_result[0], " - ", mm_result[1])
+            date_list = infocheck.get_time_list(self.get_current_month(),-24)
+            sales_result = infocheck.get_code_sales(cmd_type, material_code)
+            sales_output = infocheck.data_mapping(sales_result, self.get_current_month(), -24)
+            print(tabulate([date_list, sales_output], tablefmt="psql", headers="firstrow", floatfmt=",.0f"))
             
     # 显示单个代码历史库存量
-    def show_code_hstr_inv(self, code):
-        self.cmd_code = code
-        #获取库存种类
-        if self.cmd_code =="421":
-            self.cmd_type = "JNJ"
-        elif self.cmd_code == "422":
-            self.cmd_type = "LP"
+    def show_code_hstr_inv(self, cmd_code):
+        # Get inventory type
+        if cmd_code == "421":
+            cmd_type = "JNJ"
+        elif cmd_code == "422":
+            cmd_type = "LP"
         else:
-            self.cmd_type = "ALL"
-        # 打印标题
-        self.cmd_title = "---- -Historical " + self.cmd_type + " Inventory for Single Code---"
-        print(self.cmd_title)
-        self.material_code = input ("Material code : ")
+            cmd_type = "ALL"
+        # Print title
+        print("---- -Historical " + cmd_type + " Inventory for Single Code---")
+        material_code = input("Material code : ")
         # 读取Master Data
-        self.infocheck = calculation.InfoCheck(self.__class__.bu_name)
-        self.mm_result =self.infocheck.get_master_data(self.material_code)
-        if self.mm_result[0] == 0:
-            print ("!!ERROR, This code does NOT exist.")
+        infocheck = calculation.InfoCheck(self.__class__.bu_name)
+        mm_result = infocheck.get_master_data(material_code)
+        if mm_result[0] == 0:
+            print("!!ERROR, This code does NOT exist.")
         else:
             print("====================================================================")
-            print(self.mm_result[0], " - ", self.mm_result[1])
-            self.output = []
-            # 写入日期列表
-            self.output.append(self.infocheck.get_time_list(self.get_current_month(),-24))
+            print(mm_result[0], " - ", mm_result[1])
+            # Generate date list
+            output = [infocheck.get_time_list(self.get_current_month(), -24)]
             # 读取数据
-            if self.cmd_type == "JNJ":
-                self.jnj_inv_result = self.infocheck.get_code_jnj_inv(self.material_code)
-                self.output.append(self.infocheck.data_mapping(self.jnj_inv_result,self.get_current_month(),-24))
-            elif self.cmd_type == "LP":
-                self.lp_inv_result = self.infocheck.get_code_lp_inv(self.material_code)
-                self.output.append(self.infocheck.data_mapping(self.lp_inv_result,self.get_current_month(),-24))
+            if cmd_type == "JNJ":
+                jnj_inv_result = infocheck.get_code_jnj_inv(material_code)
+                output.append(infocheck.data_mapping(jnj_inv_result, self.get_current_month(), -24))
+            elif cmd_type == "LP":
+                lp_inv_result = infocheck.get_code_lp_inv(material_code)
+                output.append(infocheck.data_mapping(lp_inv_result, self.get_current_month(), -24))
             else:
-                self.jnj_inv_result = self.infocheck.get_code_jnj_inv(self.material_code)
-                self.output.append(self.infocheck.data_mapping(self.jnj_inv_result,self.get_current_month(),-24))
-                self.lp_inv_result = self.infocheck.get_code_lp_inv(self.material_code)
-                self.output.append(self.infocheck.data_mapping(self.lp_inv_result,self.get_current_month(),-24))
-            self.format_output(self.cmd_type, self.output)
+                jnj_inv_result = infocheck.get_code_jnj_inv(material_code)
+                output.append(infocheck.data_mapping(jnj_inv_result, self.get_current_month(), -24))
+                lp_inv_result = infocheck.get_code_lp_inv(material_code)
+                output.append(infocheck.data_mapping(lp_inv_result, self.get_current_month(), -24))
+            print(tabulate(output, tablefmt="psql", headers="firstrow", floatfmt=",.0f"))
 
     # 显示单个代码全部信息
     def show_code_all_info(self, month_number=12):
@@ -444,4 +440,4 @@ class InfoShow:
 
 if __name__ == "__main__":
     test = InfoShow("TU", "Jeffrey")
-    test.show_code_all_info()
+    test.show_code_sales_data("411")

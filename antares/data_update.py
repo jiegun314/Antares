@@ -21,8 +21,8 @@ class MonthlyUpdate:
         print("==" + self.inv_type + " Import==")
         # 输入Y确认进行导入
         print("!Warning - Please make sure data is correctly named and put in _Update folder.")
-        cmd_key = input ("Ready to continue? (Y/N): ")
-        if cmd_key != "y" and cmd_key != "Y":
+        cmd_key = input("Ready to continue? (Y/N): ")
+        if cmd_key.upper() != "Y":
             return
         # 读取excel文件
         print("==Start to read the data==")
@@ -67,10 +67,10 @@ class MonthlyUpdate:
     
     def update_lp_inv(self):
         print("==LP_Sales Import==")
+        print("---!Warning - Please make sure data is correctly name and put in _Update folder.---")
         # 输入Y确认进行导入
-        cmd_key = input(''''!Warning - Please make sure data is correctly name and put in _Update folder. 
-                        Ready to continue? (Y/N): ''')
-        if cmd_key != "y" and cmd_key != "Y":
+        cmd_key = input("Ready to continue? (Y/N):")
+        if cmd_key.upper() != "Y":
             return
         print("==Start to read the data==")
         file_name = self.__class__.update_path + "Update_" + self.__class__.bu_name + "_LP_INV.xlsx"
@@ -78,7 +78,7 @@ class MonthlyUpdate:
         # 转换成二位列表
         lst_lp_inv = np.array(df).tolist()
         # 实例化一个查询对象
-        mm_result =[]
+        mm_result = []
         info_check = cclt.InfoCheck(self.__class__.bu_name)
         for self.item_2 in lst_lp_inv:
             mm_result.append(info_check.get_master_data(self.item_2[0]))
@@ -191,6 +191,7 @@ class MonthlyUpdate:
             item.extend([mm_result[index][4], mm_result[index][5], mm_result[index][6], mm_result[index][16], mm_result[index][7], mm_result[index][12]])
             index += 1
         # 插入数据库
+        print(" ")
         print("==Reading complete, start importing to database==")
         tbl_name = self.__class__.bu_name + "_JNJ_INV"
         db_fullname = self.__class__.db_path + tbl_name + ".db"

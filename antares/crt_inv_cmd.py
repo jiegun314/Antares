@@ -43,7 +43,7 @@ class CurrentInventoryMenu:
             elif cmd_code == "bo_trend":
                 crt_inv_cclt.display_backorder_trend()
             elif cmd_code == "sync":
-                crt_inv_cclt.inv_data_sync(50)
+                crt_inv_cclt.inv_data_sync(90)
             elif cmd_code == "cmd":
                 crt_inv_cclt.show_command_list()
             else:
