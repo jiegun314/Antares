@@ -656,7 +656,7 @@ class CurrentInventory:
         for item in crt_list:
             if item not in lst_folder:
                 self.__remove_inv_tbl(item)
-                self.crt_list.remove(item)
+                crt_list.remove(item)
         # 导入新的数据
         for item in lst_folder:
             if (item not in crt_list) and (item not in lst_xcpt):
