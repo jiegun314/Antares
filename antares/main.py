@@ -55,6 +55,8 @@ class SystemIndex:
         while cmd_code != "exit":
             if cmd_code in ["411", "412", "413"]:
                 cmd_info_index.show_code_sales_data(cmd_code)
+            elif cmd_code in ["400g", "400G"]:
+                cmd_info_index.show_code_chart()
             elif cmd_code[0:3] == "400":
                 if cmd_code.lstrip("400").lstrip().lstrip("-").lstrip().rstrip().isnumeric():
                     month_number = int(cmd_code.lstrip("400").lstrip().lstrip("-").lstrip().rstrip())
@@ -72,6 +74,8 @@ class SystemIndex:
                 cmd_info_index.show_h5_sales_data(cmd_code)
             elif cmd_code in ["321", "322", "324"]:
                 cmd_info_index.show_h5_inv(cmd_code)
+            elif cmd_code in ["300g", "300G"]:
+                cmd_info_index.show_h5_chart()
             elif cmd_code[0:3] == "300":
                 if cmd_code.lstrip("300").lstrip().lstrip("-").lstrip().rstrip().isnumeric():
                     month_number = int(cmd_code.lstrip("300").lstrip().lstrip("-").lstrip().rstrip())
@@ -81,8 +85,6 @@ class SystemIndex:
                     cmd_info_index.show_h5_all_info()
                 else:
                     print("!!ERROR: Wrong CMD code. Plz input right cmd code, or input exit to quit.")
-            elif cmd_code in ["300g", "300G"]:
-                cmd_info_index.show_h5_chart()
             elif cmd_code in ["901", "902", "903", "905", "906", "909"]:
                 import data_update as update
                 data_input = update.MonthlyUpdate(self.__class__.bu_name)
@@ -91,8 +93,6 @@ class SystemIndex:
                 import data_import
                 data_input = data_import.DataInput(self.__class__.bu_name)
                 data_input.import_public_master_data()
-            elif cmd_code in ["400g", "400G"]:
-                cmd_info_index.show_code_chart()
             elif cmd_code == "450":
                 cmd_info_index.show_code_eso()
             elif cmd_code == "000":
