@@ -140,14 +140,16 @@ class InfoShow:
             self.format_output(cmd_list, output_sales)
             # 开始输出库存历史量
             print("--%s Months Historical Inventory Data --" % month_number)
-            output_inv = [["Month", ], ["JNJ_INV", ], ["LP_INV", ]]
+            output_inv = [["Month", ], ["JNJ_INV", ], ["JNJ_INV_Month", ], ["LP_INV", ], ["LP_INV_Month", ]]
             # 写入日期列表
             output_inv[0].extend(infocheck.get_time_list(self.get_current_month(), 0 - month_number))
             # 读取数据
             jnj_inv_result = infocheck.get_code_jnj_inv(material_code)
             output_inv[1].extend(infocheck.data_mapping(jnj_inv_result, self.get_current_month(), 0 - month_number))
+            output_inv[2].extend(infocheck.get_inventory_month(output_inv[1][1:], output_sales[1][1:], month_number))
             lp_inv_result = infocheck.get_code_lp_inv(material_code)
-            output_inv[2].extend(infocheck.data_mapping(lp_inv_result, self.get_current_month(), 0 - month_number))
+            output_inv[3].extend(infocheck.data_mapping(lp_inv_result, self.get_current_month(), 0 - month_number))
+            output_inv[4].extend(infocheck.get_inventory_month(output_inv[3][1:], output_sales[2][1:], month_number))
             self.format_output(cmd_list, output_inv)
             # 显示Statistical Forecast
             print("--Next 12 Months Statistical Forecast--")
@@ -440,4 +442,4 @@ class InfoShow:
 
 if __name__ == "__main__":
     test = InfoShow("TU", "Jeffrey")
-    test.show_code_sales_data("411")
+    test.show_code_all_info()
