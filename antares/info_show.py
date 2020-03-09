@@ -204,38 +204,47 @@ class InfoShow:
         else:
             print ("!!Error, Wrong Hierarchy_5 Name, Please Check!")
 
-    def show_h5_inv(self, cmd):
-        if cmd == "321":
-            self.h5_inv_type = "JNJ"
-        elif cmd == "322":
-            self.h5_inv_type = "LP"
-        else:
-            self.h5_inv_type = "ALL"
-        # Print title
-        print("---- Historical " + self.h5_inv_type + " Inventory for Hierarchy_5 Level---")
-        self.h5_info_check = calculation.InfoCheck(self.__class__.bu_name)
-        self.h5_input = input("Please input H5 name: ")
-        self.h5_name = self.h5_info_check.get_h5_name(self.h5_input)
-        if self.h5_name != "NULL":
-            # 开始输出历史库存量
-            print("====================================================================")
-            print("--24 Month Historical " + self.h5_inv_type + " Inventory for %s --"%self.h5_name + " (RMB)")
-            # 读取数据
-            self.price_type = ("Standard_Cost", "SAP_Price")
-            if self.h5_inv_type == "ALL":
-                self.inv_type = ("JNJ", "LP")
-            else:
-                self.inv_type = (self.h5_inv_type,)
-            for self.price_item in self.price_type:
-                # 打印价格小标题
-                print("-With %s-"%self.price_item)
-                self.h5_inv_result = []
-                # 写入日期列表
-                self.h5_inv_result.append(self.h5_info_check.get_time_list(self.get_current_month(),-24))
-                for self.inv_item in self.inv_type:
-                    self.h5_temp = self.h5_info_check.get_H5_hstr_inv(self.inv_item, self.price_item, self.h5_name)
-                    self.h5_inv_result.append(self.h5_info_check.data_mapping(self.h5_temp, self.get_current_month(),-24))
-                self.format_output(self.price_item, self.h5_inv_result)
+    def show_h5_inv(self, month_number=12):
+        h5_info_check = calculation.InfoCheck(self.__class__.bu_name)
+        h5_input = input("Please input H5 name: ")
+        h5_name = h5_info_check.get_h5_name(h5_input)
+        if h5_name != "NULL":
+            # Print title
+            print("--%s Month Historical Inventory for %s (RMB)--" % (month_number, h5_name))
+            # price_type = ("Standard_Cost", "SAP_Price")
+            inv_type = ("JNJ", "LP")
+            # Generate column name of month list
+            month_list = ["Month"] + h5_info_check.get_time_list(self.get_current_month(), 0-month_number)
+            # print with Standard Cost
+            print("-With Standard_Cost-")
+            h5_inv_result = [month_list, ]
+            for inv_item in inv_type:
+                h5_inv_temp = h5_info_check.get_H5_hstr_inv(inv_item, "Standard_Cost", h5_name)
+                h5_inv_output = h5_info_check.data_mapping(h5_inv_temp, self.get_current_month(), 0 - month_number)
+                h5_inv_result.append([inv_item] + h5_inv_output)
+            self.format_output("Standard_Cost", h5_inv_result)
+            # print with SAP Price
+            print("-With SAP Price-")
+            h5_inv_result = [month_list, ]
+            # get sales data
+            h5_gts_temp = h5_info_check.get_H5_sales("GTS", "SAP_Price", h5_name)
+            h5_gts_result = h5_info_check.data_mapping(h5_gts_temp, self.get_current_month(), 0-month_number)
+            h5_lpsales_temp = h5_info_check.get_H5_sales("LPSales", "SAP_Price", h5_name)
+            h5_lpsales_result = h5_info_check.data_mapping(h5_lpsales_temp, self.get_current_month(), 0 - month_number)
+            # generate inventory value and inventory month
+            # generate JNJ inventory
+            h5_inv_temp = h5_info_check.get_H5_hstr_inv("JNJ", "SAP_Price", h5_name)
+            h5_inv_output = h5_info_check.data_mapping(h5_inv_temp, self.get_current_month(), 0 - month_number)
+            h5_inv_result.append(["JNJ", ] + h5_inv_output)
+            h5_inv_result.append(
+                ["JNJ_Month", ] + h5_info_check.get_inventory_month(h5_inv_output, h5_gts_result, month_number))
+            # generate LP inventory
+            h5_inv_temp = h5_info_check.get_H5_hstr_inv("LP", "SAP_Price", h5_name)
+            h5_inv_output = h5_info_check.data_mapping(h5_inv_temp, self.get_current_month(), 0 - month_number)
+            h5_inv_result.append(["LP", ] + h5_inv_output)
+            h5_inv_result.append(
+                ["LP_Month", ] + h5_info_check.get_inventory_month(h5_inv_output, h5_lpsales_result, month_number))
+            self.format_output("SAP", h5_inv_result)
         else:
             print("!!Error, Wrong Hierarchy_5 Name, Please Check!")
 
@@ -442,4 +451,4 @@ class InfoShow:
 
 if __name__ == "__main__":
     test = InfoShow("TU", "Jeffrey")
-    test.show_code_all_info()
+    test.show_h5_inv()

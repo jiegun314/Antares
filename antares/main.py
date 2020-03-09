@@ -72,8 +72,8 @@ class SystemIndex:
                 cmd_info_index.show_code_statistical_forecast(24)
             elif cmd_code in ["311", "312", "313", "314"]:
                 cmd_info_index.show_h5_sales_data(cmd_code)
-            elif cmd_code in ["321", "322", "324"]:
-                cmd_info_index.show_h5_inv(cmd_code)
+            elif cmd_code == "320":
+                cmd_info_index.show_h5_inv()
             elif cmd_code in ["300g", "300G"]:
                 cmd_info_index.show_h5_chart()
             elif cmd_code[0:3] == "300":

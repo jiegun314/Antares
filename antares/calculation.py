@@ -174,7 +174,10 @@ class InfoCheck:
         for i in range(0, 6):
             lst_inv_month.append('-')
         for i in range(0, month_number-6):
-            lst_inv_month.append(lst_inv[i+6] / (sum(lst_sales[i: i+6])/6))
+            if sum(lst_sales[i: i+6]) == 0:
+                lst_inv_month.append('-')
+            else:
+                lst_inv_month.append(lst_inv[i+6] / (sum(lst_sales[i: i+6])/6))
         return lst_inv_month
 
     # 返回有效的H5名称
