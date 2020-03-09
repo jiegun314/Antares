@@ -165,44 +165,30 @@ class InfoShow:
             infocheck.get_code_eso(material_code)
             print("-----------END-----------")
 
-    # 获取某个H5的销售数据
-    def show_h5_sales_data(self, code):
-        if code == "311":
-            self.h5_sales_type = "GTS"
-        elif code == "312":
-            self.h5_sales_type = "LPSales"
-        elif code == "313":
-            self.h5_sales_type = "IMS"
-        else:
-            self.h5_sales_type = "ALL Sales"
-        # 打印标题
-        self.cmd_title = "---- " + self.h5_sales_type + " Information for Hierarachy_5 Level---"
-        print(self.cmd_title)
-        self.h5_info_check = calculation.InfoCheck(self.__class__.bu_name)
-        self.h5_input = input("Please input H5 name: ")
-        self.h5_name = self.h5_info_check.get_h5_name(self.h5_input)
-        if self.h5_name != "NULL":
-            # 开始输出历史销量
+    # Get sales data for one Hierarchy_5
+    def show_h5_sales_data(self, month_number=12):
+        # print title
+        print("--- Sales Information for Hierarchy_5 Level---")
+        h5_info_check = calculation.InfoCheck(self.__class__.bu_name)
+        h5_input = input("Please input H5 name: ")
+        h5_name = h5_info_check.get_h5_name(h5_input)
+        if h5_name != "NULL":
+            # print sales data
             print("====================================================================")
-            print("--24 Month Historical " + self.h5_sales_type + " Data for %s--"%self.h5_name)
-            # 读取数据
-            self.price_type = ("Standard_Cost", "SAP_Price")
-            if self.h5_sales_type == "ALL Sales":
-                self.sales_type = ("GTS", "LPSales", "IMS")
-            else:
-                self.sales_type = (self.h5_sales_type,)
-            for self.price_item in self.price_type:
-                # 打印价格小标题
-                print("-With %s-"%self.price_item)
-                self.h5_sales_result = []
-                # 写入日期列表
-                self.h5_sales_result.append(self.h5_info_check.get_time_list(self.get_current_month(),-24))
-                for self.sales_item in self.sales_type:
-                    self.h5_temp = self.h5_info_check.get_H5_sales(self.sales_item, self.price_item, self.h5_name)
-                    self.h5_sales_result.append(self.h5_info_check.data_mapping(self.h5_temp,self.get_current_month(),-24))
-                self.format_output(self.price_item, self.h5_sales_result)
+            print("--24 Month Historical Sales Data for %s--" % h5_name)
+            price_type = ("Standard_Cost", "SAP_Price")
+            sales_type = ("GTS", "LPSales", "IMS")
+            for price_item in price_type:
+                # Print price title
+                print("-With %s-" % price_item)
+                h5_sales_result = [h5_info_check.get_time_list(self.get_current_month(), 0-month_number)]
+                # get data
+                for sales_item in sales_type:
+                    h5_temp = h5_info_check.get_H5_sales(sales_item, price_item, h5_name)
+                    h5_sales_result.append(h5_info_check.data_mapping(h5_temp, self.get_current_month(), 0-month_number))
+                self.format_output(price_item, h5_sales_result)
         else:
-            print ("!!Error, Wrong Hierarchy_5 Name, Please Check!")
+            print("!!Error, Wrong Hierarchy_5 Name, Please Check!")
 
     def show_h5_inv(self, month_number=12):
         h5_info_check = calculation.InfoCheck(self.__class__.bu_name)
