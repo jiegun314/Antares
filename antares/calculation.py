@@ -58,11 +58,17 @@ class InfoCheck:
         c = conn.cursor()
         # 创建命令
         if price_type == "Standard_Cost":
-            str_cmd = "SELECT month, sum(Value_Standard_Cost) from " + tbl_name + " WHERE Hierarchy_5 = '" + \
-                      hierarchy + "\' GROUP BY month ORDER BY month"
+            if hierarchy == "ALL":
+                str_cmd = "SELECT month, sum(Value_Standard_Cost) from " + tbl_name + " GROUP BY month ORDER BY month"
+            else:
+                str_cmd = "SELECT month, sum(Value_Standard_Cost) from " + tbl_name + " WHERE Hierarchy_5 = '" + \
+                      hierarchy + "\' COLLATE NOCASE GROUP BY month ORDER BY month"
         else:
-            str_cmd = "SELECT month, sum(Value_SAP_Price) from " + tbl_name + " WHERE Hierarchy_5 = \'" + \
-                      hierarchy + "\' GROUP BY month ORDER BY month"
+            if hierarchy == "ALL":
+                str_cmd = "SELECT month, sum(Value_SAP_Price) from " + tbl_name + " GROUP BY month ORDER BY month"
+            else:
+                str_cmd = "SELECT month, sum(Value_SAP_Price) from " + tbl_name + " WHERE Hierarchy_5 = \'" + \
+                      hierarchy + "\' COLLATE NOCASE GROUP BY month ORDER BY month"
         c.execute(str_cmd)
         result = c.fetchall()
         return result
@@ -76,8 +82,11 @@ class InfoCheck:
         tbl_name = file_name
         conn = sqlite3.connect(db_fullname)
         c = conn.cursor()
-        str_cmd = "SELECT month, SUM(Value_" + price_type + ") from " + tbl_name + " WHERE Hierarchy_5 = \'" \
-                  + h5_name + "\' GROUP BY month"
+        if h5_name == "ALL":
+            str_cmd = "SELECT month, SUM(Value_" + price_type + ") from " + tbl_name + " GROUP BY month "
+        else:
+            str_cmd = "SELECT month, SUM(Value_" + price_type + ") from " + tbl_name + " WHERE Hierarchy_5 = \'" \
+                  + h5_name + "\' COLLATE NOCASE GROUP BY month "
         h5_inv_result = c.execute(str_cmd).fetchall()
         return h5_inv_result
 
@@ -112,7 +121,7 @@ class InfoCheck:
         if len(phoenix_result) ==0:
             return ["Non-Phoenix Product", "None", "None"]
         else:
-            return (["Phoenix Product", ] + list(phoenix_result[0]))
+            return ["Phoenix Product", ] + list(phoenix_result[0])
         pass
 
     # by code的销量数据
@@ -188,7 +197,7 @@ class InfoCheck:
         db_fullname = self.__class__.db_path + tbl_name + ".db"
         conn = sqlite3.connect(db_fullname)
         c = conn.cursor()
-        str_cmd = "SELECT distinct Hierarchy_5 from " + tbl_name + " WHERE Hierarchy_5 LIKE \'%" + h5_name + "%\'"
+        str_cmd = "SELECT distinct Hierarchy_5 COLLATE NOCASE from " + tbl_name + " WHERE Hierarchy_5 LIKE \'%" + h5_name + "%\'"
         c.execute(str_cmd)
         result = c.fetchall()
         h5_output = [item[0] for item in result]
@@ -206,7 +215,7 @@ class InfoCheck:
             for i in range(1, len(h5_output) + 1):
                 print(i, " - ", next(item))
             index_no = input("Plz input the NO of H5 you need：")
-            if int(index_no) <= len(h5_output):
+            if index_no.isnumeric() and int(index_no) <= len(h5_output):
                 h5_result = h5_output[int(index_no) - 1]
             else:
                 print("Wrong No, Please re-input！")

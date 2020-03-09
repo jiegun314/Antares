@@ -171,7 +171,10 @@ class InfoShow:
         print("--- Sales Information for Hierarchy_5 Level---")
         h5_info_check = calculation.InfoCheck(self.__class__.bu_name)
         h5_input = input("Please input H5 name: ")
-        h5_name = h5_info_check.get_h5_name(h5_input)
+        if h5_input.upper() == "ALL":
+            h5_name = "ALL"
+        else:
+            h5_name = h5_info_check.get_h5_name(h5_input)
         if h5_name != "NULL":
             # print sales data
             print("====================================================================")
@@ -193,7 +196,10 @@ class InfoShow:
     def show_h5_inv(self, month_number=12):
         h5_info_check = calculation.InfoCheck(self.__class__.bu_name)
         h5_input = input("Please input H5 name: ")
-        h5_name = h5_info_check.get_h5_name(h5_input)
+        if h5_input.upper() == "ALL":
+            h5_name = "ALL"
+        else:
+            h5_name = h5_info_check.get_h5_name(h5_input).upper()
         if h5_name != "NULL":
             # Print title
             print("--%s Month Historical Inventory for %s (RMB)--" % (month_number, h5_name))
@@ -437,4 +443,4 @@ class InfoShow:
 
 if __name__ == "__main__":
     test = InfoShow("TU", "Jeffrey")
-    test.show_h5_inv()
+    test.show_h5_sales_data()
