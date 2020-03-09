@@ -172,10 +172,10 @@ class InfoCheck:
         lst_inv_month = []
         # leave previous 6 month in blank
         for i in range(0, 6):
-            lst_inv_month.append('-')
+            lst_inv_month.append(0)
         for i in range(0, month_number-6):
             if sum(lst_sales[i: i+6]) == 0:
-                lst_inv_month.append('-')
+                lst_inv_month.append(0)
             else:
                 lst_inv_month.append(lst_inv[i+6] / (sum(lst_sales[i: i+6])/6))
         return lst_inv_month
