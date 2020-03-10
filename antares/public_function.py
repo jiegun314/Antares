@@ -102,7 +102,7 @@ def upload_mi_data(code_name, bu_name, lst_data):
 # show ascii graph
 def display_ascii_graph(title):
     file_fullname = db_path + "graph_" + title + ".txt"
-    f = open(file_fullname)
+    f = open(file_fullname, encoding='utf8')
     line = f.readline()
     while line:
         print(line,end="")
