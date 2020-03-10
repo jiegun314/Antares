@@ -116,12 +116,24 @@ class DataInput:
         return code_list
 
     # import BU base master data
-    def import_master_data(self, data_type):
-        # for TU. data_type = {"Master_Data", "SAP_Price", "c"}
+    def import_master_data(self):
+        # for TU. data_type = {"Master_Data", "SAP_Price", "Phoenix_List"}
+        print("==Import Master Data for %s==" % self.__class__.bu_name)
+        print("Please Choose Master Data Type (1 - Master_Data, 2 - SAP_Price, 3 - Phoenix_List)")
+        cmd_code = input("cmd >> master_data >> ")
+        if cmd_code not in ["1", "2", "3"]:
+            print("!!Wrong code, please try again!")
+            return
+        elif cmd_code == "1":
+            data_type = "Master_Data"
+        elif cmd_code == "2":
+            data_type = "SAP_Price"
+        else:
+            data_type = "Phoenix_List"
         file_name = self.__class__.bu_name + "_" + data_type
         file_fullname = self.__class__.file_path + file_name + ".xlsx"
         db_fullname = self.__class__.db_path + self.__class__.bu_name + "_Master_Data.db"
-        print("~ Start to read the data file %s" %file_name)
+        print("~ Start to read the data file %s" % file_name)
         start_time = datetime.now()
         if data_type == "Master_Data":
             df = pd.read_excel(file_fullname, na_values="0", dtype={'SAP_Price': np.float64})
@@ -129,19 +141,11 @@ class DataInput:
             df = pd.read_excel(file_fullname, na_values="0")
         # data = df.values
         stop_time = datetime.now()
-        print("~ File reading complete，with time of %s seconds" % (stop_time-start_time).seconds)
+        print("~ File reading complete with time of %s seconds" % (stop_time-start_time).seconds)
         # 写入数据库
-        # conn = sqlite3.connect(db_fullname)
-        # conn.execute("DROP TABLE IF EXISTS " + file_name)
-        # new_tbl = db.DatabaseSetup(self.__class__.bu_name)
-        # new_tbl.create_master_data()
-        # conn.executemany("INSERT INTO " + file_name + " values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", data)
-        # conn.commit()
-        # conn.close()
         conn = sqlite3.connect(db_fullname)
         df.to_sql(name=file_name, con=conn, if_exists='replace', index=False)
         print("%s is imported" % data_type)
-        pass
 
     def import_public_master_data(self):
         # print title
@@ -187,7 +191,7 @@ class DataInput:
 
 if __name__ == "__main__":
     data_input = DataInput("TU")
-    data_input.import_master_data("Phoenix_List")
+    data_input.import_master_data("SAP_Price")
     # cmd = int(input("选择需要导入的数据，1 - GTS，2 - LP Sales， 3 - IMS, 4 - LP_INV: "))
     # if cmd == 1:
     #     data_input.sales_input ("GTS")

@@ -89,10 +89,14 @@ class SystemIndex:
                 import data_update as update
                 data_input = update.MonthlyUpdate(self.__class__.bu_name)
                 data_input.data_update_entrance(cmd_code)
-            elif cmd_code == "900":
+            elif cmd_code == "919":
                 import data_import
                 data_input = data_import.DataInput(self.__class__.bu_name)
                 data_input.import_public_master_data()
+            elif cmd_code == "911":
+                import data_import
+                data_input = data_import.DataInput(self.__class__.bu_name)
+                data_input.import_master_data()
             elif cmd_code == "450":
                 cmd_info_index.show_code_eso()
             elif cmd_code == "000":
