@@ -53,8 +53,8 @@ class SystemIndex:
         cmd_info_index = info_show.InfoShow(self.__class__.bu_name, self.__class__.user_name)
         cmd_code = input("cmd >> ")
         while cmd_code != "exit":
-            if cmd_code in ["411", "412", "413"]:
-                cmd_info_index.show_code_sales_data(cmd_code)
+            if cmd_code == "410":
+                cmd_info_index.show_code_sales_data()
             elif cmd_code in ["400g", "400G"]:
                 cmd_info_index.show_code_chart()
             elif cmd_code[0:3] == "400":
@@ -66,8 +66,8 @@ class SystemIndex:
                     cmd_info_index.show_code_all_info()
                 else:
                     print("!!ERROR: Wrong CMD code. Plz input right cmd code, or input exit to quit.")
-            elif cmd_code in ["421", "422", "424"]:
-                cmd_info_index.show_code_hstr_inv(cmd_code)
+            elif cmd_code == "420":
+                cmd_info_index.show_code_hstr_inv()
             elif cmd_code == "427":
                 cmd_info_index.show_code_statistical_forecast(24)
             elif cmd_code == "310":

@@ -23,108 +23,79 @@ class InfoShow:
         pb_func.display_command_list("Main")
 
     # 数据的表格化输出
-    def format_output(self, data_name, data):
-        name_list = data_name
-        data_list = data
-        # 获取数组种类个数
-        data_length = len(data_list) - 1
-        # 打印月份列表
-        print(tabulate(data_list, tablefmt="psql", headers="firstrow", floatfmt=",.0f"))
+    def format_output(self, data):
+        print(tabulate(data, tablefmt="psql", headers="firstrow", floatfmt=",.0f"))
 
     # 显示单个代码销量数据
-    def show_code_sales_data(self, cmd_code):
-        # get sales type
-        if cmd_code == "411":
-            cmd_type = "GTS"
-        elif cmd_code == "412":
-            cmd_type = "LPSales"
-        else:
-            cmd_type = "IMS"
+    def show_code_sales_data(self, month_number=12):
         # print title
-        print("---- -24M " + cmd_type + " List for Single Code---")
+        print("---- %sM Sales List for Single Code---" % month_number)
         material_code = input("Material code: ")
-        # Get master data
-        infocheck = calculation.InfoCheck(self.__class__.bu_name)
-        mm_result = infocheck.get_master_data(material_code)
-        if mm_result[0] == 0:
+        if not pb_func.check_code_availability(self.__class__.bu_name, material_code):
             print("!!ERROR, This code does NOT exist.")
+            return
         else:
-            print("====================================================================")
-            print(mm_result[0], " - ", mm_result[1])
-            date_list = infocheck.get_time_list(self.get_current_month(),-24)
-            sales_result = infocheck.get_code_sales(cmd_type, material_code)
-            sales_output = infocheck.data_mapping(sales_result, self.get_current_month(), -24)
-            print(tabulate([date_list, sales_output], tablefmt="psql", headers="firstrow", floatfmt=",.0f"))
+            # Get master data
+            sale_type = ["GTS", "LPSales", "IMS"]
+            infocheck = calculation.InfoCheck(self.__class__.bu_name)
+            mm_result = infocheck.get_master_data(material_code)
+            print(mm_result[0][0], ": ", mm_result[1][0])
+            date_list = infocheck.get_time_list(self.get_current_month(), 0-month_number)
+            sales_output = [["Month"] + date_list, ]
+            for sales_item in sale_type:
+                sales_result = infocheck.get_code_sales(sales_item, material_code)
+                sales_output.append(
+                    [sales_item] + infocheck.data_mapping(sales_result, self.get_current_month(), 0-month_number))
+            self.format_output(sales_output)
             
     # 显示单个代码历史库存量
-    def show_code_hstr_inv(self, cmd_code):
-        # Get inventory type
-        if cmd_code == "421":
-            cmd_type = "JNJ"
-        elif cmd_code == "422":
-            cmd_type = "LP"
-        else:
-            cmd_type = "ALL"
+    def show_code_hstr_inv(self, month_number=12):
         # Print title
-        print("---- -Historical " + cmd_type + " Inventory for Single Code---")
-        material_code = input("Material code : ")
+        print("---- -Historical Inventory for Single Code---")
+        material_code = input("Material code: ")
         # 读取Master Data
         infocheck = calculation.InfoCheck(self.__class__.bu_name)
-        mm_result = infocheck.get_master_data(material_code)
-        if mm_result[0] == 0:
+        if not pb_func.check_code_availability(self.__class__.bu_name, material_code):
             print("!!ERROR, This code does NOT exist.")
+            return
         else:
-            print("====================================================================")
-            print(mm_result[0], " - ", mm_result[1])
+            mm_result = infocheck.get_master_data(material_code)
+            print(mm_result[0][0], ": ", mm_result[1][0])
             # Generate date list
-            output = [infocheck.get_time_list(self.get_current_month(), -24)]
-            # 读取数据
-            if cmd_type == "JNJ":
-                jnj_inv_result = infocheck.get_code_jnj_inv(material_code)
-                output.append(infocheck.data_mapping(jnj_inv_result, self.get_current_month(), -24))
-            elif cmd_type == "LP":
-                lp_inv_result = infocheck.get_code_lp_inv(material_code)
-                output.append(infocheck.data_mapping(lp_inv_result, self.get_current_month(), -24))
-            else:
-                jnj_inv_result = infocheck.get_code_jnj_inv(material_code)
-                output.append(infocheck.data_mapping(jnj_inv_result, self.get_current_month(), -24))
-                lp_inv_result = infocheck.get_code_lp_inv(material_code)
-                output.append(infocheck.data_mapping(lp_inv_result, self.get_current_month(), -24))
-            print(tabulate(output, tablefmt="psql", headers="firstrow", floatfmt=",.0f"))
+            output = [["Month"] + infocheck.get_time_list(self.get_current_month(), 0-month_number)]
+            jnj_inv_result = infocheck.get_code_jnj_inv(material_code)
+            output.append(["JNJ"] + infocheck.data_mapping(jnj_inv_result, self.get_current_month(), 0-month_number))
+            lp_inv_result = infocheck.get_code_lp_inv(material_code)
+            output.append(["LP"] + infocheck.data_mapping(lp_inv_result, self.get_current_month(), 0-month_number))
+            self.format_output(output)
 
     # 显示单个代码全部信息
     def show_code_all_info(self, month_number=12):
         # 打印标题
         print("---- Overall Information for Single Code---")
-        material_code = input ("Material code : ")
+        material_code = input("Material code: ")
         if not pb_func.check_code_availability(self.__class__.bu_name, material_code):
             print("!!ERROR, This code does NOT exist.")
             return
         else:
             infocheck = calculation.InfoCheck(self.__class__.bu_name)
-            mm_result = infocheck.get_master_data(material_code)
             # get master_data
-            # 输出基本信息
             print("======= <Detail Information> =======")
-            print("Description: ", mm_result[1])
-            print("CN Description: ", mm_result[2])
-            print("Hierarchy_4: ", mm_result[4])
-            print("Hierarchy_5: ", mm_result[5])
-            print("Sales_Status: ", mm_result[8])
-            print("Purchase_Status: ", mm_result[9])
-            print("Standard_Cost: ", mm_result[10])
-            print("SAP_Price: ", mm_result[11])
+            master_data_result = infocheck.get_master_data(material_code)
+            for i in range(len(master_data_result[0])):
+                print(master_data_result[0][i], ": ", master_data_result[1][i])
+            print("SAP_Price: ", infocheck.get_code_sap_price(material_code))
             print("GTIN: ", infocheck.get_code_gtin(material_code))
             # show Phoenix information
             phoenix_result = infocheck.get_code_phoenix_result(material_code)
             print("======= <Phoenix Information> =======")
-            print("Phoenix Stutus: ", phoenix_result[0])
+            print("Phoenix Status: ", phoenix_result[0])
             print("Stop Manufacturing Date: ", phoenix_result[1])
             print("Target SKU: ", phoenix_result[2])
             # show the RAG license information
-            print("======= <License Information> =======" )
+            print("======= <License Information> =======")
             license_info = [["License", "Start", 'End']] + infocheck.get_code_rag(material_code)
-            self.format_output("License", license_info)
+            self.format_output(license_info)
             # 开始输出销售量
             print("--%s Months Historical Sales Data --" % month_number)
             output_sales = [["Month", ], ["GTS", ], ["LP Sales", ], ["IMS", ]]
@@ -135,9 +106,10 @@ class InfoShow:
             index = 1
             for cmd_item in cmd_list:
                 sales_result = infocheck.get_code_sales(cmd_item, material_code)
-                output_sales[index].extend(infocheck.data_mapping(sales_result, self.get_current_month(), 0 - month_number))
+                output_sales[index].extend(infocheck.data_mapping(sales_result, self.get_current_month(),
+                                                                  0 - month_number))
                 index += 1
-            self.format_output(cmd_list, output_sales)
+            self.format_output(output_sales)
             # 开始输出库存历史量
             print("--%s Months Historical Inventory Data --" % month_number)
             output_inv = [["Month", ], ["JNJ_INV", ], ["JNJ_INV_Month", ], ["LP_INV", ], ["LP_INV_Month", ]]
@@ -150,17 +122,17 @@ class InfoShow:
             lp_inv_result = infocheck.get_code_lp_inv(material_code)
             output_inv[3].extend(infocheck.data_mapping(lp_inv_result, self.get_current_month(), 0 - month_number))
             output_inv[4].extend(infocheck.get_inventory_month(output_inv[3][1:], output_sales[2][1:], month_number))
-            self.format_output(cmd_list, output_inv)
+            self.format_output(output_inv)
             # 显示Statistical Forecast
             print("--Next 12 Months Statistical Forecast--")
             forecast_quantity = infocheck.get_code_forecast(material_code, "Statistical", 12)
             if forecast_quantity != "Fail":
-                self.format_output("Statistical Forecast", forecast_quantity)
+                self.format_output(forecast_quantity)
             # 显示Final Forecast
             print("--Next 12 Months Final Forecast--")
             forecast_quantity = infocheck.get_code_forecast(material_code, "Final", 12)
             if forecast_quantity != "Fail":
-                self.format_output("Final Forecast", forecast_quantity)
+                self.format_output(forecast_quantity)
             # 显示ESO
             infocheck.get_code_eso(material_code)
             print("-----------END-----------")
@@ -187,7 +159,7 @@ class InfoShow:
             for sales_item in sales_type:
                 h5_temp = h5_info_check.get_H5_sales(sales_item, price_item, h5_name)
                 h5_sales_result.append(h5_info_check.data_mapping(h5_temp, self.get_current_month(), 0 - month_number))
-            self.format_output(price_item, h5_sales_result)
+            self.format_output(h5_sales_result)
 
     # show sales data for one Hierarchy_5
     def show_h5_sales_data(self, month_number=12):
@@ -214,7 +186,7 @@ class InfoShow:
             h5_inv_temp = h5_info_check.get_H5_hstr_inv(inv_item, "Standard_Cost", h5_name)
             h5_inv_output = h5_info_check.data_mapping(h5_inv_temp, self.get_current_month(), 0 - month_number)
             h5_inv_result.append([inv_item] + h5_inv_output)
-        self.format_output("Standard_Cost", h5_inv_result)
+        self.format_output(h5_inv_result)
         # print with SAP Price
         print("-With SAP Price-")
         h5_inv_result = [month_list, ]
@@ -236,7 +208,7 @@ class InfoShow:
         h5_inv_result.append(["LP", ] + h5_inv_output)
         h5_inv_result.append(
             ["LP_Month", ] + h5_info_check.get_inventory_month(h5_inv_output, h5_lpsales_result, month_number))
-        self.format_output("SAP", h5_inv_result)
+        self.format_output(h5_inv_result)
 
     def show_h5_inv(self, month_number=12):
         h5_name = self.get_h5_name()
@@ -252,8 +224,8 @@ class InfoShow:
         fcst_show = calculation.InfoCheck(self.__class__.bu_name)
         forecast_quantity = fcst_show.get_code_forecast(str_code, "Final", month_quantity)
         if forecast_quantity != "Fail":
-            print("== <Statistical Forecast for %s> =="%str_code)
-            self.format_output("Statistical Forecast", forecast_quantity)
+            print("== <Statistical Forecast for %s> ==" % str_code)
+            self.format_output(forecast_quantity)
 
     # Show all information of one Hierarchy_5
     def show_h5_all_info(self, month_number=12):
@@ -415,4 +387,4 @@ class InfoShow:
 
 if __name__ == "__main__":
     test = InfoShow("TU", "Jeffrey")
-    test.show_h5_sales_data()
+    test.show_code_hstr_inv()

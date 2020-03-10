@@ -12,23 +12,19 @@ class InfoCheck:
 
     # 读取单个代码全部的master data
     def get_master_data(self, code):
-        # 设置空数组
-        empty_result = ['NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'N', 'NA', 'NA', 0, 0, 'N', None, None, None, 'N']
-        # 文件名，无后缀
-        file_name = self.__class__.bu_name + "_Master_Data"
         # 数据库完整路径加名称
-        db_fullname = self.__class__.db_path + file_name + ".db"
+        db_fullname = self.__class__.db_path + "Master_Data.db"
         # 表格名称，等于文件名称
-        tbl_name = file_name
+        table_name = "MATERIAL_MASTER"
         conn = sqlite3.connect(db_fullname)
         c = conn.cursor()
-        str_cmd = "SELECT * from " + tbl_name + " WHERE material = \'" + code + "\' "
+        str_cmd = "SELECT Description, Chinese_Description, Hierarchy_4, Hierarchy_5, Sales_Status, Purchase_Status, " \
+                  "Standard_Cost FROM " + table_name + " WHERE Material = \'" + code + "\' "
         c.execute(str_cmd)
         row = c.fetchall()
-        if len(row) == 0:
-            row = (empty_result,)
-        conn.close()
-        return list(row[0])
+        list_title = ["Description", "Chinese_Description", "Hierarchy_4", "Hierarchy_5", "Sales_Status",
+                      "Purchase_Status", "Standard_Cost"]
+        return [list_title, list(row[0])]
 
     # 读取全部的master data list
     def get_master_data_list(self):
@@ -89,6 +85,15 @@ class InfoCheck:
                   + h5_name + "\' COLLATE NOCASE GROUP BY month "
         h5_inv_result = c.execute(str_cmd).fetchall()
         return h5_inv_result
+
+    # get sap_price by code
+    def get_code_sap_price(self, code_name):
+        db_fullname = self.__class__.db_path + self.__class__.bu_name + "_Master_Data.db"
+        table_name = self.__class__.bu_name + "_SAP_Price"
+        conn = sqlite3.connect(db_fullname)
+        c = conn.cursor()
+        c.execute("SELECT Price FROM " + table_name + " WHERE Material = \'" + code_name + "\'")
+        return c.fetchall()[0][0]
 
     # get gtin by code
     def get_code_gtin(self, code_name):
