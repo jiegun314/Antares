@@ -338,8 +338,7 @@ class InfoShow:
         # generate full month list
         infocheck = calculation.InfoCheck(self.__class__.bu_name)
         historical_month_list = infocheck.get_time_list(self.get_current_month(), -24)
-        foreast_month_list = infocheck.get_time_list(self.get_current_month(), fcst_month)
-        final_month_list = historical_month_list + foreast_month_list
+        final_month_list = historical_month_list + infocheck.get_time_list(self.get_current_month(), fcst_month)
         # draw the chart
         fig, ax1 = plt.subplots(figsize=(15, 4))
         color = 'tab:red'

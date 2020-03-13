@@ -29,18 +29,17 @@ class InfoCheck:
     # 读取全部的master data list
     def get_master_data_list(self):
         # 文件名，无后缀
-        self.file_name = self.__class__.bu_name + "_Master_Data"
+        file_name = self.__class__.bu_name + "_Master_Data"
         # 数据库完整路径加名称
-        self.db_fullname = self.__class__.db_path + self.file_name + ".db"
+        db_fullname = self.__class__.db_path + file_name + ".db"
         # 表格名称，等于文件名称
-        self.tbl_name = self.file_name
-        conn = sqlite3.connect(self.db_fullname)
+        tbl_name = file_name
+        conn = sqlite3.connect(db_fullname)
         c = conn.cursor()
-        self.str_cmd = "SELECT * from " + self.tbl_name
-        self.result = c.execute(self.str_cmd)
-        self.row = self.result.fetchall()
+        result = c.execute("SELECT * from " + tbl_name)
+        row = result.fetchall()
         conn.close()
-        return list(self.row)
+        return list(row)
 
     # by H5的销量数据
     def get_H5_sales(self, data_type, price_type, hierarchy):
@@ -228,42 +227,32 @@ class InfoCheck:
         conn.close()
         return h5_result
 
-    # 获取月份列表
-    # 默认输入月份为当前月，则过去月份不包含当月，将来月份包含当月
+    # Generate month list.
+    # The previous month list does not include current month.
+    # The future month list include current month.
     def get_time_list(self, start_point, parameter):
-        self.para = parameter
-        # 获得起始月份
-        self.start_year = int(start_point[0:4])
-        self.start_month = int(start_point[-2:])
-        self.month_list = []
-        if self.para <= 0:
-            i = self.para
-            while i < 0:
-                self.t = (self.start_year,self.start_month + i, 14, 3, 6, 3, 6, 0, 0)
-                self.sec = time.mktime(self.t)
-                self.month_list.append(time.strftime("%Y-%m", time.localtime(self.sec)))
-                i = i + 1
-        else:
-            i = 0
-            while i < self.para:
-                self.t = (self.start_year,self.start_month + i, 14, 3, 6, 3, 6, 0, 0)
-                self.sec = time.mktime(self.t)
-                self.month_list.append(time.strftime("%Y-%m", time.localtime(self.sec)))
-                i = i + 1
-        return self.month_list
+        # Get month list in format YYYYMM (start_point)
+        # parameter, the month list we need to generate
+        start_year, start_month = int(start_point[0:4]), int(start_point[-2:])
+        month_list = []
+        lower_limit = parameter if parameter <= 0 else 0
+        upper_limit = parameter if parameter > 0 else 0
+        for i in range(lower_limit, upper_limit):
+            t = (start_year, start_month + i, 14, 3, 6, 3, 6, 0, 0)
+            month_list.append(time.strftime("%Y-%m", time.localtime(time.mktime(t))))
+        return month_list
 
     # 将数据与指定月份mapping
     def data_mapping(self, data, start_month, months):
-        self.value = data
-        self.month_list = self.get_time_list(start_month, months)
-        self.result_value = []
-        for self.item_month in self.month_list:
+        month_list = self.get_time_list(start_month, months)
+        result_value = []
+        for item_month in month_list:
             value = 0
-            for self.item_value in self.value:
-                if self.item_value[0] == self.item_month:
-                    value = self.item_value[1]
-            self.result_value.append(value)
-        return self.result_value
+            for item_value in data:
+                if item_value[0] == item_month:
+                    value = item_value[1]
+            result_value.append(value)
+        return result_value
 
     # get forecast of single code, set fcst_type as Statistical or Final
     def get_code_forecast(self, code_name, fcst_type, month_quantity):
@@ -338,7 +327,8 @@ class InfoCheck:
 
 if __name__ == "__main__":
     info_check = InfoCheck("TU")
+    print(info_check.get_time_list("202002", 12))
     # info_check.get_code_phoenix_result("689.893")
-    print(info_check.get_code_phoenix_result("689.893"))
+
 
 

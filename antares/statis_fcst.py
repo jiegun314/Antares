@@ -558,5 +558,5 @@ class GetStatisticalForecast:
 
 
 if __name__ == '__main__':
-    new_fcst = GetStatisticalForecast("SP")
+    new_fcst = GetStatisticalForecast("JT")
     new_fcst.get_forecast_entrance()
