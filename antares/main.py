@@ -22,7 +22,7 @@ class SystemIndex:
     def __welcome_page(self):
         import public_function
         public_function.display_ascii_graph("welcome")
-        print("** Welcome %s. Now you are working for %s **" % (self.__class__.user_name, self.__class__.bu_name))
+        print("** Welcome %s. Now you are handling %s **" % (self.__class__.user_name, self.__class__.bu_name))
 
     def __exit_page(self):
         import public_function

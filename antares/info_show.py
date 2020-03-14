@@ -2,8 +2,6 @@ import sqlite3
 import time
 import calculation
 from tabulate import tabulate
-import matplotlib.pyplot as plt
-import numpy as np
 import public_function as pb_func
 import draw_chart as chart
 
@@ -88,11 +86,12 @@ class InfoShow:
             print("SAP_Price: ", infocheck.get_code_sap_price(material_code))
             print("GTIN: ", infocheck.get_code_gtin(material_code))
             # show Phoenix information
-            phoenix_result = infocheck.get_code_phoenix_result(material_code)
-            print("======= <Phoenix Information> =======")
-            print("Phoenix Status: ", phoenix_result[0])
-            print("Stop Manufacturing Date: ", phoenix_result[1])
-            print("Target SKU: ", phoenix_result[2])
+            if self.__class__.bu_name == "TU":
+                phoenix_result = infocheck.get_code_phoenix_result(material_code)
+                print("======= <Phoenix Information> =======")
+                print("Phoenix Status: ", phoenix_result[0])
+                print("Stop Manufacturing Date: ", phoenix_result[1])
+                print("Target SKU: ", phoenix_result[2])
             # show the RAG license information
             print("======= <License Information> =======")
             license_info = [["License", "Start", 'End']] + infocheck.get_code_rag(material_code)
