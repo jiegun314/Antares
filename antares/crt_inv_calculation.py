@@ -2,7 +2,7 @@ import sqlite3
 # import pandas as pd
 # import numpy as np
 from tabulate import tabulate
-import crt_inv_chart as chart
+import draw_chart as chart
 # import time
 import os, sys
 import calculation

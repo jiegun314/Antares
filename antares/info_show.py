@@ -5,6 +5,7 @@ from tabulate import tabulate
 import matplotlib.pyplot as plt
 import numpy as np
 import public_function as pb_func
+import draw_chart as chart
 
 
 class InfoShow:
@@ -300,14 +301,20 @@ class InfoShow:
 
     # 画综合图
     def draw_sales_inv_fcst_chart(self, name, sales_data, inv_data, fcst_data, fcst_month):
-        sales_gts, sales_lpsales, sales_ims = sales_data
+        sales_gts = list(map(int, sales_data[0]))
+        sales_lpsales = list(map(int, sales_data[1]))
+        sales_ims = list(map(int, sales_data[2]))
         jnj_inv, lp_inv = inv_data
+        # set blank and zero list
+        lst_blank, lst_zero = [], []
+        for index in range(0, 12):
+            lst_blank.append(None)
+            lst_zero.append(0)
         # change inventory value to inventory month
         jnj_inv_month, lp_inv_month = [], []
         # set first 12 months value as blank
-        for index in range(0, 12):
-            jnj_inv_month.append(0)
-            lp_inv_month.append(0)
+        jnj_inv_month.extend(lst_blank)
+        lp_inv_month.extend(lst_blank)
         # from latter 12 months, set inventory month as value / avg 6 months sales
         for index in range(12, 24):
             sum_gts, sum_lpsales = 0, 0
@@ -316,20 +323,12 @@ class InfoShow:
                 sum_lpsales += sales_lpsales[step]
             jnj_inv_month.append(round(jnj_inv[index] * 6 / sum_gts, 1))
             lp_inv_month.append(round(lp_inv[index] * 6 / sum_lpsales, 1))
-        # get 2 time of maximum inventory value as up limit for y-axis
-        inv_month_max = 2 * max(max(lp_inv_month), max(jnj_inv_month))
-        inv_month_gap = int(inv_month_max / 10)
-        # set blank and zero list
-        lst_blank, lst_zero = [], []
-        for index in range(0, 12):
-            lst_blank.append(None)
-            lst_zero.append(0)
         # fulfill the sales and inventory data with zero and blank for last 12 months
         sales_gts.extend(lst_blank)
         sales_lpsales.extend(lst_blank)
         sales_ims.extend(lst_blank)
-        jnj_inv_month.extend(lst_zero)
-        lp_inv_month.extend(lst_zero)
+        jnj_inv_month.extend(lst_blank)
+        lp_inv_month.extend(lst_blank)
         # fulfill forecast data with blank in historical 24 months
         final_fcst_data = lst_blank + lst_blank + fcst_data
         # link fcst data with gts
@@ -340,50 +339,10 @@ class InfoShow:
         historical_month_list = infocheck.get_time_list(self.get_current_month(), -24)
         final_month_list = historical_month_list + infocheck.get_time_list(self.get_current_month(), fcst_month)
         # draw the chart
-        fig, ax1 = plt.subplots(figsize=(15, 4))
-        color = 'tab:red'
-        ind = np.arange(len(jnj_inv_month))
-        width = 0.35
-        rects1 = ax1.bar(ind - width / 2, jnj_inv_month, width, facecolor='w', edgecolor="r",
-                         label="JNJ Inventory")
-        rects2 = ax1.bar(ind + width / 2, lp_inv_month, width, facecolor='w', edgecolor="b",
-                         label="LP Inventory")
-        ax1.set_xlabel("Month")
-        ax1.set_ylabel("Inventory (Months)")
-        plt.xticks(rotation=45, fontsize=8)
-        plt.yticks(np.arange(0, inv_month_max, step=inv_month_gap))
-        ax1.tick_params(axis='y', labelcolor=color)
-        ax2 = ax1.twinx()
-        color = 'tab:blue'
-        ax2.set_ylabel("Sales")
-        ax2.plot(final_month_list, sales_gts, 'b-', linewidth=1.5, label="GTS")
-        ax2.plot(final_month_list, sales_lpsales, 'g-.', linewidth=1.5, label="LP_Sales")
-        ax2.plot(final_month_list, sales_ims, 'r--', linewidth=1.5, label="IMS")
-        ax2.plot(final_month_list, final_fcst_data, 'c:', linewidth=1.5, label="Forecast")
-        ax2.tick_params(axis='y', labelcolor=color)
-        plt.title("One-page Summary for " + name)
-        plt.legend()
-
-        # Add label on the chart
-        def autolabel(rects):
-            """Attach a text label above each bar in *rects*, displaying its height."""
-            for rect in rects:
-                height = rect.get_height()
-                value = height
-                if height == 0:
-                    value = ""
-                ax1.annotate('{}'.format(value),
-                             xy=(rect.get_x() + rect.get_width() / 2, height),
-                             xytext=(0, 3),  # 3 points vertical offset
-                             textcoords="offset points",
-                             ha='center', va='bottom')
-
-        autolabel(rects1)
-        autolabel(rects2)
-        fig.tight_layout()
-        plt.show()
+        chart.all_in_one_echart(name, final_month_list, jnj_inv_month, lp_inv_month, sales_gts, sales_lpsales,
+                                sales_ims, final_fcst_data)
 
 
 if __name__ == "__main__":
     test = InfoShow("TU", "Jeffrey")
-    test.show_code_hstr_inv()
+    test.show_h5_chart()
