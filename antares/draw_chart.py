@@ -63,68 +63,20 @@ def pending_inventory_trend_chart(date_list, pending_inventory_data, title_name)
     os.startfile(file_name)
 
 
-# draw all-in-one chart for code and h5 summary with matplotlib
-def all_in_one_chart(name, final_month_list, inv_month_max, inv_month_gap, jnj_inv_month, lp_inv_month, sales_gts,
-                     sales_lpsales, sales_ims, final_fcst_data):
-    import matplotlib.pyplot as plt
-    import numpy as np
-    fig, ax1 = plt.subplots(figsize=(15, 4))
-    color = 'tab:red'
-    ind = np.arange(len(jnj_inv_month))
-    width = 0.35
-    rects1 = ax1.bar(ind - width / 2, jnj_inv_month, width, facecolor='w', edgecolor="r",
-                     label="JNJ Inventory")
-    rects2 = ax1.bar(ind + width / 2, lp_inv_month, width, facecolor='w', edgecolor="b",
-                     label="LP Inventory")
-    ax1.set_xlabel("Month")
-    ax1.set_ylabel("Inventory (Months)")
-    plt.xticks(rotation=45, fontsize=8)
-    plt.yticks(np.arange(0, inv_month_max, step=inv_month_gap))
-    ax1.tick_params(axis='y', labelcolor=color)
-    ax2 = ax1.twinx()
-    color = 'tab:blue'
-    ax2.set_ylabel("Sales")
-    ax2.plot(final_month_list, sales_gts, 'b-', linewidth=1.5, label="GTS")
-    ax2.plot(final_month_list, sales_lpsales, 'g-.', linewidth=1.5, label="LP_Sales")
-    ax2.plot(final_month_list, sales_ims, 'r--', linewidth=1.5, label="IMS")
-    ax2.plot(final_month_list, final_fcst_data, 'c:', linewidth=1.5, label="Forecast")
-    ax2.tick_params(axis='y', labelcolor=color)
-    plt.title("One-page Summary for " + name)
-    plt.legend()
-
-    # Add label on the chart
-    def autolabel(rects):
-        """Attach a text label above each bar in *rects*, displaying its height."""
-        for rect in rects:
-            height = rect.get_height()
-            value = height
-            if height == 0:
-                value = ""
-            ax1.annotate('{}'.format(value),
-                         xy=(rect.get_x() + rect.get_width() / 2, height),
-                         xytext=(0, 3),  # 3 points vertical offset
-                         textcoords="offset points",
-                         ha='center', va='bottom')
-
-    autolabel(rects1)
-    autolabel(rects2)
-    fig.tight_layout()
-    plt.show()
-
-
 # draw all-in-one chart for code and h5 summary with echarts
 def all_in_one_echart(name, final_month_list, jnj_inv_month, lp_inv_month, sales_gts, sales_lpsales, sales_ims,
-                      final_fcst_data):
+                      final_fcst_data, data_type):
     sys_path = os.path.abspath('..')
     file_name = sys_path + "/data/_Charter/" + name.replace("/", "_") + "-all-in-one.html"
+    sales_unit = "PC" if data_type == "code" else "RMB"
     bar = (
-        Bar(init_opts=opts.InitOpts(theme=ThemeType.INFOGRAPHIC, width="1500px"))
+        Bar(init_opts=opts.InitOpts(theme=ThemeType.MACARONS, width="1500px"))
         .add_xaxis(final_month_list)
         .add_yaxis("JNJ", jnj_inv_month)
         .add_yaxis("NED", lp_inv_month)
         .extend_axis(
             yaxis=opts.AxisOpts(
-                axislabel_opts=opts.LabelOpts(formatter="{value} RMB")
+                axislabel_opts=opts.LabelOpts(formatter="{value} " + sales_unit)
             )
         )
         .set_series_opts(label_opts=opts.LabelOpts(is_show=True))

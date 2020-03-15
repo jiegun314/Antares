@@ -29,7 +29,7 @@ class InfoShow:
     def show_code_sales_data(self, month_number=12):
         # print title
         print("---- %sM Sales List for Single Code---" % month_number)
-        material_code = input("Material code: ")
+        material_code = input("Material code: ").upper()
         if not pb_func.check_code_availability(self.__class__.bu_name, material_code):
             print("!!ERROR, This code does NOT exist.")
             return
@@ -51,7 +51,7 @@ class InfoShow:
     def show_code_hstr_inv(self, month_number=12):
         # Print title
         print("---- -Historical Inventory for Single Code---")
-        material_code = input("Material code: ")
+        material_code = input("Material code: ").upper()
         # 读取Master Data
         infocheck = calculation.InfoCheck(self.__class__.bu_name)
         if not pb_func.check_code_availability(self.__class__.bu_name, material_code):
@@ -72,7 +72,7 @@ class InfoShow:
     def show_code_all_info(self, month_number=12):
         # 打印标题
         print("---- Overall Information for Single Code---")
-        material_code = input("Material code: ")
+        material_code = input("Material code: ").upper()
         if not pb_func.check_code_availability(self.__class__.bu_name, material_code):
             print("!!ERROR, This code does NOT exist.")
             return
@@ -154,11 +154,12 @@ class InfoShow:
         for price_item in price_type:
             # Print price title
             print("-With %s-" % price_item)
-            h5_sales_result = [h5_info_check.get_time_list(self.get_current_month(), 0 - month_number)]
+            # Add Month list
+            h5_sales_result = [["Month", ] + h5_info_check.get_time_list(self.get_current_month(), 0 - month_number)]
             # get data
             for sales_item in sales_type:
                 h5_temp = h5_info_check.get_H5_sales(sales_item, price_item, h5_name)
-                h5_sales_result.append(h5_info_check.data_mapping(h5_temp, self.get_current_month(), 0 - month_number))
+                h5_sales_result.append([sales_item, ] + h5_info_check.data_mapping(h5_temp, self.get_current_month(), 0 - month_number))
             self.format_output(h5_sales_result)
 
     # show sales data for one Hierarchy_5
@@ -220,7 +221,7 @@ class InfoShow:
     # 显示某个代码的Statistical Forecast
     def show_code_statistical_forecast(self, month_quantity):
         print("==Statistical Forecast for Single Code==")
-        str_code = input("Please input material code: ")
+        str_code = input("Material code: ").upper()
         fcst_show = calculation.InfoCheck(self.__class__.bu_name)
         forecast_quantity = fcst_show.get_code_forecast(str_code, "Final", month_quantity)
         if forecast_quantity != "Fail":
@@ -238,22 +239,20 @@ class InfoShow:
 
     # 显示单个代码的ESO
     def show_code_eso(self):
-        code_name = input("Input Material Code: ")
+        code_name = input("Input Material Code: ").upper()
         info_check = calculation.InfoCheck(self.__class__.bu_name)
         info_check.get_code_eso(code_name)
 
     # 显示单个代码的综合图表
     def show_code_chart(self):
         print("==Single Code General Chart==")
-        material_code = input("Material code : ")
-        # 读取Master Data
-        infocheck = calculation.InfoCheck(self.__class__.bu_name)
-        mm_result = infocheck.get_master_data(material_code)
+        material_code = input("Material code: ").upper()
         # 验证代码是否存在
-        if mm_result[0] == 0 or mm_result[0] == "NA":
-            print("!!ERROR, This code does NOT exist.")
+        if not pb_func.check_code_availability(self.__class__.bu_name, material_code):
+            print("!! This code does no exist, please try again.")
             return
         # 读取销量数据
+        infocheck = calculation.InfoCheck(self.__class__.bu_name)
         sales_list = ("GTS", "LPSales", "IMS")
         sales_output = []
         for index in range(0, 3):
@@ -267,7 +266,7 @@ class InfoShow:
         inventory_result = infocheck.get_code_lp_inv(material_code)
         historical_lp_inv = infocheck.data_mapping(inventory_result, self.get_current_month(), -24)
         historical_inv = [historical_jnj_inv, historical_lp_inv]
-        self.draw_sales_inv_fcst_chart(material_code, sales_output, historical_inv, code_forecast, 12)
+        self.draw_sales_inv_fcst_chart(material_code, sales_output, historical_inv, code_forecast, 12, "code")
 
     # 显示H5的综合图表
     def show_h5_chart(self):
@@ -295,11 +294,12 @@ class InfoShow:
         # 读取final forecast
         h5_forecast = h5_info_check.get_h5_forecast(h5_name, "Final", 12)
         # Generate the chart with 12 months forecast
-        self.draw_sales_inv_fcst_chart(h5_name, h5_sales_result, h5_inv_result, h5_forecast, 12)
+        self.draw_sales_inv_fcst_chart(h5_name, h5_sales_result, h5_inv_result, h5_forecast, 12, "h5")
         pass
 
     # 画综合图
-    def draw_sales_inv_fcst_chart(self, name, sales_data, inv_data, fcst_data, fcst_month):
+    def draw_sales_inv_fcst_chart(self, name, sales_data, inv_data, fcst_data, fcst_month, data_type):
+        # get integer format of all sales data
         sales_gts = list(map(int, sales_data[0]))
         sales_lpsales = list(map(int, sales_data[1]))
         sales_ims = list(map(int, sales_data[2]))
@@ -309,20 +309,10 @@ class InfoShow:
         for index in range(0, 12):
             lst_blank.append(None)
             lst_zero.append(0)
-        # change inventory value to inventory month
-        jnj_inv_month, lp_inv_month = [], []
-        # set first 12 months value as blank
-        jnj_inv_month.extend(lst_blank)
-        lp_inv_month.extend(lst_blank)
-        # from latter 12 months, set inventory month as value / avg 6 months sales
-        for index in range(12, 24):
-            sum_gts, sum_lpsales = 0, 0
-            for step in range(index - 5, index + 1):
-                sum_gts += sales_gts[step]
-                sum_lpsales += sales_lpsales[step]
-            jnj_inv_month.append(round(jnj_inv[index] * 6 / sum_gts, 1))
-            lp_inv_month.append(round(lp_inv[index] * 6 / sum_lpsales, 1))
-        # fulfill the sales and inventory data with zero and blank for last 12 months
+        # get inventory month
+        jnj_inv_month = calculation.InfoCheck.get_inventory_month(jnj_inv, sales_gts, 24, blank_type=1)
+        lp_inv_month = calculation.InfoCheck.get_inventory_month(lp_inv, sales_lpsales, 24, blank_type=1)
+        # fulfill sales and inventory data with blank in future 12 months
         sales_gts.extend(lst_blank)
         sales_lpsales.extend(lst_blank)
         sales_ims.extend(lst_blank)
@@ -339,9 +329,10 @@ class InfoShow:
         final_month_list = historical_month_list + infocheck.get_time_list(self.get_current_month(), fcst_month)
         # draw the chart
         chart.all_in_one_echart(name, final_month_list, jnj_inv_month, lp_inv_month, sales_gts, sales_lpsales,
-                                sales_ims, final_fcst_data)
+                                sales_ims, final_fcst_data, data_type)
+        print("--The chart is generated, you can also find it under ../data/_Charter --")
 
 
 if __name__ == "__main__":
     test = InfoShow("TU", "Jeffrey")
-    test.show_h5_chart()
+    test.show_code_chart()

@@ -181,16 +181,17 @@ class InfoCheck:
 
     # calculate inventory month
     @staticmethod
-    def get_inventory_month(lst_inv, lst_sales, month_number):
+    def get_inventory_month(lst_inv, lst_sales, month_number, blank_type=0):
+        # set blank value as None if blank_type is 1, else set zero
         lst_inv_month = []
         # leave previous 6 month in blank
         for i in range(0, 6):
-            lst_inv_month.append(0)
+            lst_inv_month.append(0) if blank_type == 0 else lst_inv_month.append(None)
         for i in range(0, month_number-6):
             if sum(lst_sales[i: i+6]) == 0:
-                lst_inv_month.append(0)
+                lst_inv_month.append(0) if blank_type == 0 else lst_inv_month.append(None)
             else:
-                lst_inv_month.append(lst_inv[i+6] / (sum(lst_sales[i: i+6])/6))
+                lst_inv_month.append(round(lst_inv[i+6] / (sum(lst_sales[i: i+6])/6), 1))
         return lst_inv_month
 
     # 返回有效的H5名称
