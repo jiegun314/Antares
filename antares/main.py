@@ -3,6 +3,7 @@
 # import crt_inv_cmd as crt
 # import statis_fcst as fcst
 # import mi
+import re
 
 
 class SystemIndex:
@@ -58,11 +59,13 @@ class SystemIndex:
             elif cmd_code in ["400g", "400G"]:
                 cmd_info_index.show_code_chart()
             elif cmd_code[0:3] == "400":
-                if cmd_code.lstrip("400").lstrip().lstrip("-").lstrip().rstrip().isnumeric():
-                    month_number = int(cmd_code.lstrip("400").lstrip().lstrip("-").lstrip().rstrip())
+                if re.match(r'^(400)\s*\-\s*(\d{1,2})$', cmd_code):
+                    month_number = int(re.match(r'^(400)\s*\-\s*(\d{1,2})$', cmd_code).group(2))
                     if month_number <= 24:
                         cmd_info_index.show_code_all_info(month_number)
-                elif cmd_code.lstrip("400").lstrip().lstrip("-").lstrip().rstrip() == "":
+                    else:
+                        print("!!ERROR: Too many months, the upper limit is 24")
+                elif cmd_code == "400":
                     cmd_info_index.show_code_all_info()
                 else:
                     print("!!ERROR: Wrong CMD code. Plz input right cmd code, or input exit to quit.")
@@ -77,8 +80,8 @@ class SystemIndex:
             elif cmd_code in ["300g", "300G"]:
                 cmd_info_index.show_h5_chart()
             elif cmd_code[0:3] == "300":
-                if cmd_code.lstrip("300").lstrip().lstrip("-").lstrip().rstrip().isnumeric():
-                    month_number = int(cmd_code.lstrip("300").lstrip().lstrip("-").lstrip().rstrip())
+                if re.match(r'^(300)\s*\-\s*(\d{1,2})$', cmd_code):
+                    month_number = int(re.match(r'^(300)\s*\-\s*(\d{1,2})$', cmd_code).group(2))
                     if month_number <= 24:
                         cmd_info_index.show_h5_all_info(month_number)
                 elif cmd_code.lstrip("300").lstrip().lstrip("-").lstrip().rstrip() == "":
