@@ -272,12 +272,10 @@ class InfoShow:
     def show_h5_chart(self):
         # 打印标题
         print("==Hierarchy_5 General Chart==")
-        h5_info_check = calculation.InfoCheck(self.__class__.bu_name)
-        h5_input = input("Please input H5 name: ")
-        h5_name = h5_info_check.get_h5_name(h5_input)
+        h5_name = self.get_h5_name()
         if h5_name == "NULL":
-            print("No H5 category exist. Please re-try.")
             return
+        h5_info_check = calculation.InfoCheck(self.__class__.bu_name)
         # 读取数据
         # 读取历史销量
         sales_type = ("GTS", "LPSales", "IMS")
