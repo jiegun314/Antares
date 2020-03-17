@@ -14,6 +14,8 @@ class CurrentInventory:
     db_path = "../data/_DB/"
     backorder_path = "../data/_Backorder/"
     inventory_path = "../data/_INV_Export/"
+    oneclick_path = "L:\\COMPASS\\Oneclick Inventory Report\\Output\\"
+    currency_rate = 7.0842
     
     def __init__(self, bu):
         self.__class__.bu_name = bu
@@ -134,135 +136,21 @@ class CurrentInventory:
         self.conn.close()
         print (">> Table %s is deleted." % self.table_name)
 
-    def insert_inv_table(self, db_date):
-        self.str_date = db_date
-        self.file_path = "L:\\COMPASS\\Oneclick Inventory Report\\Output\\"+ self.str_date + "\\OneClick_Inventory_Projection_Report _" + self.str_date +".csv"
-        #打开文件
+    # import oneclick inventory data into database
+    def oneclick_inventory_import(self, str_date):
+        data_file_fullname = self.oneclick_path + str_date + "\\OneClick_Inventory_Projection_Report _" \
+                             + str_date + ".csv"
         try:
-            self.fo = open(self.file_path,"r")
+            df = pd.read_csv(data_file_fullname, sep='|', encoding='gb18030')
         except FileNotFoundError:
-            print ("!!ERROR, file does NOT exist. " + self.str_date + " import fail.")
+            print("INV%s reading fail. " % str_date)
             return
-        print(">>Start to read ",self.fo.name)
-        # 创建数组
-        self.lst_data = []
-        for self.item in self.fo.readlines():
-            self.item = self.item.strip('\n')
-            self.lst_temp = self.item.split('|')
-            if self.lst_temp[10] == self.__class__.bu_name and self.lst_temp[21]=="Total":
-                # 转换。0000格式
-                self.lst_data.append(tuple(self.__str_transfer(self.lst_temp)))
-        self.fo.close()
-        print (">>Read %s successfully."%self.str_date)
-        self.__db_insert(self.str_date, self.lst_data)
-
-    def __str_transfer(self, str_data):
-        self.str_input = str_data
-        self.str_result = []
-        for self.item in self.str_input:
-            if self.item.find('.0000')==0:
-                self.str_result.append(0)
-            elif self.item.find('.')>0 and self.item.find('00')>0 and self.str_input.index(self.item)>10:
-                self.str_result.append(float(self.item))
-            else:
-                self.str_result.append(self.item)
-        return self.str_result
-
-    def __db_insert(self, date, data):
-        self.table_name = "INV" + date
-        self.str_data = data
-        # 连接数据库
-        self.db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
-        self.conn = sqlite3.connect(self.db_name)
-        # 删除重名表格
-        self.conn.execute("DROP TABLE IF EXISTS " + self.table_name)
-        self.c = self.conn.cursor()
-        # 创建表格
-        self.sql_cmd = '''CREATE TABLE ''' + self.table_name + '''
-            (Material CHAR(50) NOT NULL,
-            Description TEXT  NOT NULL,
-            EMG_Description TEXT  NOT NULL,
-            Hierarchy_1  TEXT  NOT NULL,
-            Hierarchy_2  TEXT  NOT NULL,
-            Hierarchy_3  TEXT  NOT NULL,
-            Hierarchy_4  TEXT  NOT NULL,
-            Hierarchy_5  TEXT  NOT NULL,
-            Franchise TEXT  NOT NULL,
-            Business_Group  TEXT  NOT NULL,
-            Business_Unit  TEXT  NOT NULL,
-            Base_UoM   TEXT  NOT NULL,
-            Sales_UoM  TEXT  NOT NULL,
-            Purchasing_UoM  TEXT  NOT NULL,
-            Rate_Base_to_Pur INT  NOT NULL,
-            Rate_Base_to_Sales  INT  NOT NULL,
-            ESO_Flag  CHAR(5)  NOT NULL,
-            Average_Selling_Price  REAL  NOT NULL,
-            Standard_Cost  REAL  NOT NULL,
-            CSC  CHAR(5)  NOT NULL,
-            SS  INT  NOT NULL,
-            Loc CHAR(5)  NOT NULL,
-            Inventory_OnHand  INT  NOT NULL,
-            Available_Stock  INT  NOT NULL,
-            Pending_Inventory_Bonded_Total_Qty  INT  NOT NULL,
-            Pending_Inventory_Bonded_140_Qty  INT  NOT NULL,
-            Pending_Inventory_Bonded_141_Qty  INT  NOT NULL,
-            Pending_Inventory_Bonded_142_Qty  INT  NOT NULL,
-            Pending_Inventory_Bonded_Q_Hold_Qty  INT  NOT NULL,
-            Pending_Inventory_Bonded_S_Hold_Qty  INT  NOT NULL,
-            Pending_Inventory_Bonded_X_Hold_Qty  INT  NOT NULL,
-            Pending_Inventory_NonB_Total_Qty  INT  NOT NULL,
-            Pending_Inventory_NonB_140_Qty  INT  NOT NULL,
-            Pending_Inventory_NonB_141_Qty  INT  NOT NULL,
-            Pending_Inventory_NonB_142_Qty  INT  NOT NULL,
-            Pending_Inventory_NonB_Q_Hold_Qty  INT  NOT NULL,
-            Pending_Inventory_NonB_S_Hold_Qty  INT  NOT NULL,
-            Pending_Inventory_NonB_X_Hold_Qty  INT  NOT NULL,
-            Open_SO_Regular  INT  NOT NULL,
-            Open_SO_Non_Regular  INT  NOT NULL,
-            Current_Backorder_Qty  INT  NOT NULL,
-            Current_Backorder_Value  REAL  NOT NULL,
-            GIT_1_Week  INT  NOT NULL,
-            GIT_2_Week  INT  NOT NULL,
-            GIT_3_Week  INT  NOT NULL,
-            GIT_4_Week  INT  NOT NULL,
-            Open_PO  INT  NOT NULL,
-            MTD_Val  INT  NOT NULL,
-            MTD_NoVal  INT  NOT NULL,
-            Last_Month_BackOrder_Qty  INT  NOT NULL,
-            Forecast_T  INT  NOT NULL,
-            Forecast_T_1  INT NOT NULL,
-            Forecast_T_2  INT NOT NULL,
-            Forecast_T_3  INT NOT NULL,
-            Estimate_Backorder_Qty_Demand  INT  NOT NULL,
-            Estimate_Backorder_Value_Demand  REAL  NOT NULL,
-            Estimate_Backorder_Qty_Forecast  INT NOT NULL,
-            Estimate_Backorder_Value_Forecast  REAL  NOT NULL,
-            Estimate_Backorder_Qty_Aggressive  INT  NOT NULL,
-            Estimate_Backorder_Value_Aggressive  REAL  NOT NULL,
-            Inventory_Qty_Shelflife_3_MTH  INT  NOT NULL,
-            Inventory_Qty_Shelflife_6_MTH  INT  NOT NULL,
-            Inventory_Qty_Shelflife_12_MTH  INT  NOT NULL,
-            Demand_Qty_T  INT  NOT NULL,
-            Demand_Qty_T1  INT  NOT NULL,
-            Demand_Qty_T2  INT  NOT NULL,
-            Demand_Qty_T3  INT  NOT NULL,
-            Demand_Qty_T4  INT  NOT NULL,
-            Demand_Qty_T5  INT  NOT NULL,
-            Demand_Qty_T6  INT  NOT NULL);'''
-        self.c.execute(self.sql_cmd)
-        print (">>Create new table successfully!")
-        # 开始插入数据
-        self.sql_cmd = "INSERT INTO " + self.table_name + " VALUES (?"
-        self.cnt = 1
-        while self.cnt <=69:
-            self.sql_cmd += ",?"
-            self.cnt += 1
-        else:
-            self.sql_cmd += ")"
-        self.c.executemany (self.sql_cmd, self.str_data)
-        self.conn.commit()
-        self.conn.close()
-        print (">>Import %s successfully" % self.table_name)
+        df_single_bu = df.loc[(df['Business_Unit'] == self.__class__.bu_name) & (df['Loc'] == "Total")]
+        database_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
+        conn = sqlite3.connect(database_name)
+        df_single_bu.to_sql("INV" + str_date, con=conn, if_exists="replace", index=False)
+        print("INV%s was imported. " % str_date)
+        pass
 
     # 获取当天库存
     def today_inv(self):
@@ -274,8 +162,6 @@ class CurrentInventory:
         else:
             table_name = "INV" + inventory_date
         print("===== <Result of %s> =====" % table_name.lstrip("INV"))
-        h5_list = self._get_h5_list(table_name)
-        # 基本思路：用sql语句计算所有的结果
         db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
         conn = sqlite3.connect(db_name)
         c = conn.cursor()
@@ -289,15 +175,23 @@ class CurrentInventory:
         c.execute(sql_cmd)
         inventory_output = c.fetchall()
         # calculate inventory total value.
-        total_available_stock_value, total_overall_stock_value = 0, 0
+        total_available_stock_value, total_useful_stock_value, total_stock_value = 0, 0, 0
         for item in inventory_output:
             total_available_stock_value += item[1]
-            total_overall_stock_value += item[1] + item[2] + item[3]
-        title = [("Hierarchy_5", "Available Stock", "GIT Inventory", "Open PO Value", "Bonded Pending", "Non-bonded Pending")]
+            total_useful_stock_value += item[1] + item[2] + item[3]
+            total_stock_value += item[1] + item[2] + item[3] + item[4] + item[5]
+        title = [("Hierarchy_5", "Available Stock", "GIT Inventory", "Open PO Value", "Bonded Pending",
+                  "Non-bonded Pending")]
         result = title + inventory_output
-        print(tabulate(result, headers="firstrow", tablefmt="github", showindex=range(1, len(result)), floatfmt=",.0f"))
-        print("Total Available Stock Value (RMB): %s" % format(total_available_stock_value, ",.0f"))
-        print("Total Overall Stock Value (RMB): %s" % format(total_overall_stock_value, ',.0f'))
+        print(tabulate(result, headers="firstrow", tablefmt="psql", showindex=range(1, len(result)), floatfmt=",.0f"))
+        print("Total Available Stock Value: RMB - %s, USD - %s"
+              % (format(total_available_stock_value, ",.0f"),
+                 format(total_available_stock_value / self.__class__.currency_rate, ",.0f")))
+        print("Total Useful Stock Value: RMB - %s, USD - %s"
+              % (format(total_useful_stock_value, ',.0f'),
+                 format(total_useful_stock_value / self.__class__.currency_rate, ',.0f')))
+        print("Total Stock Value: RMB - %s, USD - %s"
+              % (format(total_stock_value, ',.0f'), format(total_stock_value / self.__class__.currency_rate, ',.0f')))
 
     # 获取当前BO
     def get_current_bo(self):
@@ -324,7 +218,7 @@ class CurrentInventory:
         conn = sqlite3.connect(master_data_db_name)
         c = conn.cursor()
         # 读取SAP Price并计算价格
-        bo_result=[]
+        bo_result = []
         for bo_item in bo_output:
             bo_material = bo_item[0]
             sql_cmd = "SELECT Price from " + master_data_table_name + " WHERE Material = \'" + bo_material + "\'"
@@ -660,7 +554,7 @@ class CurrentInventory:
         # 导入新的数据
         for item in lst_folder:
             if (item not in crt_list) and (item not in lst_xcpt):
-                self.insert_inv_table(item)
+                self.oneclick_inventory_import(item)
         print(">> Synchronization succeed!")
 
     # Display command list
