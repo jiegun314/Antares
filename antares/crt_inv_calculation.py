@@ -37,45 +37,17 @@ class CurrentInventory:
         return self.lst_date[0]
 
     # 检查日期是否存在
-    def _check_date_availability(self, name):
-        self.tb_input = name
-        self.db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
-        self.conn = sqlite3.connect(self.db_name)
-        self.c = self.conn.cursor()
-        self.sql_cmd = "select name from sqlite_master where type='table' order by name"
-        self.c.execute(self.sql_cmd)
-        self.result = self.c.fetchall()
-        self.lst_date = []
-        for self.item in self.result:
-            self.lst_date.append(self.item[0])
-        if self.tb_input in self.lst_date:
-            self.trigger = True
-        else:
-            self.trigger = False
-        self.conn.commit()
-        self.conn.close()
-        return self.trigger
-    
-    # 检查代码是否存在
-    def _check_code_availability(self, name):
-        self.code_name = name
-        self.db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
-        self.conn = sqlite3.connect(self.db_name)
-        self.c = self.conn.cursor()
-        #获取最新表格
-        self.sql_cmd = "select name from sqlite_master where type='table' order by name"
-        self.c.execute(self.sql_cmd)
-        self.result = self.c.fetchall()
-        self.tbl_result = self.result[-1][0]
-        #判断代码是否存在
-        self.sql_cmd = "SELECT count(Material) from " + self.tbl_result + " WHERE Material Like \'" + self.code_name + "\'"
-        self.c.execute(self.sql_cmd)
-        self.result = self.c.fetchall()
-        self.check_result = self.result[0][0]
-        if self.check_result == 0:
-            return False
-        else:
-            return True
+    def _check_date_availability(self, table_name):
+        db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
+        conn = sqlite3.connect(db_name)
+        c = conn.cursor()
+        c.execute("select name from sqlite_master where type='table' order by name")
+        result = c.fetchall()
+        lst_date = [item[0] for item in result]
+        trigger = True if table_name in lst_date else False
+        conn.commit()
+        conn.close()
+        return trigger
 
     # 获取所有表格的列表
     def get_tbl_list(self):
@@ -93,22 +65,18 @@ class CurrentInventory:
         return self.tbl_list
 
     # 产品代码校验
-    def check_code (self, code):
-        self.material_code = code
-        self.db_name = self.__class__.db_path + self.__class__.bu_name + "_Master_Data.db"
-        self.table_name = self.__class__.bu_name + "_Master_Data"
-        self.conn = sqlite3.connect(self.db_name)
-        self.c = self.conn.cursor()
-        self.sql_cmd = "SELECT count(Material) from " + self.table_name + " WHERE Material = \'" + self.material_code + "\'"
-        self.c.execute(self.sql_cmd)
-        for self. item in self.c.fetchall():
-            if self.item[0] == 0:
-                self.trigger = False
-            else:
-                self.trigger = True
-        self.conn.commit()
-        self.conn.close()
-        return self.trigger
+    def check_code(self, material_code):
+        table_name = "Material_Master"
+        conn = sqlite3.connect(self.__class__.db_path + "Master_Data.db")
+        c = conn.cursor()
+        sql_cmd = "SELECT count(Material) from " + table_name + " WHERE Business_Unit = \'" + self.__class__.bu_name \
+                  + "\' AND Material = \'" + material_code + "\'"
+        c.execute(sql_cmd)
+        result = c.fetchall()[0][0]
+        trigger = False if result == 0 else True
+        conn.commit()
+        conn.close()
+        return trigger
 
     # 获取H5信息
     def _get_h5_list(self, table):
@@ -381,42 +349,35 @@ class CurrentInventory:
     def get_code_inv(self):
         print("===Single Code Inventory===")
         # 获取日期
-        code_name = input("Input Material Code: ")
-        while not self._check_code_availability(code_name):
-            code_name = input("Wrong code, please re-input: ")
-        if self.check_code(code_name):
-            data_ready = True
+        code_name = input("Input Material Code: ").upper()
+        while not self.check_code(code_name):
+            code_name = input("Wrong code, please re-input: ").upper()
+        # start to get inventory data from oneclick database
+        str_input = input("Please input date (YYYYMMDD) OR press Enter to get most fresh date: ")
+        table_name = self._get_newest_date() if str_input == "" else "INV" + str_input
+        while not self._check_date_availability(table_name):
+            print("!!Error - Wrong date, Please re-input! ")
             str_input = input("Please input date (YYYYMMDD) OR press Enter to get most fresh date: ")
-            if str_input == "":
-                table_name = self._get_newest_date()
+            table_name = self._get_newest_date() if str_input == "" else "INV" + str_input
+        print("===== <Result of %s> =====" % table_name.lstrip("INV"))
+        db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
+        conn = sqlite3.connect(db_name)
+        c = conn.cursor()
+        sql_cmd = "SELECT Material, Description, Hierarchy_5, Available_Stock, Pending_Inventory_Bonded_Total_Qty, " \
+                  "Pending_Inventory_NonB_Total_Qty, CSC, GIT_1_Week, GIT_2_Week, GIT_3_Week, GIT_4_Week, " \
+                  "Standard_Cost, Average_Selling_Price FROM " + table_name + " WHERE Material = \'" + code_name + "\'"
+        c.execute(sql_cmd)
+        result = c.fetchall()[0]
+        title = ["Material", "Description", "Hierarchy_5", "Available_Stock", "Pending_Qty_BD",
+                 "Pending_Qty_NB", "CSC", "GIT_1_Qty", "GIT_2_Qty", "GIT_3_Qty", "GIT_4_Qty", "Std Cost",
+                 "AVG Selling Price"]
+        code_inv_output = [["Item", "Value"]]
+        for i in range(len(result)):
+            if isinstance(result[i], str):
+                code_inv_output.append([title[i], result[i]])
             else:
-                table_name = "INV" + str_input
-                if not self._check_date_availability(table_name):
-                    print("!!Error - Wrong date, Please re-input! ")
-                    data_ready = False
-            if data_ready:
-                print("===== <Result of %s> =====" % table_name.lstrip("INV"))
-                db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
-                conn = sqlite3.connect(db_name)
-                c = conn.cursor()
-                sql_cmd = '''SELECT Material, Description, Hierarchy_5, Available_Stock, 
-                Pending_Inventory_Bonded_Total_Qty, Pending_Inventory_NonB_Total_Qty, CSC, GIT_1_Week, GIT_2_Week, 
-                GIT_3_Week, GIT_4_Week, Standard_Cost, Average_Selling_Price from ''' + table_name + \
-                          ' where Material = \"' + code_name + '\"'
-                c.execute(sql_cmd)
-                result = c.fetchall()[0]
-                title = ["Material", "Description", "Hierarchy_5", "Available_Stock", "Pending_Qty_BD",
-                         "Pending_Qty_NB", "CSC", "GIT_1_Qty", "GIT_2_Qty", "GIT_3_Qty", "GIT_4_Qty", "Std Cost",
-                         "AVG Selling Price"]
-                code_inv_output = [["Item", "Value"]]
-                for i in range(len(result)):
-                    if isinstance(result[i], str):
-                        code_inv_output.append([title[i], result[i]])
-                    else:
-                        code_inv_output.append([title[i], int(result[i])])
-                print(tabulate(code_inv_output, headers="firstrow", floatfmt=",.0f", tablefmt="github"))
-        else:
-            print("!!Error - This Material Code does NOT exist, Please re-input! ")
+                code_inv_output.append([title[i], int(result[i])])
+        print(tabulate(code_inv_output, headers="firstrow", floatfmt=",.0f", tablefmt="github"))
     
     # 查询单个代码可用库存趋势
     def code_inv_trend(self):
@@ -439,13 +400,13 @@ class CurrentInventory:
                     inv_result.append(0)
                 else:
                     inv_result.append(result[0])
+            conn.commit()
+            conn.close()
+            # print charter
+            x_value = [item[-4:] for item in tbl_list]
+            chart.line_chart(code_name, x_value, inv_result, "Date", "INV Qty", "Inventory Trend of " + code_name)
         else:
             print("!!Error - This Material Code does NOT exist, Please re-input! ")
-        conn.commit()
-        conn.close()
-        # print charter
-        x_value = [item[-4:] for item in tbl_list]
-        chart.line_chart(code_name, x_value, inv_result, "Date", "INV Qty", "Inventory Trend of " + code_name)
 
     # 查询H5库存趋势
     def h5_inv_trend(self):
