@@ -7,17 +7,16 @@ import re
 
 
 class SystemIndex:
-    bu_name = ""
-    user_name = ""
+    bu_name = None
+    user_name = None
     
-    def __init__(self, bu, account):
-        self.__class__.bu_name = bu
-        self.__class__.user_name = account
+    def __init__(self):
+        self.__login_control()
 
     # 程序入口
-    def entrance(self):
+    def __entrance(self):
         self.__welcome_page()
-        self._command_center()
+        self.__command_center()
 
     # 欢迎页面/home/jeffrey
     def __welcome_page(self):
@@ -28,7 +27,6 @@ class SystemIndex:
     def __exit_page(self):
         import public_function
         public_function.display_ascii_graph("goodbye")
-        self.cmd_exit = input()
 
     # 命令接收及跳转中心
     # 命令设计逻辑：
@@ -47,13 +45,13 @@ class SystemIndex:
     # X99 - MI调整
     # 0. Overall Information
 
-    def _command_center(self):
+    def __command_center(self):
         print("===Please wait a few seconds for module loading===")
         import info_show
         # 实例化显示信息的类
         cmd_info_index = info_show.InfoShow(self.__class__.bu_name, self.__class__.user_name)
         cmd_code = input("cmd >> ")
-        while cmd_code != "exit":
+        while cmd_code != "exit" and cmd_code != "switch":
             if cmd_code == "410":
                 cmd_info_index.show_code_sales_data()
             elif cmd_code in ["400g", "400G"]:
@@ -119,23 +117,31 @@ class SystemIndex:
             else:
                 print("!!ERROR: Wrong CMD code. Plz input right cmd code, or input exit to quit.")
             cmd_code = input("cmd >> ")
-        self.__exit_page()
+        if cmd_code == "switch":
+            self.__class__.bu_name, self.__class__.user_name = None, None
+            self.__login_control()
+        else:
+            self.__exit_page()
+
+    def __login_control(self):
+        name = input("Please input your name: ")
+        if name.upper() == "JEFFREY":
+            self.__class__.bu_name = "TU"
+        elif name.upper() == "CECILIA":
+            self.__class__.bu_name = "CMF"
+        elif name.upper() == "CC":
+            self.__class__.bu_name = "PT"
+        else:
+            pass
+        if self.__class__.bu_name:
+            self.__class__.user_name = name.capitalize()
+            self.__entrance()
+        else:
+            print("!!Error: wrong user name, please restart the program.")
 
 
 if __name__ == "__main__":
-    name = input("Please input your name: ")
-    if name.upper() == "JEFFREY":
-        str_bu_name = "TU"
-        login_status = True
-        name = name.capitalize()
-    else:
-        login_status = False
-    if login_status:
-        info_check = SystemIndex(str_bu_name, name)
-        info_check.entrance()
-    else:
-        print("!!Error: wrong user name, press Enter to exit!")
-        exit_cmd = input()
+    test = SystemIndex()
 
     # 方法2获取所有的代码信息并导出到excel
     # result = info_check.generate_code_detail_v2()
