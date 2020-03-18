@@ -18,7 +18,7 @@ class CurrentInventoryMenu:
         self.__welcome_page()
         crt_inv_cclt = cclt.CurrentInventory(self.__class__.bu_name)
 
-        cmd_code = input ("cmd >> crt_inv >> ")
+        cmd_code = input("cmd >> crt_inv >> ")
         while cmd_code != "exit":
             if cmd_code == "inv":
                 crt_inv_cclt.today_inv()

@@ -3,8 +3,7 @@ import sqlite3
 # import numpy as np
 from tabulate import tabulate
 import draw_chart as chart
-# import time
-import os, sys
+import os
 import calculation
 import pandas as pd
 
@@ -22,19 +21,14 @@ class CurrentInventory:
 
     # 获取最新日期
     def _get_newest_date(self):
-        self.db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
-        self.conn = sqlite3.connect(self.db_name)
-        self.c = self.conn.cursor()
-        self.sql_cmd = "select name from sqlite_master where type='table' order by name"
-        self.c.execute(self.sql_cmd)
-        self.result = self.c.fetchall()
-        self.lst_date = []
-        for self.item in self.result:
-            self.lst_date.append(self.item[0])
-        self.lst_date.sort(reverse = True)
-        self.conn.commit()
-        self.conn.close()
-        return self.lst_date[0]
+        conn = sqlite3.connect(self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db")
+        c = conn.cursor()
+        c.execute("select name from sqlite_master where type='table' order by name")
+        lst_date = [item[0] for item in c.fetchall()]
+        # lst_date.sort(reverse=True)
+        conn.commit()
+        conn.close()
+        return lst_date[-1]
 
     # 检查日期是否存在
     def _check_date_availability(self, table_name):
@@ -51,18 +45,13 @@ class CurrentInventory:
 
     # 获取所有表格的列表
     def get_tbl_list(self):
-        self.db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
-        self.conn = sqlite3.connect(self.db_name)
-        self.c = self.conn.cursor()
-        self.sql_cmd = "select name from sqlite_master where type='table' order by name"
-        self.c.execute(self.sql_cmd)
-        self.result = self.c.fetchall()
-        self.tbl_list = []
-        for self.item in self.result:
-            self.tbl_list.append(self.item[0])
-        self.conn.commit()
-        self.conn.close()
-        return self.tbl_list
+        conn = sqlite3.connect(self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db")
+        c = conn.cursor()
+        c.execute("select name from sqlite_master where type='table' order by name")
+        tbl_list = [item[0] for item in c.fetchall()]
+        conn.commit()
+        conn.close()
+        return tbl_list
 
     # 产品代码校验
     def check_code(self, material_code):
@@ -78,31 +67,15 @@ class CurrentInventory:
         conn.close()
         return trigger
 
-    # 获取H5信息
-    def _get_h5_list(self, table):
-        self.table_name = table
-        self.db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
-        self.conn = sqlite3.connect(self.db_name)
-        self.c = self.conn.cursor()
-        self.sql_cmd = "select distinct Hierarchy_5 from " + self.table_name
-        self.c.execute(self.sql_cmd)
-        self.h5_list = []
-        for self.item in self.c.fetchall():
-            self.h5_list.append(self.item[0])
-        self.conn.commit()
-        self.conn.close()
-        return self.h5_list
-
     def __remove_inv_tbl(self, db_date):
-        self.table_name = "INV" + db_date
-        self.db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
-        self.conn = sqlite3.connect(self.db_name)
-        self.c = self.conn.cursor()
-        self.sql_cmd = "DROP TABLE " + self.table_name
-        self.c.execute(self.sql_cmd)
-        self.conn.commit()
-        self.conn.close()
-        print (">> Table %s is deleted." % self.table_name)
+        table_name = "INV" + db_date
+        conn = sqlite3.connect(self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db")
+        c = conn.cursor()
+        sql_cmd = "DROP TABLE " + table_name
+        c.execute(sql_cmd)
+        conn.commit()
+        conn.close()
+        print(">> Table %s is deleted." % self.table_name)
 
     # import oneclick inventory data into database
     def oneclick_inventory_import(self, str_date):
@@ -117,7 +90,7 @@ class CurrentInventory:
         database_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
         conn = sqlite3.connect(database_name)
         df_single_bu.to_sql("INV" + str_date, con=conn, if_exists="replace", index=False)
-        print("INV%s was imported. " % str_date)
+        print(">>INV%s was imported. " % str_date)
         pass
 
     # 获取当天库存
@@ -219,10 +192,7 @@ class CurrentInventory:
         print("===Export Backorder Detail List===")
         # get data
         inventory_date = input("Inventory Data (YYYYMMDD, Press Enter to get newest) : ")
-        if inventory_date == "":
-            table_name = self._get_newest_date()
-        else:
-            table_name = "INV" + inventory_date
+        table_name = self._get_newest_date() if inventory_date == "" else "INV" + inventory_date
         db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
         conn = sqlite3.connect(db_name)
         sql_cmd = '''SELECT Material, Description, Hierarchy_5, Current_Backorder_Qty,
@@ -234,7 +204,7 @@ class CurrentInventory:
         df = df.rename(columns={"Material": "代码", "Description": "英文描述", "Hierarchy_5": "产品分类",
                                 "Current_Backorder_Qty": "缺货数量", "GIT_1_Week": "2周左右", "GIT_2_Week": "3-4周",
                                 "GIT_3_Week": "6-8周", "not_delivered_qty": "已下订单"})
-        backorder_file = self.__class__.backorder_path + "Backorder_" + table_name[3:] +".xlsx"
+        backorder_file = self.__class__.backorder_path + "Backorder_" + table_name[3:] + ".xlsx"
         df.to_excel(backorder_file, index=False)
         print("Backorder detail exported to " + backorder_file)
 
@@ -253,7 +223,7 @@ class CurrentInventory:
         sql_cmd = '''SELECT Material, Description, Available_Stock FROM ''' + table_name + ''' WHERE Available_Stock !=0'''
         df = pd.read_sql(sql=sql_cmd, con=conn)
         df = df.rename(columns={"Material": "代码", "Description": "英文描述", "Available_Stock": "可用数量"})
-        inventory_file = self.__class__.inventory_path + "Inventory_" + table_name[3:] +".xlsx"
+        inventory_file = self.__class__.inventory_path + "Inventory_" + table_name[3:] + ".xlsx"
         df.to_excel(inventory_file, index=False)
         print("Inventory detail exported to " + inventory_file)
         pass
@@ -310,7 +280,6 @@ class CurrentInventory:
             backorder_value_summary[1].append(daily_backorder_total_value['ROP'])
             backorder_value_summary[2].append(daily_backorder_total_value['ND'])
         chart.backorder_trend_chart(date_list, backorder_value_summary)
-        pass
 
     # Daily pending inventory trend display
     def get_pending_trend(self, data_type="value"):
@@ -350,11 +319,13 @@ class CurrentInventory:
         print("===Single Code Inventory===")
         # 获取日期
         code_name = input("Input Material Code: ").upper()
+        # check if this code exist in material master
         while not self.check_code(code_name):
             code_name = input("Wrong code, please re-input: ").upper()
         # start to get inventory data from oneclick database
         str_input = input("Please input date (YYYYMMDD) OR press Enter to get most fresh date: ")
         table_name = self._get_newest_date() if str_input == "" else "INV" + str_input
+        # check if this date exist in newest oneclick file
         while not self._check_date_availability(table_name):
             print("!!Error - Wrong date, Please re-input! ")
             str_input = input("Please input date (YYYYMMDD) OR press Enter to get most fresh date: ")
@@ -420,6 +391,7 @@ class CurrentInventory:
             h5_result = h5_temp.get_h5_name(h5_input)
         # if not right h5 name, return
         if h5_result == "NULL":
+            print("!!Error, No such Hierarchy_5 name. Please try again!")
             return
         # 获取日期清单
         tbl_list = self.get_tbl_list()
@@ -490,7 +462,7 @@ class CurrentInventory:
         # 设置例外清单
         lst_xcpt = ['20190118', ]
         onclick_path = "L:\\COMPASS\\Oneclick Inventory Report\\Output\\"
-        lst_folder_temp=[]
+        lst_folder_temp = []
         # 读取oneclick目录下文件夹清单
         try:
             for file_name in os.listdir(onclick_path):
@@ -502,22 +474,20 @@ class CurrentInventory:
         # 排序
         lst_folder_temp.sort()
         # 读取后N天, lst_folder为共享盘上数据
-        lst_folder = lst_folder_temp[0 - sync_days:]
+        lst_folder_sharepoint = lst_folder_temp[0 - sync_days:]
         # 读取现有数据
         lst_db_date = self.get_tbl_list()
         # crt_list为现有数据
-        crt_list = []
-        for item in lst_db_date:
-            crt_list.append(item.lstrip("INV"))
+        lst_current_database = [item.lstrip("INV") for item in lst_db_date]
         # 开始对比数据
         # 删除过期数据
-        for item in crt_list:
-            if item not in lst_folder:
+        for item in lst_current_database:
+            if item not in lst_folder_sharepoint:
                 self.__remove_inv_tbl(item)
-                crt_list.remove(item)
+                lst_current_database.remove(item)
         # 导入新的数据
-        for item in lst_folder:
-            if (item not in crt_list) and (item not in lst_xcpt):
+        for item in lst_folder_sharepoint:
+            if (item not in lst_current_database) and (item not in lst_xcpt):
                 self.oneclick_inventory_import(item)
         print(">> Synchronization succeed!")
 
@@ -529,6 +499,6 @@ class CurrentInventory:
 
 
 if __name__ == "__main__":
-    test = CurrentInventory("CMF")
-    test.get_code_inv()
+    test = CurrentInventory("TU")
+    print(test._get_newest_date())
     # test.inv_data_sync(50)

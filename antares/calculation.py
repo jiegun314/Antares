@@ -41,6 +41,20 @@ class InfoCheck:
         conn.close()
         return list(row)
 
+    # get single column from bu master data
+    def get_bu_master_data(self, code, column_name):
+        file_name = self.__class__.bu_name + "_Master_Data"
+        db_fullname = self.__class__.db_path + file_name + ".db"
+        conn = sqlite3.connect(db_fullname)
+        c = conn.cursor()
+        sql_cmd = "SELECT " + column_name + " FROM " + file_name + " WHERE Material = \'" + code + "\'"
+        c.execute(sql_cmd)
+        md_result = c.fetchall()
+        if md_result:
+            return md_result[0][0]
+        else:
+            return ""
+
     # by H5的销量数据
     def get_H5_sales(self, data_type, price_type, hierarchy):
         # 文件名，无后缀
@@ -92,7 +106,11 @@ class InfoCheck:
         conn = sqlite3.connect(db_fullname)
         c = conn.cursor()
         c.execute("SELECT Price FROM " + table_name + " WHERE Material = \'" + code_name + "\'")
-        return c.fetchall()[0][0]
+        sap_price_result = c.fetchall()
+        if not sap_price_result:
+            return 0
+        else:
+            return sap_price_result[0][0]
 
     # get gtin by code
     def get_code_gtin(self, code_name):
@@ -328,7 +346,8 @@ class InfoCheck:
 
 if __name__ == "__main__":
     info_check = InfoCheck("TU")
-    print(info_check.get_time_list("202002", 12))
+    result = info_check.get_bu_master_data("440.834S", "PM")
+    print(result)
     # info_check.get_code_phoenix_result("689.893")
 
 

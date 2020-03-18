@@ -17,57 +17,57 @@ class MonthlyUpdate:
         self.__class__.bu_name = bu
 
     def update_sales(self, inv_type):
-        self.inv_type = inv_type
-        print("==" + self.inv_type + " Import==")
+        print("==" + inv_type + " Import==")
         # 输入Y确认进行导入
-        print("!Warning - Please make sure data is correctly named and put in _Update folder.")
+        print("--*Warning* - Please make sure data is correctly named and put in _Update folder.")
         cmd_key = input("Ready to continue? (Y/N): ")
         if cmd_key.upper() != "Y":
             return
-        # 读取excel文件
+        # read excel file
         print("==Start to read the data==")
-        self.file_name = self.__class__.update_path + "Update_" + self.__class__.bu_name + "_" +self.inv_type + ".xlsx"
-        self.df = pd.read_excel(self.file_name, dtype={'Month': object})
-        # 转换成二位列表
-        self.lst_material = np.array(self.df).tolist()
+        file_name = self.__class__.update_path + "Update_" + self.__class__.bu_name + "_" + inv_type + ".xlsx"
+        df = pd.read_excel(file_name, dtype={'Month': object})
+        lst_material = np.array(df).tolist()
+        print("==Reading complete, start to map master data==")
         # 实例化一个查询对象
-        self.mm_result =[]
-        self.info_check = cclt.InfoCheck(self.__class__.bu_name)
-        for self.item_2 in self.lst_material:
-            self.mm_result.append(self.info_check.get_master_data(self.item_2[0]))
+        info_check = cclt.InfoCheck(self.__class__.bu_name)
         # 数据整合
-        self.index = 0
-        for self.item_3 in self.lst_material:
+        for material_item in lst_material:
+            # get master data
+            material_code = material_item[0]
+            master_data_result = info_check.get_master_data(material_code)[1]
+            md_standard_cost = master_data_result[6]
+            md_h4_name = master_data_result[2]
+            md_h5_name = master_data_result[3]
+            # get sap price
+            md_sap_price = info_check.get_code_sap_price(material_code)
             # 插入std cost价格
-            if self.mm_result[self.index][10] == None:
-                self.item_3.append(0)
+            if not md_standard_cost:
+                material_item.append(0)
             else:
-                self.item_3.append(self.mm_result[self.index][10]*self.item_3[2])
+                material_item.append(md_standard_cost * material_item[2])
             # 插入sap价格
-            if self.mm_result[self.index][11] == None:
-                self.item_3.append(0)
+            if not md_sap_price:
+                material_item.append(0)
             else:
-                self.item_3.append(self.mm_result[self.index][11]*self.item_3[2])
-            # 插入BU
-            self.item_3.append(self.__class__.bu_name)
-            # 插入H4
-            self.item_3.append(self.mm_result[self.index][4])
-            # 插入H5
-            self.item_3.append(self.mm_result[self.index][5])
-            self.index += 1
+                material_item.append(md_sap_price * material_item[2])
+            # Insert BU name, h4 and h5 name
+            material_item.append(self.__class__.bu_name)
+            material_item.append(md_h4_name)
+            material_item.append(md_h5_name)
         # 插入数据库
-        print("==Reading complete, start importing to database==")
-        self.file_name = self.__class__.bu_name + "_" + self.inv_type
-        self.db_fullname = self.__class__.db_path + self.file_name + ".db"
-        self.conn = sqlite3.connect(self.db_fullname)
-        self.conn.executemany("INSERT INTO " + self.file_name + " values (?,?,?,?,?,?,?,?)", self.lst_material)
-        self.conn.commit()
-        self.conn.close()
-        print("===== <%s Import Successfully!> ====="%self.inv_type)
+        print("==Mapping complete, start to import to database==")
+        file_name = self.__class__.bu_name + "_" + inv_type
+        db_fullname = self.__class__.db_path + file_name + ".db"
+        conn = sqlite3.connect(db_fullname)
+        conn.executemany("INSERT INTO " + file_name + " values (?,?,?,?,?,?,?,?)", lst_material)
+        conn.commit()
+        conn.close()
+        print("===== <%s Import Successfully!> =====" % inv_type)
     
     def update_lp_inv(self):
         print("==LP_Sales Import==")
-        print("---!Warning - Please make sure data is correctly name and put in _Update folder.---")
+        print("--*Warning* - Please make sure data is correctly name and put in _Update folder.")
         # 输入Y确认进行导入
         cmd_key = input("Ready to continue? (Y/N):")
         if cmd_key.upper() != "Y":
@@ -75,37 +75,40 @@ class MonthlyUpdate:
         print("==Start to read the data==")
         file_name = self.__class__.update_path + "Update_" + self.__class__.bu_name + "_LP_INV.xlsx"
         df = pd.read_excel(file_name, dtype={'Month': object})
-        # 转换成二位列表
         lst_lp_inv = np.array(df).tolist()
+        print("==Reading complete, start to map master data==")
         # 实例化一个查询对象
-        mm_result = []
         info_check = cclt.InfoCheck(self.__class__.bu_name)
-        for self.item_2 in lst_lp_inv:
-            mm_result.append(info_check.get_master_data(self.item_2[0]))
         # 数据整合
-        index = 0
-        for item_3 in lst_lp_inv:
+        for material_item in lst_lp_inv:
+            # get master data
+            material_code = material_item[0]
+            master_data_result = info_check.get_master_data(material_code)[1]
+            md_standard_cost = master_data_result[6]
+            md_h4_name = master_data_result[2]
+            md_h5_name = master_data_result[3]
+            md_phoenix_status = "Y" if info_check.get_code_phoenix_result(material_code)[0] == "Phoenix Product" else "N"
+            md_suzhou_status = "Y" if material_code[-2:] == "CN" else "N"
+            # get sap price
+            md_sap_price = info_check.get_code_sap_price(material_code)
             # 插入std cost价格
-            if mm_result[index][10] is None:
-                item_3.append(0)
+            if not md_standard_cost:
+                material_item.append(0)
             else:
-                item_3.append(mm_result[index][10] * item_3[2])
+                material_item.append(md_standard_cost * material_item[2])
             # 插入SAP Price价格
-            if mm_result[index][11] is None:
-                item_3.append(0)
+            if not md_sap_price:
+                material_item.append(0)
             else:
-                item_3.append(mm_result[index][11] * item_3[2])
-            # 插入BU
-            item_3.append(self.__class__.bu_name)
-            # 插入H4
-            item_3.append(mm_result[index][4])
-            # 插入H5
-            item_3.append(mm_result[index][5])
+                material_item.append(md_sap_price * material_item[2])
+            # 插入BU, h4, h5
+            material_item.append(self.__class__.bu_name)
+            material_item.append(md_h4_name)
+            material_item.append(md_h5_name)
             # 插入Suzhou属性
-            item_3.append(mm_result[index][7])
+            material_item.append(md_suzhou_status)
             # 插入Phoenix属性
-            item_3.append(mm_result[index][12])
-            index += 1
+            material_item.append(md_phoenix_status)
         # 插入数据库
         print("==Reading complete, start importing to database==")
         tbl_name = self.__class__.bu_name + "_LP_INV"
@@ -132,64 +135,61 @@ class MonthlyUpdate:
         if tbl_result == 0:
             print("!Error. Wrong date input, please re-input. ")
             return
-        sql_cmd = '''SELECT Material, Inventory_OnHand, Available_Stock, Pending_Inventory_Bonded_Total_Qty, 
-                    Pending_Inventory_Bonded_Q_Hold_Qty, Pending_Inventory_NonB_Total_Qty, SS FROM '''
-        c.execute(sql_cmd + import_tbl_name + " Order by Available_Stock DESC")
+        sql_cmd = "SELECT Material, Inventory_OnHand, Available_Stock, Pending_Inventory_Bonded_Total_Qty, " \
+                  "Pending_Inventory_Bonded_Q_Hold_Qty, Pending_Inventory_NonB_Total_Qty, SS FROM " \
+                  + import_tbl_name + " Order by Available_Stock DESC"
+        c.execute(sql_cmd)
         lst_jnj_inv = []
         inv_output = c.fetchall()
         # 转成列表，插入月份
-        for item in inv_output:
-            item_jnj_inv = list(item)
+        for material_item in inv_output:
+            item_jnj_inv = list(material_item)
             item_jnj_inv.insert(0, str_month)
             lst_jnj_inv.append(item_jnj_inv)
         # 实例化一个查询对象
-        mm_result = []
         info_check = cclt.InfoCheck(self.__class__.bu_name)
         # 计数变量
-        counter = 0
-        list_length = len(lst_jnj_inv)
-        list_show = []
-        gap_show = int(list_length / 20)
-        for i in range(1, 21):
-            list_show.append(i * gap_show)
-        num = 5
-        # 开始读取material master
-        for self.item in lst_jnj_inv:
-            mm_result.append(info_check.get_master_data(self.item[1]))
+        counter, num = 0, 5
+        list_show = list(range(int(len(lst_jnj_inv) / 20), len(lst_jnj_inv) + 1, int(len(lst_jnj_inv) / 20)))
+        # 数据整合
+        for material_item in lst_jnj_inv:
+            # get master data
+            material_code = material_item[1]
+            master_data_result = info_check.get_master_data(material_code)[1]
+            md_standard_cost = master_data_result[6]
+            md_h4_name = master_data_result[2]
+            md_h5_name = master_data_result[3]
+            md_phoenix_status = "Y" if info_check.get_code_phoenix_result(material_code)[0] == "Phoenix Product" else "N"
+            md_suzhou_status = "Y" if material_code[-2:] == "CN" else "N"
+            md_instrument_status = info_check.get_bu_master_data(material_code, "Instrument")
+            md_pm_status = info_check.get_bu_master_data(material_code, "PM")
+            # get sap price
+            md_sap_price = info_check.get_code_sap_price(material_code)
+            # 设定价格
+            item_std_cost = md_standard_cost if md_standard_cost else 0
+            item_sap_price = md_sap_price if md_sap_price else 0
+            # 插入Value_Standard_Cost
+            material_item.append(item_std_cost * material_item[3])
+            # 插入Value_SAP_Price
+            material_item.append(item_sap_price * material_item[3])
+            # 插入Pending_NB_Std_Cost
+            material_item.append(item_std_cost * material_item[6])
+            # 插入Pending_NB_SAP_Price
+            material_item.append(item_sap_price * material_item[6])
+            # 插入Pending_B_Std_Cost
+            material_item.append(item_std_cost * material_item[4])
+            # 插入Pending_B_SAP_Price
+            material_item.append(item_sap_price * material_item[4])
+            # 插入 Total_Inventory, Total_Inventory_Std_Cost, Total_Inventory_SAP_Price
+            total_inv_qty = material_item[3] + material_item[4] + material_item[6]
+            material_item.extend([total_inv_qty, total_inv_qty * item_std_cost, total_inv_qty * item_sap_price])
+            # 插入 h4, h5, pm, instrument, suzhou, phoenix六个特殊属性
+            material_item.extend([md_h4_name, md_h5_name, md_pm_status, md_instrument_status,
+                                  md_suzhou_status, md_phoenix_status])
             counter += 1
             if counter in list_show:
                 print(" -->", num, "%", end="", flush=True)
                 num += 5
-        # 数据整合
-        index = 0
-        for item in lst_jnj_inv:
-            # 设定价格
-            if mm_result[index][10] is None:
-                item_std_cost = 0
-            else:
-                item_std_cost = mm_result[index][10]
-            if mm_result[index][11] is None:
-                item_sap_price = 0
-            else:
-                item_sap_price = mm_result[index][11]
-            # 插入Value_Standard_Cost
-            item.append(item_std_cost * item[3])
-            # 插入Value_SAP_Price
-            item.append(item_sap_price * item[3])
-            # 插入Pending_NB_Std_Cost
-            item.append(item_std_cost * item[6])
-            # 插入Pending_NB_SAP_Price
-            item.append(item_sap_price * item[6])
-            # 插入Pending_B_Std_Cost
-            item.append(item_std_cost * item[4])
-            # 插入Pending_B_SAP_Price
-            item.append(item_sap_price * item[4])
-            # 插入 Total_Inventory, Total_Inventory_Std_Cost, Total_Inventory_SAP_Price
-            total_inv_qty = item[3] + item[4] + item[6]
-            item.extend([total_inv_qty, total_inv_qty * item_std_cost, total_inv_qty * item_sap_price])
-            # 插入 h4, h5, pm, instrument, suzhou, phoenix六个特殊属性
-            item.extend([mm_result[index][4], mm_result[index][5], mm_result[index][6], mm_result[index][16], mm_result[index][7], mm_result[index][12]])
-            index += 1
         # 插入数据库
         print(" ")
         print("==Reading complete, start importing to database==")
@@ -242,5 +242,5 @@ class MonthlyUpdate:
 
 if __name__ == "__main__":
     data_import = MonthlyUpdate("TU")
-    data_import.data_update_entrance("909")
+    data_import.update_jnj_inv()
     pass
