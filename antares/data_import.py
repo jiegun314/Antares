@@ -137,6 +137,8 @@ class DataInput:
         start_time = datetime.now()
         if data_type == "Master_Data":
             df = pd.read_excel(file_fullname, na_values="0", dtype={'SAP_Price': np.float64})
+        elif data_type == "SAP_Price":
+            df = pd.read_excel(file_fullname, na_values="0", dtype={'Price': np.float64})
         else:
             df = pd.read_excel(file_fullname, na_values="0")
         # data = df.values

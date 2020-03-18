@@ -236,7 +236,7 @@ class CurrentInventory:
         for item in bo_result:
             bo_qty_sum += item[4]
             bo_value_sum += item[5]
-        print("=== Current Backorder Quantity %s, Value RMB %s ===" %(bo_qty_sum, format(bo_value_sum,",.0f")))
+        print("=== Current Backorder Quantity %s, Value RMB %s ===" % (int(bo_qty_sum), format(bo_value_sum, ",.0f")))
         # 输入表格
         title = [('Material', 'Description', 'Hierarchy_5', 'CSC', 'Qty', 'Value', 'GIT_1', 'GIT_2', 'GIT_3', 'GIT_4',
                   'Open_PO')]
@@ -406,11 +406,14 @@ class CurrentInventory:
                 c.execute(sql_cmd)
                 result = c.fetchall()[0]
                 title = ["Material", "Description", "Hierarchy_5", "Available_Stock", "Pending_Qty_BD",
-                         "Pending_Qty_NB", "CSC", "GIT_1_Qty", "GIT_2_Qty","GIT_3_Qty", "GIT_4_Qty", "Std Cost",
+                         "Pending_Qty_NB", "CSC", "GIT_1_Qty", "GIT_2_Qty", "GIT_3_Qty", "GIT_4_Qty", "Std Cost",
                          "AVG Selling Price"]
                 code_inv_output = [["Item", "Value"]]
                 for i in range(len(result)):
-                    code_inv_output.append([title[i], result[i]])
+                    if isinstance(result[i], str):
+                        code_inv_output.append([title[i], result[i]])
+                    else:
+                        code_inv_output.append([title[i], int(result[i])])
                 print(tabulate(code_inv_output, headers="firstrow", floatfmt=",.0f", tablefmt="github"))
         else:
             print("!!Error - This Material Code does NOT exist, Please re-input! ")
@@ -565,6 +568,6 @@ class CurrentInventory:
 
 
 if __name__ == "__main__":
-    test = CurrentInventory("TU")
-    test.get_pending_trend()
+    test = CurrentInventory("CMF")
+    test.get_code_inv()
     # test.inv_data_sync(50)
