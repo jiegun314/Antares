@@ -42,6 +42,8 @@ class CurrentInventoryMenu:
                 crt_inv_cclt.display_h5_inv_detail()
             elif cmd_code == "bo_trend":
                 crt_inv_cclt.display_backorder_trend()
+            elif cmd_code == "mapping":
+                crt_inv_cclt.inventory_mapping()
             elif cmd_code == "sync":
                 crt_inv_cclt.inv_data_sync(90)
             elif cmd_code == "cmd":

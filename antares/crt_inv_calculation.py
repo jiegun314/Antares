@@ -456,6 +456,47 @@ class CurrentInventory:
         print(tabulate(result_to_print, headers="firstrow", tablefmt="github", showindex=range(1, len(result_to_print)),
                        floatfmt=",.0f"))
 
+    # data mapping for a list of codes
+    def inventory_mapping(self):
+        print("===Inventory Status Mapping with Lists===")
+        # read code list
+        file_fullname = "../data/_Source_Data/Data_Mapping.txt"
+        try:
+            fo = open(file_fullname, "r")
+        except FileNotFoundError:
+            print("!Error, please make sure you have put Data_Mapping.txt under _Source_Data folder")
+            return
+        code_list = [item.strip() for item in fo.readlines()]
+        # get the date
+        inventory_date = input("Inventory Data (YYYYMMDD, Press Enter to get newest) : ")
+        if inventory_date == "":
+            table_name = self._get_newest_date()
+        else:
+            table_name = "INV" + inventory_date
+        if not self._check_date_availability(table_name):
+            print("!Error, please make sure you input the correct date.")
+            return
+        # connect to database and get the inventory data
+        inventory_result = [["Material", "Description", "Hierarchy_5", "CSC", "Available_Stock", "Pending_Qty_BD",
+                             "Pending_Qty_NB", "GIT_1_Qty", "GIT_2_Qty", "GIT_3_Qty", "GIT_4_Qty", "Open_PO"], ]
+        db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
+        conn = sqlite3.connect(db_name)
+        c = conn.cursor()
+        for code_item in code_list:
+            sql_cmd = "SELECT Material, Description, Hierarchy_5, CSC, Available_Stock, " \
+                      "Pending_Inventory_Bonded_Total_Qty, Pending_Inventory_NonB_Total_Qty, GIT_1_Week, GIT_2_Week, " \
+                      "GIT_3_Week, GIT_4_Week, Open_PO FROM " + table_name + " WHERE Material = \'" + code_item + "\'"
+            c.execute(sql_cmd)
+            result = c.fetchall()
+            if result:
+                inventory_result.append(result[0])
+            else:
+                inventory_result.append([code_item, ])
+        conn.commit()
+        conn.close()
+        print(tabulate(inventory_result, headers="firstrow", tablefmt="github",
+                       showindex=range(1, len(inventory_result)), floatfmt=",.0f"))
+
     # 数据同步
     def inv_data_sync(self, sync_days):
         print("===Sync Current Inventory Data from Oneclick===")
@@ -500,5 +541,5 @@ class CurrentInventory:
 
 if __name__ == "__main__":
     test = CurrentInventory("TU")
-    print(test._get_newest_date())
+    test.inventory_mapping()
     # test.inv_data_sync(50)
