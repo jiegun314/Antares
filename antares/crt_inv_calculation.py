@@ -75,7 +75,7 @@ class CurrentInventory:
         c.execute(sql_cmd)
         conn.commit()
         conn.close()
-        print(">> Table %s is deleted." % self.table_name)
+        print(">> Table %s is deleted." % table_name)
 
     # import oneclick inventory data into database
     def oneclick_inventory_import(self, str_date):
