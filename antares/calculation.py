@@ -310,7 +310,10 @@ class InfoCheck:
         tbl_name = c.fetchone()[0]
         forecast_result = []
         for month_item in month_list:
-            sql_cmd = "SELECT sum(Value_SAP_Price) FROM " + tbl_name + " WHERE Hierarchy_5 = \'" + h5_name + \
+            if h5_name.upper() == "ALL":
+                sql_cmd = "SELECT sum(Value_SAP_Price) FROM " + tbl_name + " WHERE Month = \'" + month_item + "\'"
+            else:
+                sql_cmd = "SELECT sum(Value_SAP_Price) FROM " + tbl_name + " WHERE Hierarchy_5 = \'" + h5_name + \
                       "\' AND Month = \'" + month_item + "\'"
             c.execute(sql_cmd)
             forecast_result.append(c.fetchall()[0][0])
