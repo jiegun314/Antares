@@ -1,5 +1,6 @@
 import sqlite3
 import time
+import json
 from tabulate import tabulate
 
 db_path = "../data/_DB/"
@@ -31,16 +32,30 @@ def check_future_month(month_item, month_quantity):
 
 
 # display the command list
+# def display_command_list_sql(command_type):
+#     db_fullname = db_path + "Master_Data.db"
+#     conn = sqlite3.connect(db_fullname)
+#     sql_cmd = "SELECT Command_Code, Description from Command_List WHERE Type = \'" + command_type \
+#               + "\' ORDER by Command_Code"
+#     c = conn.cursor()
+#     c.execute(sql_cmd)
+#     final_display_result = [("Code", "Command_Detail"), ] + c.fetchall()
+#     print(tabulate(final_display_result, tablefmt="psql", headers="firstrow", colalign=("left","left")))
+#     pass
+
+
+# read the command list from json file
 def display_command_list(command_type):
-    db_fullname = db_path + "Master_Data.db"
-    conn = sqlite3.connect(db_fullname)
-    sql_cmd = "SELECT Command_Code, Description from Command_List WHERE Type = \'" + command_type \
-              + "\' ORDER by Command_Code"
-    c = conn.cursor()
-    c.execute(sql_cmd)
-    final_display_result = [("Code", "Command_Detail"), ] + c.fetchall()
-    print(tabulate(final_display_result, tablefmt="psql", headers="firstrow", colalign=("left","left")))
-    pass
+    # read json file
+    file_fullname = db_path + "command_list.json"
+    try:
+        with open(file_fullname, "r", encoding='utf8') as f:
+            command_list_file = json.load(f)
+    except FileNotFoundError:
+        print("!Error, file missing. Please check if the data file is in the data folder.")
+    command_list = command_list_file[command_type].items()
+    print("====<Commands List>====")
+    print(tabulate(command_list, tablefmt="psql", headers="firstrow", colalign=("left", "left")))
 
 
 # input MI data to database, data format [[YYYYMM, Qty],]
@@ -111,5 +126,5 @@ def display_ascii_graph(title):
 
 
 if __name__ == '__main__':
-    display_ascii_graph("welcome")
+    display_command_list("current_inventory_command")
     pass

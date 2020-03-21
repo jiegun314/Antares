@@ -536,7 +536,7 @@ class CurrentInventory:
     @staticmethod
     def show_command_list():
         import public_function
-        public_function.display_command_list("CRT_INV")
+        public_function.display_command_list("current_inventory_command")
 
 
 if __name__ == "__main__":

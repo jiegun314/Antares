@@ -19,7 +19,7 @@ class InfoShow:
 
     @staticmethod
     def show_command_list():
-        pb_func.display_command_list("Main")
+        pb_func.display_command_list("public_command")
 
     # 数据的表格化输出
     def format_output(self, data):
