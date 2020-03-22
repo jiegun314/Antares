@@ -2,6 +2,7 @@
 import sqlite3
 import pandas as pd
 import calculation as cclt
+import time
 # import math
 # import data_import as dtimp
 import numpy as np
@@ -13,7 +14,7 @@ class MonthlyUpdate:
     update_path = "../data/_Update/"
     db_path = "../data/_DB/"
 
-    def __init__ (self, bu):
+    def __init__(self, bu):
         self.__class__.bu_name = bu
 
     def update_sales(self, inv_type):
@@ -223,6 +224,65 @@ class MonthlyUpdate:
         print("ESO File is updated")
         pass
 
+    # import final forecast
+    def update_final_forecast(self):
+        file_name = self.__class__.bu_name + "_Forecast"
+        file_fullname = self.__class__.update_path + "Update_" + file_name + ".xlsx"
+        print("Start to read forecast file")
+        df_forecast = pd.read_excel(file_fullname).fillna(0)
+        # get month list
+        month_list = np.delete(df_forecast.columns.values, 0, 0).tolist()
+        month_length = len(month_list)
+        # get code list
+        code_list = df_forecast['Code'].values.tolist()
+        # get hierarchy name and sap_price
+        infocheck = cclt.InfoCheck(self.__class__.bu_name)
+        print("Start to map Hierarchy_5 data")
+        hierarchy_5_list = infocheck.get_master_data_for_list(code_list, "Hierarchy_5")
+        print("Start to map SAP_Price data")
+        sap_price_list = infocheck.get_master_data_for_list(code_list, "SAP_Price")
+        print("Start to generate list")
+        # merge back to dataframe
+        df_forecast.insert(1, "Hierarchy_5", hierarchy_5_list)
+        df_forecast.insert(2, "SAP_Price", sap_price_list)
+        # merge sap value
+        print("Start to generate forecast in value format")
+        # print(df_forecast.head())
+        for index in range(0, len(month_list)):
+            column_name = 'Value_' + month_list[index]
+            df_forecast[column_name] = df_forecast.apply(lambda x: x[month_list[index]] * x['SAP_Price'], axis=1)
+        print("Convert to import list")
+        list_forecast_raw = df_forecast.values.tolist()
+        forecast_to_upload = []
+        for forecast_item in list_forecast_raw:
+            index = 0
+            for month_item in month_list:
+                # insert code and hierarchy_5
+                forecast_single_line = forecast_item[0:2]
+                # insert month
+                forecast_single_line.append(month_item)
+                # insert forecast quantity
+                forecast_single_line.append(forecast_item[index + 3])
+                # insert forecast value
+                forecast_single_line.append(forecast_item[index + 3 + month_length])
+                # insert single line for one code in one month
+                forecast_to_upload.append(forecast_single_line)
+                index += 1
+        # change to dataframe for upload
+        df_forecast_upload = pd.DataFrame(forecast_to_upload,
+                                          columns=["Material", "Hierarchy_5", "Month", "Quantity", "Value_SAP_Price"])
+        # df_forecast_upload.to_excel(self.__class__.update_path + "forecast.xlsx")
+        # write to final forecast
+        print("Update to database as final forecast")
+        tbl_final_fcst = self.__class__.bu_name + "_Final_Forecast"
+        db_final_fcst_fullname = self.__class__.db_path + tbl_final_fcst + ".db"
+        tbl_name = tbl_final_fcst + "_" + time.strftime("%Y%m", time.localtime())
+        conn = sqlite3.connect(db_final_fcst_fullname)
+        df_forecast_upload.to_sql(tbl_name, conn, index=False, if_exists='replace')
+        conn.commit()
+        conn.close()
+        print("Final forecast updated!~")
+
     def data_update_entrance(self, cmd):
         if cmd == "901":
             self.update_sales("GTS")
@@ -242,5 +302,5 @@ class MonthlyUpdate:
 
 if __name__ == "__main__":
     data_import = MonthlyUpdate("TU")
-    data_import.update_jnj_inv()
+    data_import.update_final_forecast()
     pass

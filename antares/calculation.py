@@ -41,6 +41,27 @@ class InfoCheck:
         conn.close()
         return list(row)
 
+    # get master data for code list
+    def get_master_data_for_list(self, code_list, master_data_name):
+        file_name = self.__class__.bu_name + "_Master_Data" if master_data_name == "SAP_Price" else "Master_Data"
+        db_fullname = self.__class__.db_path + file_name + ".db"
+        table_name = self.__class__.bu_name + "_SAP_Price" if master_data_name == "SAP_Price" else "MATERIAL_MASTER"
+        master_data_result = []
+        conn = sqlite3.connect(db_fullname)
+        c = conn.cursor()
+        for code_name in code_list:
+            if master_data_name == "SAP_Price":
+                sql_cmd = "SELECT Price FROM " + table_name + " WHERE Material = \'" + code_name + "\'"
+            else:
+                sql_cmd = "SELECT " + master_data_name + " FROM " + table_name + " WHERE Material = \'" + code_name + "\'"
+            c.execute(sql_cmd)
+            master_data_output = c.fetchall()
+            if master_data_output:
+                master_data_result.append(master_data_output[0][0])
+            else:
+                master_data_result.append(0)
+        return master_data_result
+
     # get single column from bu master data
     def get_bu_master_data(self, code, column_name):
         file_name = self.__class__.bu_name + "_Master_Data"

@@ -438,19 +438,19 @@ class GetStatisticalForecast:
         db_statis_fcst_fullname = self.__class__.db_path + tbl_statis_fcst + ".db"
         tbl_name = tbl_statis_fcst + "_" + time.strftime("%Y%m", time.localtime())
         conn = sqlite3.connect(db_statis_fcst_fullname)
-        df.to_sql(tbl_name, conn, index_label="Material", if_exists='replace')
+        df.to_sql(tbl_name, conn, index=False, if_exists='replace')
         conn.commit()
         conn.close()
         print("=== Statistical Forecast Updated %s ===" % db_statis_fcst_fullname)
         # write to final forecast
-        tbl_final_fcst = self.__class__.bu_name + "_Final_Forecast"
-        db_final_fcst_fullname = self.__class__.db_path + tbl_final_fcst + ".db"
-        tbl_name = tbl_final_fcst + "_" + time.strftime("%Y%m", time.localtime())
-        conn = sqlite3.connect(db_final_fcst_fullname)
-        df.to_sql(tbl_name, conn, index_label="Material", if_exists='replace')
-        conn.commit()
-        conn.close()
-        print("=== Final Forecast Updated %s ===" % db_final_fcst_fullname)
+        # tbl_final_fcst = self.__class__.bu_name + "_Final_Forecast"
+        # db_final_fcst_fullname = self.__class__.db_path + tbl_final_fcst + ".db"
+        # tbl_name = tbl_final_fcst + "_" + time.strftime("%Y%m", time.localtime())
+        # conn = sqlite3.connect(db_final_fcst_fullname)
+        # df.to_sql(tbl_name, conn, index_label="Material", if_exists='replace')
+        # conn.commit()
+        # conn.close()
+        # print("=== Final Forecast Updated %s ===" % db_final_fcst_fullname)
 
     # 对于IMS最后一个月数据补足
     def fulfill_last_month_ims(self, lst_sales_data):

@@ -179,16 +179,16 @@ class DataInput:
         print("%s imported" % master_data_filename)
         pass
     
-    def get_H5_list(self):
-        self.file_name = self.__class__.bu_name + "_Master_Data"
-        self.db_fullname = self.__class__.db_path + self.file_name + ".db"
-        conn = sqlite3.connect(self.db_fullname)
-        c = conn.cursor()
-        result = c.execute("SELECT DISTINCT Hierarchy_5 from " + self.file_name)
-        self.list = []
-        for self.item in result:
-            self.list.append(self.item[0])
-        return (self.list)
+    # def get_H5_list(self):
+    #     self.file_name = self.__class__.bu_name + "_Master_Data"
+    #     self.db_fullname = self.__class__.db_path + self.file_name + ".db"
+    #     conn = sqlite3.connect(self.db_fullname)
+    #     c = conn.cursor()
+    #     result = c.execute("SELECT DISTINCT Hierarchy_5 from " + self.file_name)
+    #     self.list = []
+    #     for self.item in result:
+    #         self.list.append(self.item[0])
+    #     return (self.list)
 
 
 if __name__ == "__main__":
