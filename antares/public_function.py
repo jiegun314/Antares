@@ -53,6 +53,7 @@ def display_command_list(command_type):
             command_list_file = json.load(f)
     except FileNotFoundError:
         print("!Error, file missing. Please check if the data file is in the data folder.")
+        return
     command_list = command_list_file[command_type].items()
     print("====<Commands List>====")
     print(tabulate(command_list, tablefmt="psql", headers="firstrow", colalign=("left", "left")))
