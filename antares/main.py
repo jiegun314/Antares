@@ -86,7 +86,7 @@ class SystemIndex:
                     cmd_info_index.show_h5_all_info()
                 else:
                     print("!!ERROR: Wrong CMD code. Plz input right cmd code, or input exit to quit.")
-            elif cmd_code in ["901", "902", "903", "905", "906", "909"]:
+            elif cmd_code in ["901", "902", "903", "905", "906", "908", "909"]:
                 import data_update as update
                 data_input = update.MonthlyUpdate(self.__class__.bu_name)
                 data_input.data_update_entrance(cmd_code)

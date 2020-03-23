@@ -226,8 +226,12 @@ class MonthlyUpdate:
 
     # import final forecast
     def update_final_forecast(self):
+        print("==Final Forecast Import==")
         file_name = self.__class__.bu_name + "_Forecast"
         file_fullname = self.__class__.update_path + "Update_" + file_name + ".xlsx"
+        print("Warning - Make sure you've put file %s under update folder." % file_name)
+        if input("Ready to proceed? (Y/N): ").upper() != 'Y':
+            return
         print("Start to read forecast file")
         df_forecast = pd.read_excel(file_fullname).fillna(0)
         # get month list
@@ -294,10 +298,12 @@ class MonthlyUpdate:
             self.update_jnj_inv()
         elif cmd == "906":
             self.update_lp_inv()
+        elif cmd == "908":
+            self.update_final_forecast()
         elif cmd == "909":
             self.update_eso()
         else:
-            pass
+            print("!!Error: wrong user name, please restart the program.")
 
 
 if __name__ == "__main__":
