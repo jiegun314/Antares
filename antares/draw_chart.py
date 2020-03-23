@@ -83,13 +83,13 @@ def all_in_one_echart(name, final_month_list, jnj_inv_month, lp_inv_month, sales
         .set_global_opts(title_opts=opts.TitleOpts(title="All-in-one for " + name),
                          datazoom_opts=[opts.DataZoomOpts(), opts.DataZoomOpts(type_="inside")], )
     )
-    line_gts = Line().add_xaxis(final_month_list).add_yaxis("GTS", sales_gts, yaxis_index=1)\
+    line_gts = Line().add_xaxis(final_month_list).add_yaxis("GTS", sales_gts, yaxis_index=1, is_smooth=True)\
         .set_series_opts(label_opts=opts.LabelOpts(is_show=False))
-    line_lpsales = Line().add_xaxis(final_month_list).add_yaxis("NED Sales", sales_lpsales, yaxis_index=1)\
+    line_lpsales = Line().add_xaxis(final_month_list).add_yaxis("NED Sales", sales_lpsales, yaxis_index=1, is_smooth=True)\
         .set_series_opts(label_opts=opts.LabelOpts(is_show=False))
-    line_ims = Line().add_xaxis(final_month_list).add_yaxis("IMS", sales_ims, yaxis_index=1)\
+    line_ims = Line().add_xaxis(final_month_list).add_yaxis("IMS", sales_ims, yaxis_index=1, is_smooth=True)\
         .set_series_opts(label_opts=opts.LabelOpts(is_show=False))
-    line_fcst = Line().add_xaxis(final_month_list).add_yaxis("Forecast", final_fcst_data, yaxis_index=1)\
+    line_fcst = Line().add_xaxis(final_month_list).add_yaxis("Forecast", final_fcst_data, yaxis_index=1, is_smooth=True)\
         .set_series_opts(label_opts=opts.LabelOpts(is_show=False))
     bar.overlap(line_gts)
     bar.overlap(line_lpsales)
