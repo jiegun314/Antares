@@ -335,9 +335,9 @@ class InfoCheck:
                 sql_cmd = "SELECT sum(Value_SAP_Price) FROM " + tbl_name + " WHERE Month = \'" + month_item + "\'"
             else:
                 sql_cmd = "SELECT sum(Value_SAP_Price) FROM " + tbl_name + " WHERE Hierarchy_5 = \'" + h5_name + \
-                      "\' AND Month = \'" + month_item + "\'"
+                      "\' COLLATE NOCASE AND Month = \'" + month_item + "\'"
             c.execute(sql_cmd)
-            forecast_result.append(c.fetchall()[0][0])
+            forecast_result.append(c.fetchall()[0][0] * 1.0)
         conn.commit()
         conn.close()
         return forecast_result

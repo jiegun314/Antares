@@ -218,22 +218,23 @@ class InfoShow:
         else:
             print("!!Error, Wrong Hierarchy_5 Name, Please Check!")
 
-    # 显示某个代码的Statistical Forecast
-    def show_code_statistical_forecast(self, month_quantity):
-        print("==Statistical Forecast for Single Code==")
-        str_code = input("Material code: ").upper()
-        fcst_show = calculation.InfoCheck(self.__class__.bu_name)
-        forecast_quantity = fcst_show.get_code_forecast(str_code, "Final", month_quantity)
-        if forecast_quantity != "Fail":
-            print("== <Statistical Forecast for %s> ==" % str_code)
-            self.format_output(forecast_quantity)
+    # display forecast for one Hierarchy_5
+    def show_h5_forecast(self, h5_name, fcst_type, month_quntity=12):
+        print("== %s Forecast for %s ==" % (fcst_type, h5_name))
+        forecast_calculation = calculation.InfoCheck(self.__class__.bu_name)
+        month_list = forecast_calculation.get_time_list(self.get_current_month(), month_quntity)
+        forecast_result = forecast_calculation.get_h5_forecast(h5_name, fcst_type, month_quntity)
+        self.format_output([["Month", ] + month_list, ["Value (SAP Price)", ] + forecast_result])
+        pass
 
     # Show all information of one Hierarchy_5
-    def show_h5_all_info(self, month_number=12):
+    def show_h5_all_info(self, month_number=12, forecast_month=12):
         h5_name = self.get_h5_name()
         if h5_name != "NULL":
             self.get_h5_sales_data(h5_name, month_number)
             self.get_h5_inventory(h5_name, month_number)
+            self.show_h5_forecast(h5_name, "Statistical", forecast_month)
+            self.show_h5_forecast(h5_name, "Final", forecast_month)
         else:
             print("!!Error, Wrong Hierarchy_5 Name, Please Check!")
 
@@ -333,4 +334,4 @@ class InfoShow:
 
 if __name__ == "__main__":
     test = InfoShow("TU", "Jeffrey")
-    test.show_code_chart()
+    test.show_h5_forecast("PFNA-II", "Final")
