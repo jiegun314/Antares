@@ -334,4 +334,4 @@ class InfoShow:
 
 if __name__ == "__main__":
     test = InfoShow("TU", "Jeffrey")
-    test.show_h5_forecast("PFNA-II", "Final")
+    test.show_h5_all_info()

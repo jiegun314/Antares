@@ -337,7 +337,11 @@ class InfoCheck:
                 sql_cmd = "SELECT sum(Value_SAP_Price) FROM " + tbl_name + " WHERE Hierarchy_5 = \'" + h5_name + \
                       "\' COLLATE NOCASE AND Month = \'" + month_item + "\'"
             c.execute(sql_cmd)
-            forecast_result.append(c.fetchall()[0][0] * 1.0)
+            # if not setting, make value 0
+            result = c.fetchall()
+            forecast_output = result[0][0] if result[0][0] else 0
+            # change format from integer to float
+            forecast_result.append(forecast_output * 1.0)
         conn.commit()
         conn.close()
         return forecast_result
@@ -361,10 +365,8 @@ class InfoCheck:
         code_eso_result = [["Cycle", ], ["E_Qty", ], ["SM_Qty", ], ["O_Qty", ], ["ESO_Qty", ], ["ESO_Value_Std_Cost", ],
                            ["ESO_Value_SAP_Price", ]]
         for item in eso_result:
-            index = 0
-            while index < 7:
+            for index in range(0, 7):
                 code_eso_result[index].append(item[index])
-                index += 1
         print(tabulate(code_eso_result, tablefmt="psql", headers="firstrow", floatfmt=",.0f"))
 
 
