@@ -2,6 +2,8 @@ from pyecharts.charts import Line
 from pyecharts.charts import Bar
 from pyecharts import options as opts
 from pyecharts.globals import ThemeType
+import platform
+import subprocess
 import os
 
 
@@ -25,7 +27,10 @@ def line_chart(code_name, x_value, y_value, x_label, y_label, chart_ttl):
             datazoom_opts=[opts.DataZoomOpts(), opts.DataZoomOpts(type_="inside")],)
     )
     c.render(file_name)
-    os.startfile(file_name)
+    if platform.system() == "Linux":
+        subprocess.call(["xdg-open", file_name])
+    else:
+        os.startfile(file_name)
 
 
 # draw stack bar chart for backorder daily trend
@@ -43,7 +48,10 @@ def backorder_trend_chart(date_list, backorder_value):
                          datazoom_opts=[opts.DataZoomOpts(), opts.DataZoomOpts(type_="inside")],)
     )
     c.render(file_name)
-    os.startfile(file_name)
+    if platform.system() == "Linux":
+        subprocess.call(["xdg-open", file_name])
+    else:
+        os.startfile(file_name)
 
 
 # draw stack bar chart for pending inventory trend
@@ -60,7 +68,10 @@ def pending_inventory_trend_chart(date_list, pending_inventory_data, title_name)
                          datazoom_opts=[opts.DataZoomOpts(), opts.DataZoomOpts(type_="inside")],)
     )
     c.render(file_name)
-    os.startfile(file_name)
+    if platform.system() == "Linux":
+        subprocess.call(["xdg-open", file_name])
+    else:
+        os.startfile(file_name)
 
 
 # draw all-in-one chart for code and h5 summary with echarts
@@ -96,5 +107,8 @@ def all_in_one_echart(name, final_month_list, jnj_inv_month, lp_inv_month, sales
     bar.overlap(line_ims)
     bar.overlap(line_fcst)
     bar.render(file_name)
-    os.startfile(file_name)
-    pass
+    if platform.system() == "Linux":
+        subprocess.call(["xdg-open", file_name])
+    else:
+        os.startfile(file_name)
+
