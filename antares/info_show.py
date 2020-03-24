@@ -134,7 +134,7 @@ class InfoShow:
             if forecast_quantity != "Fail":
                 self.format_output(forecast_quantity)
             # 显示ESO
-            infocheck.get_code_eso(material_code)
+            self.display_material_eso(material_code, "code")
             print("-----------END-----------")
 
     # get hierarchy_5 name
@@ -235,14 +235,28 @@ class InfoShow:
             self.get_h5_inventory(h5_name, month_number)
             self.show_h5_forecast(h5_name, "Statistical", forecast_month)
             self.show_h5_forecast(h5_name, "Final", forecast_month)
+            self.display_material_eso(h5_name, "h5")
         else:
             print("!!Error, Wrong Hierarchy_5 Name, Please Check!")
 
     # 显示单个代码的ESO
     def show_code_eso(self):
         code_name = input("Input Material Code: ").upper()
+        self.display_material_eso(code_name, eso_type="code")
+
+    # display eso for single code
+    def display_material_eso(self, material_code, eso_type):
         info_check = calculation.InfoCheck(self.__class__.bu_name)
-        info_check.get_code_eso(code_name)
+        eso_result = info_check.get_material_eso(material_code, eso_type)
+        if eso_type == "code":
+            eso_output = [["Cycle", ], ["E_Qty", ], ["SM_Qty", ], ["O_Qty", ], ["ESO_Qty", ], ["ESO_Value_Std_Cost", ],
+                           ["ESO_Value_SAP_Price", ]]
+        else:
+            eso_output = [["Cycle", ], ["ESO_Value_Std_Cost", ], ["ESO_Value_SAP_Price", ]]
+        for item in eso_result:
+            for index in range(0, len(eso_output)):
+                eso_output[index].append(item[index])
+        print(tabulate(eso_output, tablefmt="psql", headers="firstrow", floatfmt=",.0f"))
 
     # 显示单个代码的综合图表
     def show_code_chart(self):
@@ -334,4 +348,4 @@ class InfoShow:
 
 if __name__ == "__main__":
     test = InfoShow("TU", "Jeffrey")
-    test.show_h5_all_info()
+    test.display_material_eso("VA Ankle", "H5")

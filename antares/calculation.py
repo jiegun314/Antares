@@ -346,33 +346,36 @@ class InfoCheck:
         conn.close()
         return forecast_result
 
-    # 获取单个代码的ESO
-    def get_code_eso(self, code_name):
-        print("==== < ESO Trend of %s > ====" % code_name)
+    # get eso result for one code or one hierarchy_5
+    def get_material_eso(self, material_name, eso_type="code"):
+        print("==== < ESO Trend of %s > ====" % material_name)
         filename = self.__class__.bu_name + "_ESO"
         db_fullname = self.__class__.db_path + filename + ".db"
         conn = sqlite3.connect(db_fullname)
         c = conn.cursor()
-        sql_cmd = "SELECT Month, Excess_Quantity, Slow_Moving_Quantity, Obsolete_Quantity, ESO_Quantity, " \
+        if eso_type == "code":
+            sql_cmd = "SELECT Month, Excess_Quantity, Slow_Moving_Quantity, Obsolete_Quantity, ESO_Quantity, " \
                   "ESO_Value_Standard_Cost, ESO_Value_SAP_Price FROM " + filename + " WHERE Material = \'" + \
-                  code_name + "\' ORDER BY Month"
+                  material_name + "\' ORDER BY Month"
+        else:
+            if material_name.upper() != "ALL":
+                sql_cmd = "SELECT Month, sum(ESO_Value_Standard_Cost), sum(ESO_Value_SAP_Price) FROM " + filename + \
+                      " WHERE Hierarchy_5 = \'" + material_name + "\' GROUP by Month, Hierarchy_5 ORDER BY Month"
+            else:
+                sql_cmd = "SELECT Month, sum(ESO_Value_Standard_Cost), sum(ESO_Value_SAP_Price) FROM " + filename + \
+                          " GROUP by Month ORDER BY Month"
         try:
             c.execute(sql_cmd)
         except sqlite3.OperationalError:
             print("!!Error! No such code, please check your input!")
             return
         eso_result = c.fetchall()
-        code_eso_result = [["Cycle", ], ["E_Qty", ], ["SM_Qty", ], ["O_Qty", ], ["ESO_Qty", ], ["ESO_Value_Std_Cost", ],
-                           ["ESO_Value_SAP_Price", ]]
-        for item in eso_result:
-            for index in range(0, 7):
-                code_eso_result[index].append(item[index])
-        print(tabulate(code_eso_result, tablefmt="psql", headers="firstrow", floatfmt=",.0f"))
+        return eso_result
 
 
 if __name__ == "__main__":
     info_check = InfoCheck("TU")
-    result = info_check.get_bu_master_data("440.834S", "PM")
+    result = info_check.get_material_eso("VA Ankle", eso_type="H5")
     print(result)
     # info_check.get_code_phoenix_result("689.893")
 
