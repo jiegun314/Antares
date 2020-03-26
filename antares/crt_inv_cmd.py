@@ -1,4 +1,5 @@
 import crt_inv_calculation as cclt
+import crt_inv_backorder as bo_cclt
 
 
 class CurrentInventoryMenu:
@@ -44,6 +45,9 @@ class CurrentInventoryMenu:
                 crt_inv_cclt.display_backorder_trend()
             elif cmd_code == "mapping":
                 crt_inv_cclt.inventory_mapping()
+            elif cmd_code == "aging":
+                crt_inv_bo_cclt = bo_cclt.CurrentInventoryBackorder(self.__class__.bu_name)
+                crt_inv_bo_cclt.calculate_aging_backorder()
             elif cmd_code == "sync":
                 crt_inv_cclt.inv_data_sync(90)
             elif cmd_code == "help":
