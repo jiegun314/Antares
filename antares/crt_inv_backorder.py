@@ -35,6 +35,7 @@ class CurrentInventoryBackorder:
         c.execute(sql_cmd)
         backorder_code_list = [item[0] for item in c.fetchall()]
         # set up tracing list with code, backorder days, open_status
+        print("---Start to map backorder historical data---")
         backorder_tracing_list = []
         for item in backorder_code_list:
             backorder_tracing_list.append([item, 1, "Y"])
@@ -56,10 +57,12 @@ class CurrentInventoryBackorder:
             print(">", end="", flush=True)
         backorder_tracing_list.sort(key=self.take_quantity, reverse=True)
         print("")
+        print("---Start to generate result---")
         # get current day information
-        backorder_output = [["Material", "Description", "Hierarchy_5", "BO Qty", "GIT Qty", "Open PO", "BO Days"], ]
+        backorder_output = [["Material", "Description", "Hierarchy_5", "CSC", "BO Qty", "GIT Qty", "Open PO",
+                             "BO Days"], ]
         for backorder_item in backorder_tracing_list:
-            sql_cmd = "SELECT Description, Hierarchy_5, Current_Backorder_Qty, " \
+            sql_cmd = "SELECT Description, Hierarchy_5, CSC, Current_Backorder_Qty, " \
                   "sum(GIT_1_Week + GIT_2_Week + GIT_3_Week + GIT_4_Week) as GIT_Qty, Open_PO FROM " +  \
                   current_day_table + " WHERE Material = \'" + backorder_item[0] + "\'"
             c.execute(sql_cmd)

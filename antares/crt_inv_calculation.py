@@ -119,8 +119,8 @@ class CurrentInventory:
         total_available_stock_value, total_useful_stock_value, total_stock_value = 0, 0, 0
         for item in inventory_output:
             total_available_stock_value += item[1]
-            total_useful_stock_value += item[1] + item[2] + item[3]
-            total_stock_value += item[1] + item[2] + item[3] + item[4] + item[5]
+            total_useful_stock_value += item[1] + item[2]
+            total_stock_value += item[1] + item[2] + item[4] + item[5]
         title = [("Hierarchy_5", "Available Stock", "GIT Inventory", "Open PO Value", "Bonded Pending",
                   "Non-bonded Pending")]
         result = title + inventory_output
