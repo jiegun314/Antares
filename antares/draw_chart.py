@@ -54,6 +54,54 @@ def backorder_trend_chart(date_list, backorder_value):
         os.startfile(file_name)
 
 
+# draw stack bar chart for backorder daily trend
+def backorder_trend_line_chart(date_list, backorder_value):
+    sys_path = os.path.abspath('..')
+    file_name = sys_path + "/data/_Charter/Backorder_trend.html"
+    c = (
+        Line(init_opts=opts.InitOpts(theme=ThemeType.VINTAGE, width="1500px"))
+        .add_xaxis(date_list)
+        .add_yaxis(
+            series_name="ND",
+            stack="总量",
+            y_axis=backorder_value[2],
+            areastyle_opts=opts.AreaStyleOpts(opacity=0.5),
+            label_opts=opts.LabelOpts(is_show=False),
+        )
+        .add_yaxis(
+            series_name="ROP",
+            stack="总量",
+            y_axis=backorder_value[1],
+            areastyle_opts=opts.AreaStyleOpts(opacity=0.5),
+            label_opts=opts.LabelOpts(is_show=False),
+        )
+        .add_yaxis(
+            series_name="IND",
+            stack="总量",
+            y_axis=backorder_value[0],
+            areastyle_opts=opts.AreaStyleOpts(opacity=0.5),
+            label_opts=opts.LabelOpts(is_show=True, position="top"),
+        )
+        .set_series_opts(label_opts=opts.LabelOpts(is_show=False))
+        .set_global_opts(
+            title_opts=opts.TitleOpts(title="Backorder trend (Value in RMB)"),
+            tooltip_opts=opts.TooltipOpts(trigger="axis", axis_pointer_type="cross"),
+            yaxis_opts=opts.AxisOpts(
+                type_="value",
+                axistick_opts=opts.AxisTickOpts(is_show=True),
+                splitline_opts=opts.SplitLineOpts(is_show=True),
+            ),
+            xaxis_opts=opts.AxisOpts(type_="category", boundary_gap=False),
+            datazoom_opts=[opts.DataZoomOpts(), opts.DataZoomOpts(type_="inside")],
+        )
+    )
+    c.render(file_name)
+    if platform.system() == "Linux":
+        subprocess.call(["xdg-open", file_name])
+    else:
+        os.startfile(file_name)
+
+
 # draw stack bar chart for pending inventory trend
 def pending_inventory_trend_chart(date_list, pending_inventory_data, title_name):
     sys_path = os.path.abspath('..')

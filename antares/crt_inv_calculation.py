@@ -279,7 +279,8 @@ class CurrentInventory:
             backorder_value_summary[0].append(daily_backorder_total_value['IND'])
             backorder_value_summary[1].append(daily_backorder_total_value['ROP'])
             backorder_value_summary[2].append(daily_backorder_total_value['ND'])
-        chart.backorder_trend_chart(date_list, backorder_value_summary)
+        # chart.backorder_trend_chart(date_list, backorder_value_summary)
+        chart.backorder_trend_line_chart(date_list, backorder_value_summary)
 
     # Daily pending inventory trend display
     def get_pending_trend(self, data_type="value"):
