@@ -1,6 +1,5 @@
 import sqlite3
 import time
-from tabulate import tabulate
 
 
 class InfoCheck:

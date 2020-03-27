@@ -2,10 +2,6 @@ import sqlite3
 # import pandas as pd
 # import numpy as np
 from tabulate import tabulate
-import draw_chart as chart
-import os
-import calculation
-import pandas as pd
 
 
 class CurrentInventoryBackorder:
@@ -57,7 +53,7 @@ class CurrentInventoryBackorder:
             print(">", end="", flush=True)
         backorder_tracing_list.sort(key=self.take_quantity, reverse=True)
         print("")
-        print("---Start to generate result---")
+        print("---Aging Backorder List within %s days---" % len(table_list))
         # get current day information
         backorder_output = []
         for backorder_item in backorder_tracing_list:
