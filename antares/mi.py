@@ -211,8 +211,7 @@ class MI:
     def mi_by_h5(self):
         print("-- Please input the Hierarchy_5 name: --")
         h5_input = input("cmd >> MI >> BY_H5 >> ")
-        infocheck = cclt.InfoCheck(self.__class__.bu_name)
-        h5_result = infocheck.get_h5_name(h5_input)
+        h5_result = pb_func.get_available_h5_name(h5_input, self.__class__.bu_name)
         if h5_result == "NULL":
             print("No Similar H5, Please re-input")
             return

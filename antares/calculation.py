@@ -233,40 +233,6 @@ class InfoCheck:
                 lst_inv_month.append(round(lst_inv[i+6] / (sum(lst_sales[i: i+6])/6), 1))
         return lst_inv_month
 
-    # 返回有效的H5名称
-    def get_h5_name(self, h5_name):
-        # 文件名，无后缀
-        tbl_name = self.__class__.bu_name + "_Master_Data"
-        # 数据库完整路径加名称
-        db_fullname = self.__class__.db_path + tbl_name + ".db"
-        conn = sqlite3.connect(db_fullname)
-        c = conn.cursor()
-        str_cmd = "SELECT distinct Hierarchy_5 COLLATE NOCASE from " + tbl_name + " WHERE Hierarchy_5 LIKE \'%" + h5_name + "%\'"
-        c.execute(str_cmd)
-        result = c.fetchall()
-        h5_output = [item[0] for item in result]
-        # 如果返回是空结果
-        if len(h5_output) == 0:
-            print("No related H5 name, please check.")
-            h5_result = "NULL"
-        # 如果返回是单值
-        elif len(h5_output) == 1:
-            h5_result = h5_output[0]
-        # 如果有多个返回值
-        else:
-            print("More than 1 similar output as below：")
-            item = iter(h5_output)
-            for i in range(1, len(h5_output) + 1):
-                print(i, " - ", next(item))
-            index_no = input("Plz input the NO of H5 you need：")
-            if index_no.isnumeric() and int(index_no) <= len(h5_output):
-                h5_result = h5_output[int(index_no) - 1]
-            else:
-                print("Wrong No, Please re-input！")
-                h5_result = "NULL"
-        conn.close()
-        return h5_result
-
     # Generate month list.
     # The previous month list does not include current month.
     # The future month list include current month.

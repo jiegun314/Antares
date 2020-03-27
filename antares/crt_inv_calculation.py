@@ -4,7 +4,7 @@ import sqlite3
 from tabulate import tabulate
 import draw_chart as chart
 import os
-import calculation
+import public_function as pb_func
 import pandas as pd
 
 
@@ -297,7 +297,7 @@ class CurrentInventory:
         for table_name in tbl_list:
             sql_cmd = '''SELECT sum(Pending_Inventory_Bonded_Total_Qty), sum(Pending_Inventory_NonB_Total_Qty), 
             sum((Standard_Cost * Pending_Inventory_Bonded_Total_Qty)) As Pending_BD_Value, 
-            sum((Standard_Cost * Pending_Inventory_NonB_Total_Qty)) As Pending_NB_Value from ''' + table_name[0]
+            sum((Standard_Cost * Pending_Iself.__class__.nventory_NonB_Total_Qty)) As Pending_NB_Value from ''' + table_name[0]
             c.execute(sql_cmd)
             pending_result.append(c.fetchall()[0])
         # group data with different category
@@ -336,13 +336,12 @@ class CurrentInventory:
         conn = sqlite3.connect(db_name)
         c = conn.cursor()
         sql_cmd = "SELECT Material, Description, Hierarchy_5, Available_Stock, Pending_Inventory_Bonded_Total_Qty, " \
-                  "Pending_Inventory_NonB_Total_Qty, CSC, GIT_1_Week, GIT_2_Week, GIT_3_Week, GIT_4_Week, " \
-                  "Standard_Cost, Average_Selling_Price FROM " + table_name + " WHERE Material = \'" + code_name + "\'"
+                  "Pending_Inventory_NonB_Total_Qty, CSC, GIT_1_Week, GIT_2_Week, GIT_3_Week, GIT_4_Week, Open_PO, " \
+                  "Standard_Cost FROM " + table_name + " WHERE Material = \'" + code_name + "\'"
         c.execute(sql_cmd)
         result = c.fetchall()[0]
         title = ["Material", "Description", "Hierarchy_5", "Available_Stock", "Pending_Qty_BD",
-                 "Pending_Qty_NB", "CSC", "GIT_1_Qty", "GIT_2_Qty", "GIT_3_Qty", "GIT_4_Qty", "Std Cost",
-                 "AVG Selling Price"]
+                 "Pending_Qty_NB", "CSC", "GIT_1_Qty", "GIT_2_Qty", "GIT_3_Qty", "GIT_4_Qty", "Open_PO",  "Std Cost"]
         code_inv_output = [["Item", "Value"]]
         for i in range(len(result)):
             if isinstance(result[i], str):
@@ -388,8 +387,7 @@ class CurrentInventory:
         if h5_input == "" or h5_input.upper() == "ALL":
             h5_result = "ALL"
         else:
-            h5_temp = calculation.InfoCheck(self.__class__.bu_name)
-            h5_result = h5_temp.get_h5_name(h5_input)
+            h5_result = pb_func.get_available_h5_name(h5_input, self.__class__.bu_name)
         # if not right h5 name, return
         if h5_result == "NULL":
             print("!!Error, No such Hierarchy_5 name. Please try again!")
@@ -422,8 +420,7 @@ class CurrentInventory:
         print("===Hierarchy_5 Inventory Detail List===")
         # Get H5 Name
         h5_input = input("Input Hierarchy_5 Name : ")
-        h5_infocheck = calculation.InfoCheck(self.__class__.bu_name)
-        h5_name = h5_infocheck.get_h5_name(h5_input)
+        h5_name = pb_func.get_available_h5_name(h5_input, self.__class__.bu_name)
         # if not right h5 name, return
         if h5_name == "NULL":
             print("No such Hierarchy_5 name and please try again!~")
@@ -495,8 +492,9 @@ class CurrentInventory:
                 inventory_result.append([code_item, ])
         conn.commit()
         conn.close()
+        # fill material code with blank
         print(tabulate(inventory_result, headers="firstrow", tablefmt="github",
-                       showindex=range(1, len(inventory_result)), floatfmt=",.0f"))
+                       showindex=range(1, len(inventory_result))))
 
     # 数据同步
     def inv_data_sync(self, sync_days):

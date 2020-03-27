@@ -139,9 +139,8 @@ class InfoShow:
 
     # get hierarchy_5 name
     def get_h5_name(self):
-        h5_info_check = calculation.InfoCheck(self.__class__.bu_name)
         h5_input = input("Please input Hierarchy_5 name: ")
-        h5_name = "ALL" if h5_input.upper() == "ALL" else h5_info_check.get_h5_name(h5_input)
+        h5_name = "ALL" if h5_input.upper() == "ALL" else pb_func.get_available_h5_name(h5_input, self.__class__.bu_name)
         return h5_name
 
     # get sales data for one Hierarchy_5

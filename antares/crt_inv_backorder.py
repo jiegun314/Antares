@@ -59,8 +59,7 @@ class CurrentInventoryBackorder:
         print("")
         print("---Start to generate result---")
         # get current day information
-        backorder_output = [["Material", "Description", "Hierarchy_5", "CSC", "BO Qty", "GIT Qty", "Open PO",
-                             "BO Days"], ]
+        backorder_output = []
         for backorder_item in backorder_tracing_list:
             sql_cmd = "SELECT Description, Hierarchy_5, CSC, Current_Backorder_Qty, " \
                   "sum(GIT_1_Week + GIT_2_Week + GIT_3_Week + GIT_4_Week) as GIT_Qty, Open_PO FROM " +  \
@@ -69,7 +68,14 @@ class CurrentInventoryBackorder:
             result_temp = list(c.fetchall()[0])
             backorder_output.append([backorder_item[0], ] + result_temp + [backorder_item[1], ])
         # print out
-        print(tabulate(backorder_output, headers="firstrow", tablefmt="psql"))
+        return backorder_output
+
+    # display aging backorder list
+    def display_aging_backorder(self):
+        aging_backorder_list = self.calculate_aging_backorder()
+        list_header = [["Material", "Description", "Hierarchy_5", "CSC", "BO Qty", "GIT Qty", "Open PO", "BO Days"], ]
+        aging_backorder_output = list_header + aging_backorder_list
+        print(tabulate(aging_backorder_output, headers="firstrow", tablefmt="psql"))
 
     def take_quantity(self, elem):
         return elem[1]
@@ -77,4 +83,4 @@ class CurrentInventoryBackorder:
 
 if __name__ == "__main__":
     test = CurrentInventoryBackorder("TU")
-    test.calculate_aging_backorder()
+    test.display_aging_backorder()
