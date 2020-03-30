@@ -1,4 +1,5 @@
 import crt_inv_calculation as cclt
+import crt_inv_display as dpl
 import crt_inv_backorder as bo_cclt
 
 
@@ -17,8 +18,8 @@ class CurrentInventoryMenu:
     def crt_inv_entrance(self):
         # self.db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
         self.__welcome_page()
-        crt_inv_cclt = cclt.CurrentInventory(self.__class__.bu_name)
-
+        crt_inv_cclt = cclt.CurrentInventoryCalculation(self.__class__.bu_name)
+        crt_inv_display = dpl.CurrentInventoryDisplay(self.__class__.bu_name)
         cmd_code = input("cmd >> crt_inv >> ")
         while cmd_code != "exit":
             if cmd_code == "inv":
@@ -34,7 +35,7 @@ class CurrentInventoryMenu:
             elif cmd_code == "pending -q":
                 crt_inv_cclt.get_pending_trend("quantity")
             elif cmd_code == "check":
-                crt_inv_cclt.get_code_inv()
+                crt_inv_display.display_code_status()
             elif cmd_code == "trend":
                 crt_inv_cclt.code_inv_trend()
             elif cmd_code == "bu_trend":

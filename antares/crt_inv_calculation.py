@@ -8,7 +8,7 @@ import public_function as pb_func
 import pandas as pd
 
 
-class CurrentInventory:
+class CurrentInventoryCalculation:
     bu_name = ""
     db_path = "../data/_DB/"
     backorder_path = "../data/_Backorder/"
@@ -20,7 +20,7 @@ class CurrentInventory:
         self.__class__.bu_name = bu
 
     # 获取最新日期
-    def _get_newest_date(self):
+    def get_newest_date(self):
         conn = sqlite3.connect(self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db")
         c = conn.cursor()
         c.execute("select name from sqlite_master where type='table' order by name")
@@ -31,7 +31,7 @@ class CurrentInventory:
         return lst_date[-1]
 
     # 检查日期是否存在
-    def _check_date_availability(self, table_name):
+    def check_date_availability(self, table_name):
         db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
         conn = sqlite3.connect(db_name)
         c = conn.cursor()
@@ -99,7 +99,7 @@ class CurrentInventory:
         # 获取日期
         inventory_date = input("Inventory Data (YYYYMMDD, Press Enter to get newest) : ")
         if inventory_date == "":
-            table_name = self._get_newest_date()
+            table_name = self.get_newest_date()
         else:
             table_name = "INV" + inventory_date
         print("===== <Result of %s> =====" % table_name.lstrip("INV"))
@@ -140,7 +140,7 @@ class CurrentInventory:
         # 获取日期
         inventory_date = input("Inventory Data (YYYYMMDD, Press Enter to get newest) : ")
         if inventory_date == "":
-            table_name = self._get_newest_date()
+            table_name = self.get_newest_date()
         else:
             table_name = "INV" + inventory_date
         print("===== <Result of %s> =====" % table_name.lstrip("INV"))
@@ -192,7 +192,7 @@ class CurrentInventory:
         print("===Export Backorder Detail List===")
         # get data
         inventory_date = input("Inventory Data (YYYYMMDD, Press Enter to get newest) : ")
-        table_name = self._get_newest_date() if inventory_date == "" else "INV" + inventory_date
+        table_name = self.get_newest_date() if inventory_date == "" else "INV" + inventory_date
         db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
         conn = sqlite3.connect(db_name)
         sql_cmd = '''SELECT Material, Description, Hierarchy_5, Current_Backorder_Qty,
@@ -215,7 +215,7 @@ class CurrentInventory:
         # get data
         inventory_date = input("Inventory Data (YYYYMMDD, Press Enter to get newest) : ")
         if inventory_date == "":
-            table_name = self._get_newest_date()
+            table_name = self.get_newest_date()
         else:
             table_name = "INV" + inventory_date
         db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
@@ -316,22 +316,7 @@ class CurrentInventory:
                                                 "Pending Inventory Trend (by Quantity)")
 
     # 查询单个代码
-    def get_code_inv(self):
-        print("===Single Code Inventory===")
-        # 获取日期
-        code_name = input("Input Material Code: ").upper()
-        # check if this code exist in material master
-        while not self.check_code(code_name):
-            code_name = input("Wrong code, please re-input: ").upper()
-        # start to get inventory data from oneclick database
-        str_input = input("Please input date (YYYYMMDD) OR press Enter to get most fresh date: ")
-        table_name = self._get_newest_date() if str_input == "" else "INV" + str_input
-        # check if this date exist in newest oneclick file
-        while not self._check_date_availability(table_name):
-            print("!!Error - Wrong date, Please re-input! ")
-            str_input = input("Please input date (YYYYMMDD) OR press Enter to get most fresh date: ")
-            table_name = self._get_newest_date() if str_input == "" else "INV" + str_input
-        print("===== <Result of %s> =====" % table_name.lstrip("INV"))
+    def get_code_inv(self, code_name, table_name):
         db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
         conn = sqlite3.connect(db_name)
         c = conn.cursor()
@@ -348,7 +333,8 @@ class CurrentInventory:
                 code_inv_output.append([title[i], result[i]])
             else:
                 code_inv_output.append([title[i], int(result[i])])
-        print(tabulate(code_inv_output, headers="firstrow", floatfmt=",.0f", tablefmt="github"))
+        return code_inv_output
+
     
     # 查询单个代码可用库存趋势
     def code_inv_trend(self):
@@ -428,7 +414,7 @@ class CurrentInventory:
         # get the date
         inventory_date = input("Inventory Data (YYYYMMDD, Press Enter to get newest) : ")
         if inventory_date == "":
-            table_name = self._get_newest_date()
+            table_name = self.get_newest_date()
         else:
             table_name = "INV" + inventory_date
         # generate title
@@ -468,10 +454,10 @@ class CurrentInventory:
         # get the date
         inventory_date = input("Inventory Data (YYYYMMDD, Press Enter to get newest) : ")
         if inventory_date == "":
-            table_name = self._get_newest_date()
+            table_name = self.get_newest_date()
         else:
             table_name = "INV" + inventory_date
-        if not self._check_date_availability(table_name):
+        if not self.check_date_availability(table_name):
             print("!Error, please make sure you input the correct date.")
             return
         # connect to database and get the inventory data
@@ -539,6 +525,6 @@ class CurrentInventory:
 
 
 if __name__ == "__main__":
-    test = CurrentInventory("TU")
+    test = CurrentInventoryCalculation("TU")
     test.inventory_mapping()
     # test.inv_data_sync(50)

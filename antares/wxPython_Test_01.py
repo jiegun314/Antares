@@ -11,11 +11,7 @@ import wx
 import wx.xrc
 import wx.adv
 
-bookdata = {
-    1 : ("钢铁是怎样炼成的练成的", "2017-05-31"),
-    2 : ("秦腔", "2017-04-12"), 
-    3 : ("西游记", "1987-08-12")
-}
+
 ###########################################################################
 ## Class MyFrame1
 ###########################################################################
@@ -108,10 +104,8 @@ class MyFrame1 ( wx.Frame ):
 
 		bSizer7.Add( self.m_staticText3, 0, wx.ALL, 5 )
 
-		self.listCtrlOutput = wx.ListCtrl( self.pnlOneclick, wx.ID_ANY, wx.DefaultPosition, wx.Size( 700,-1 ), wx.LC_REPORT )
-		self.listCtrlOutput.InsertColumn(0, "ID")
-		self.listCtrlOutput.InsertColumn(1, "Name")
-		self.listCtrlOutput.InsertColumn(2, "Date")
+		self.listCtrlOutput = wx.ListCtrl( self.pnlOneclick, wx.ID_ANY, wx.DefaultPosition, wx.Size( 700,700 ), wx.LC_REPORT )
+
 		bSizer7.Add( self.listCtrlOutput, 0, wx.ALL, 5 )
 
 
@@ -159,10 +153,6 @@ class MyFrame1 ( wx.Frame ):
 
 	# Virtual event handlers, overide them in your derived class
 	def codeSubmit( self, event ):
-		items = bookdata.items()
-		for key, data in items:
-			index = self.listCtrlOutput.InsertItem(self.listCtrlOutput.GetItemCount(), str(key))
-			self.listCtrlOutput.SetItem(index, 1, data[0])
-			self.listCtrlOutput.SetItem(index, 2, data[1])
+		event.Skip()
 
 
