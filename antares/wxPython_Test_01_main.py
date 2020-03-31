@@ -10,12 +10,14 @@ class DragonGUI(MyFrame1):
         self.__class__.bu_name = bu_name
 
     def bu_submit(self, event):
+        self.txtLog.Clear()
         dict_bu_list = {'SPINE': 'SP', 'JOINT': 'JT', 'MITEK': 'MT', 'TRAUMA': 'TU', 'CMFT': 'CMFT', 'PT': 'PT'}
         bu_result = self.rdbxBusinessUnit.GetStringSelection()
         self.bu_name = dict_bu_list[bu_result]
+        self.txtLog.write("%s has been selected" % bu_result)
         pass
 
-    # Virtual event handlers, overide them in your derived class
+    # Virtual event handlers, override them in your derived class
     def codeSubmit(self, event):
         # clean the column
         self.clean_column_list()
@@ -31,9 +33,11 @@ class DragonGUI(MyFrame1):
             index = self.listCtrlOutput.InsertItem(self.listCtrlOutput.GetItemCount(), str(i))
             for j in range(0, len(inventory_result[i])):
                 self.listCtrlOutput.SetItem(index, j+1, str(inventory_result[i][j]))
+        self.txtLog.write("Done, with data of %s." % table_name)
 
     def clean_column_list(self):
         self.listCtrlOutput.ClearAll()
+        self.txtLog.Clear()
         pass
 
 
