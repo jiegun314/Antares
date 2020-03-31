@@ -266,7 +266,7 @@ class CurrentInventoryCalculation:
         for table_name in tbl_list:
             sql_cmd = '''SELECT sum(Pending_Inventory_Bonded_Total_Qty), sum(Pending_Inventory_NonB_Total_Qty), 
             sum((Standard_Cost * Pending_Inventory_Bonded_Total_Qty)) As Pending_BD_Value, 
-            sum((Standard_Cost * Pending_Iself.__class__.nventory_NonB_Total_Qty)) As Pending_NB_Value from ''' + table_name[0]
+            sum((Standard_Cost * Pending_Inventory_NonB_Total_Qty)) As Pending_NB_Value from ''' + table_name[0]
             c.execute(sql_cmd)
             pending_result.append(c.fetchall()[0])
         # group data with different category
