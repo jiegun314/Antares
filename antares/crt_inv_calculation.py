@@ -403,7 +403,7 @@ class CurrentInventoryCalculation:
         for code_item in code_list:
             sql_cmd = "SELECT Material, Description, Hierarchy_5, CSC, Available_Stock, " \
                       "Pending_Inventory_Bonded_Total_Qty, Pending_Inventory_NonB_Total_Qty, GIT_1_Week, GIT_2_Week, " \
-                      "GIT_3_Week, GIT_4_Week, Open_PO FROM " + table_name + " WHERE Material = \'" + code_item + "\'"
+                      "GIT_3_Week, GIT_4_Week, Open_PO FROM " + table_name + " WHERE Material = \'" + code_item.upper() + "\'"
             c.execute(sql_cmd)
             result = c.fetchall()
             if result:

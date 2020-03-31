@@ -2,37 +2,44 @@ from wxPython_Test_01 import MyFrame1
 import wx
 from crt_inv_calculation import CurrentInventoryCalculation as CIC
 
-bookdata = {
-    1: ("钢铁是怎样炼成的练成的", "2017-05-31"),
-    2: ("秦腔", "2017-04-12"),
-    3: ("西游记", "1987-08-12")
-}
 
+class DragonGUI(MyFrame1):
+    bu_name = "TU"
 
-class wxDemo(MyFrame1):
+    def set_bu_name(self, bu_name):
+        self.__class__.bu_name = bu_name
+
+    def bu_submit(self, event):
+        dict_bu_list = {'SPINE': 'SP', 'JOINT': 'JT', 'MITEK': 'MT', 'TRAUMA': 'TU', 'CMFT': 'CMFT', 'PT': 'PT'}
+        bu_result = self.rdbxBusinessUnit.GetStringSelection()
+        self.bu_name = dict_bu_list[bu_result]
+        pass
+
     # Virtual event handlers, overide them in your derived class
     def codeSubmit(self, event):
-        self.listCtrlOutput.InsertColumn(0, "ID")
-        self.listCtrlOutput.InsertColumn(1, "Item")
-        self.listCtrlOutput.InsertColumn(2, "Value")
-        code_name = self.txtMaterialCode.Value.upper()
-        CodeCalculation = CIC("TU")
+        # clean the column
+        self.clean_column_list()
+        # get code list and newest timing to mapping
+        code_name_list = self.txtMaterialCode.Value.split()
+        CodeCalculation = CIC(self.__class__.bu_name)
         table_name = CodeCalculation.get_newest_date()
-        code_inv_output = CodeCalculation.get_code_inv(code_name, table_name)
-        for i in range(1, len(code_inv_output)):
+        inventory_result = CodeCalculation.inventory_mapping(code_name_list, table_name)
+        column_title = ["No", ] + inventory_result[0]
+        for i in range(0, len(column_title)):
+            self.listCtrlOutput.InsertColumn(i, column_title[i])
+        for i in range(1, len(inventory_result)):
             index = self.listCtrlOutput.InsertItem(self.listCtrlOutput.GetItemCount(), str(i))
-            self.listCtrlOutput.SetItem(index, 1, str(code_inv_output[i][0]))
-            self.listCtrlOutput.SetItem(index, 2, str(code_inv_output[i][1]))
-        # items = bookdata.items()
-        # for key, data in items:
-        #     index = self.listCtrlOutput.InsertItem(self.listCtrlOutput.GetItemCount(), str(key))
-        #     self.listCtrlOutput.SetItem(index, 1, data[0])
-        #     self.listCtrlOutput.SetItem(index, 2, data[1])
+            for j in range(0, len(inventory_result[i])):
+                self.listCtrlOutput.SetItem(index, j+1, str(inventory_result[i][j]))
+
+    def clean_column_list(self):
+        self.listCtrlOutput.ClearAll()
+        pass
 
 
 if __name__ == '__main__':
     # When this module is run (not imported) then create the app, the
     # frame, show it, and start the event loop.
     app = wx.App()
-    wxDemo(None).Show()
+    DragonGUI(None).Show()
     app.MainLoop()
