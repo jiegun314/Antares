@@ -23,11 +23,11 @@ class CurrentInventoryMenu:
         cmd_code = input("cmd >> crt_inv >> ")
         while cmd_code != "exit":
             if cmd_code == "inv":
-                crt_inv_cclt.today_inv()
+                crt_inv_display.display_current_inventory()
             elif cmd_code == "inv_export":
                 crt_inv_cclt.export_inventory_data()
             elif cmd_code == "bo":
-                crt_inv_cclt.get_current_bo()
+                crt_inv_display.display_current_backorder()
             elif cmd_code == "bo_export":
                 crt_inv_cclt.export_backorder_data()
             elif cmd_code == "pending":
@@ -41,11 +41,11 @@ class CurrentInventoryMenu:
             elif cmd_code == "bu_trend":
                 crt_inv_cclt.h5_inv_trend()
             elif cmd_code == "h5_detail":
-                crt_inv_cclt.display_h5_inv_detail()
+                crt_inv_display.display_h5_inv_detail()
             elif cmd_code == "bo_trend":
                 crt_inv_cclt.display_backorder_trend()
             elif cmd_code == "mapping":
-                crt_inv_cclt.inventory_mapping()
+                crt_inv_display.display_mapping_inventory()
             elif cmd_code == "aging":
                 crt_inv_bo_cclt = bo_cclt.CurrentInventoryBackorder(self.__class__.bu_name)
                 crt_inv_bo_cclt.display_aging_backorder()

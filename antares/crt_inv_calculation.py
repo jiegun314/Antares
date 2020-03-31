@@ -93,16 +93,8 @@ class CurrentInventoryCalculation:
         print(">>INV%s was imported. " % str_date)
         pass
 
-    # 获取当天库存
-    def today_inv(self):
-        print("===Current Inventory List by Hierarchy_5===")
-        # 获取日期
-        inventory_date = input("Inventory Data (YYYYMMDD, Press Enter to get newest) : ")
-        if inventory_date == "":
-            table_name = self.get_newest_date()
-        else:
-            table_name = "INV" + inventory_date
-        print("===== <Result of %s> =====" % table_name.lstrip("INV"))
+    # calculate current inventory, return detail list and summary result
+    def get_current_inventory(self, table_name):
         db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
         conn = sqlite3.connect(db_name)
         c = conn.cursor()
@@ -124,26 +116,10 @@ class CurrentInventoryCalculation:
         title = [("Hierarchy_5", "Available Stock", "GIT Inventory", "Open PO Value", "Bonded Pending",
                   "Non-bonded Pending")]
         result = title + inventory_output
-        print(tabulate(result, headers="firstrow", tablefmt="psql", showindex=range(1, len(result)), floatfmt=",.0f"))
-        print("Total Available Stock Value: RMB - %s, USD - %s"
-              % (format(total_available_stock_value, ",.0f"),
-                 format(total_available_stock_value / self.__class__.currency_rate, ",.0f")))
-        print("Total Useful Stock Value: RMB - %s, USD - %s"
-              % (format(total_useful_stock_value, ',.0f'),
-                 format(total_useful_stock_value / self.__class__.currency_rate, ',.0f')))
-        print("Total Stock Value: RMB - %s, USD - %s"
-              % (format(total_stock_value, ',.0f'), format(total_stock_value / self.__class__.currency_rate, ',.0f')))
+        return [result, [total_available_stock_value, total_useful_stock_value, total_stock_value]]
 
     # 获取当前BO
-    def get_current_bo(self):
-        print("===Current Backorder List===")
-        # 获取日期
-        inventory_date = input("Inventory Data (YYYYMMDD, Press Enter to get newest) : ")
-        if inventory_date == "":
-            table_name = self.get_newest_date()
-        else:
-            table_name = "INV" + inventory_date
-        print("===== <Result of %s> =====" % table_name.lstrip("INV"))
+    def get_current_bo(self, table_name):
         db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
         conn = sqlite3.connect(db_name)
         c = conn.cursor()
@@ -172,19 +148,12 @@ class CurrentInventoryCalculation:
             bo_item_list = list(bo_item)
             bo_item_list[5] = bo_item_list[4] * bo_price
             bo_result.append(tuple(bo_item_list))
-        # 输出总数
-        bo_qty_sum, bo_value_sum = 0, 0
-        for item in bo_result:
-            bo_qty_sum += item[4]
-            bo_value_sum += item[5]
-        print("=== Current Backorder Quantity %s, Value RMB %s ===" % (int(bo_qty_sum), format(bo_value_sum, ",.0f")))
         # 输入表格
         title = [('Material', 'Description', 'Hierarchy_5', 'CSC', 'Qty', 'Value', 'GIT_1', 'GIT_2', 'GIT_3', 'GIT_4',
                   'Open_PO')]
-        final_result = title + bo_result
-        print(tabulate(final_result, headers="firstrow", tablefmt="github", showindex=range(1, len(final_result)), floatfmt=",.0f"))
         conn.commit()
         conn.close()
+        return title + bo_result
 
     # 导出backorder给平台
     def export_backorder_data(self):
@@ -335,7 +304,6 @@ class CurrentInventoryCalculation:
                 code_inv_output.append([title[i], int(result[i])])
         return code_inv_output
 
-    
     # 查询单个代码可用库存趋势
     def code_inv_trend(self):
         title = "===Single Code Available Stock Trend==="
@@ -402,21 +370,7 @@ class CurrentInventoryCalculation:
         chart.line_chart(h5_result, x_value, h5_inv_result, "Date", "Value", "Value by Std. Cost of " + h5_result)
 
     # 显示某个H5的库存明细
-    def display_h5_inv_detail(self):
-        print("===Hierarchy_5 Inventory Detail List===")
-        # Get H5 Name
-        h5_input = input("Input Hierarchy_5 Name : ")
-        h5_name = pb_func.get_available_h5_name(h5_input, self.__class__.bu_name)
-        # if not right h5 name, return
-        if h5_name == "NULL":
-            print("No such Hierarchy_5 name and please try again!~")
-            return
-        # get the date
-        inventory_date = input("Inventory Data (YYYYMMDD, Press Enter to get newest) : ")
-        if inventory_date == "":
-            table_name = self.get_newest_date()
-        else:
-            table_name = "INV" + inventory_date
+    def get_h5_inv_detail(self, h5_name, table_name):
         # generate title
         table_title = [("Material", "Description", "CSC", "Available Stock", "Onhand_INV_Value", "Bonded Pending",
                         "GIT_1_Week", "GIT_2_Week", "GIT_3_Week", "GIT_4_Week"),]
@@ -435,31 +389,11 @@ class CurrentInventoryCalculation:
         for item in result:
             total_inv_value += item[4]
         print("Total Inventory Value of " + h5_name + " is %s" % (format(total_inv_value, ",.0f")))
-        # print the list
-        result_to_print = table_title + result
-        print(tabulate(result_to_print, headers="firstrow", tablefmt="github", showindex=range(1, len(result_to_print)),
-                       floatfmt=",.0f"))
+        # return value
+        return table_title + result
 
     # data mapping for a list of codes
-    def inventory_mapping(self):
-        print("===Inventory Status Mapping with Lists===")
-        # read code list
-        file_fullname = "../data/_Source_Data/Data_Mapping.txt"
-        try:
-            fo = open(file_fullname, "r")
-        except FileNotFoundError:
-            print("!Error, please make sure you have put Data_Mapping.txt under _Source_Data folder")
-            return
-        code_list = [item.strip() for item in fo.readlines()]
-        # get the date
-        inventory_date = input("Inventory Data (YYYYMMDD, Press Enter to get newest) : ")
-        if inventory_date == "":
-            table_name = self.get_newest_date()
-        else:
-            table_name = "INV" + inventory_date
-        if not self.check_date_availability(table_name):
-            print("!Error, please make sure you input the correct date.")
-            return
+    def inventory_mapping(self, code_list, table_name):
         # connect to database and get the inventory data
         inventory_result = [["Material", "Description", "Hierarchy_5", "CSC", "Available_Stock", "Pending_Qty_BD",
                              "Pending_Qty_NB", "GIT_1_Qty", "GIT_2_Qty", "GIT_3_Qty", "GIT_4_Qty", "Open_PO"], ]
@@ -479,8 +413,7 @@ class CurrentInventoryCalculation:
         conn.commit()
         conn.close()
         # fill material code with blank
-        print(tabulate(inventory_result, headers="firstrow", tablefmt="github",
-                       showindex=range(1, len(inventory_result))))
+        return inventory_result
 
     # 数据同步
     def inv_data_sync(self, sync_days):
