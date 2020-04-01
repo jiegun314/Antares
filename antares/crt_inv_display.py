@@ -128,6 +128,17 @@ class CurrentInventoryDisplay:
         print("Total Stock Value: RMB - %s, USD - %s"
               % (format(total_stock_value, ',.0f'), format(total_stock_value / self.__class__.currency_rate, ',.0f')))
 
+    def synchronize_oneclick_data(self):
+        CodeCalculation = CIC(self.__class__.bu_name)
+        lst_xcpt = ['20190118', ]
+        print("===Sync Current Inventory Data from Oneclick===")
+        sync_result = CodeCalculation.inv_data_sync(90, lst_xcpt)
+        if sync_result == "Error":
+            print("!Error, the sharefolder cannot be opened. Make sure you've connected to JNJ network and try again.")
+        else:
+            print(">> Synchronization succeed!")
+            print(">> %s days succeed, %s days fail" % (sync_result[0], sync_result[1]))
+
 
 if __name__ == "__main__":
     test = CurrentInventoryDisplay("TU")

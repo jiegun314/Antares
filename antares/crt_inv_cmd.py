@@ -50,7 +50,7 @@ class CurrentInventoryMenu:
                 crt_inv_bo_cclt = bo_cclt.CurrentInventoryBackorder(self.__class__.bu_name)
                 crt_inv_bo_cclt.display_aging_backorder()
             elif cmd_code == "sync":
-                crt_inv_cclt.inv_data_sync(90)
+                crt_inv_display.synchronize_oneclick_data()
             elif cmd_code == "help":
                 crt_inv_cclt.show_command_list()
             else:

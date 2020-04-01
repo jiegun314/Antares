@@ -221,6 +221,7 @@ class MyFrame1 ( wx.Frame ):
         self.btnSubmit.Bind( wx.EVT_BUTTON, self.codeSubmit )
         self.btnCurrentInventory.Bind( wx.EVT_BUTTON, self.get_current_inventory_list )
         self.btnCurrentBackorder.Bind( wx.EVT_BUTTON, self.get_current_bo_list )
+        self.btnSync.Bind(wx.EVT_BUTTON, self.sync_inventory)
 
     def __del__( self ):
         pass
@@ -239,4 +240,5 @@ class MyFrame1 ( wx.Frame ):
     def get_current_bo_list( self, event ):
         event.Skip()
 
-
+    def sync_inventory(self, event):
+        event.Skip()

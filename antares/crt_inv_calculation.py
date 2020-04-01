@@ -75,7 +75,6 @@ class CurrentInventoryCalculation:
         c.execute(sql_cmd)
         conn.commit()
         conn.close()
-        print(">> Table %s is deleted." % table_name)
 
     # import oneclick inventory data into database
     def oneclick_inventory_import(self, str_date):
@@ -84,14 +83,12 @@ class CurrentInventoryCalculation:
         try:
             df = pd.read_csv(data_file_fullname, sep='|', encoding='gb18030')
         except FileNotFoundError:
-            print("INV%s reading fail. " % str_date)
-            return
+            return -1
         df_single_bu = df.loc[(df['Business_Unit'] == self.__class__.bu_name) & (df['Loc'] == "Total")]
         database_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
         conn = sqlite3.connect(database_name)
         df_single_bu.to_sql("INV" + str_date, con=conn, if_exists="replace", index=False)
-        print(">>INV%s was imported. " % str_date)
-        pass
+        return 1
 
     # calculate current inventory, return detail list and summary result
     def get_current_inventory(self, table_name):
@@ -416,20 +413,17 @@ class CurrentInventoryCalculation:
         return inventory_result
 
     # 数据同步
-    def inv_data_sync(self, sync_days):
-        print("===Sync Current Inventory Data from Oneclick===")
-        # 设置例外清单
-        lst_xcpt = ['20190118', ]
+    def inv_data_sync(self, sync_days, lst_xcpt):
         onclick_path = "L:\\COMPASS\\Oneclick Inventory Report\\Output\\"
         lst_folder_temp = []
+        import_success_count, import_fail_count = 0, 0
         # 读取oneclick目录下文件夹清单
         try:
             for file_name in os.listdir(onclick_path):
                 if os.path.isdir(onclick_path + file_name):
                     lst_folder_temp.append(file_name)
         except FileNotFoundError:
-            print("!Error, the sharefolder cannot be opened. Make sure you've connected to JNJ network and try again.")
-            return
+            return "ERROR"
         # 排序
         lst_folder_temp.sort()
         # 读取后N天, lst_folder为共享盘上数据
@@ -447,8 +441,12 @@ class CurrentInventoryCalculation:
         # 导入新的数据
         for item in lst_folder_sharepoint:
             if (item not in lst_current_database) and (item not in lst_xcpt):
-                self.oneclick_inventory_import(item)
-        print(">> Synchronization succeed!")
+                import_result = self.oneclick_inventory_import(item)
+                if import_result == 1:
+                    import_success_count += 1
+                else:
+                    import_fail_count += 1
+        return [import_success_count, import_fail_count]
 
     # Display command list
     @staticmethod
