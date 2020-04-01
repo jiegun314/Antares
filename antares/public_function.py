@@ -45,16 +45,7 @@ def check_future_month(month_item, month_quantity):
 
 
 def get_available_h5_name(h5_name, bu_name):
-    # 文件名，无后缀
-    tbl_name = bu_name + "_Master_Data"
-    # 数据库完整路径加名称
-    db_fullname = db_path + tbl_name + ".db"
-    conn = sqlite3.connect(db_fullname)
-    c = conn.cursor()
-    str_cmd = "SELECT distinct Hierarchy_5 COLLATE NOCASE from " + tbl_name + " WHERE Hierarchy_5 LIKE \'%" + h5_name + "%\'"
-    c.execute(str_cmd)
-    result = c.fetchall()
-    h5_output = [item[0] for item in result]
+    h5_output = get_available_h5_list(h5_name, bu_name)
     # 如果返回是空结果
     if len(h5_output) == 0:
         print("No related H5 name, please check.")
@@ -74,9 +65,22 @@ def get_available_h5_name(h5_name, bu_name):
         else:
             print("Wrong No, Please re-input！")
             h5_result = "NULL"
-    conn.close()
     return h5_result
 
+
+def get_available_h5_list(h5_name, bu_name):
+    # 文件名，无后缀
+    tbl_name = bu_name + "_Master_Data"
+    # 数据库完整路径加名称
+    db_fullname = db_path + tbl_name + ".db"
+    conn = sqlite3.connect(db_fullname)
+    c = conn.cursor()
+    str_cmd = "SELECT distinct Hierarchy_5 COLLATE NOCASE from " + tbl_name + " WHERE Hierarchy_5 LIKE \'%" + h5_name + "%\'"
+    c.execute(str_cmd)
+    result = c.fetchall()
+    h5_output = [item[0] for item in result]
+    conn.close()
+    return h5_output
 
 # read the command list from json file
 def display_command_list(command_type):

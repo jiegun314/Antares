@@ -80,7 +80,8 @@ class CurrentInventoryDisplay:
             table_name = CodeCalculation.get_newest_date()
         else:
             table_name = "INV" + inventory_date
-        inventory_result = CodeCalculation.get_h5_inv_detail(h5_name, table_name)
+        [inventory_result, total_inv_value] = CodeCalculation.get_h5_inv_detail(h5_name, table_name)
+        print("Total Inventory Value of " + h5_name + " is %s" % (format(total_inv_value, ",.0f")))
         print(tabulate(inventory_result, headers="firstrow", tablefmt="github",
                        showindex=range(1, len(inventory_result)), floatfmt=",.0f"))
 
@@ -104,6 +105,17 @@ class CurrentInventoryDisplay:
             bo_qty_sum += item[4]
             bo_value_sum += item[5]
         print("=== Current Backorder Quantity %s, Value RMB %s ===" % (int(bo_qty_sum), format(bo_value_sum, ",.0f")))
+
+    # display aging backorder list
+    def display_aging_backorder(self):
+        # print title
+        print("===Display Aging Backorder===")
+        # set exception list with abnormal backorder information
+        exception_list = ["INV20200330", "INV20200331"]
+        CodeCalculation = CIC(self.__class__.bu_name)
+        [aging_backorder_list, mapping_days] = CodeCalculation.calculate_aging_backorder(exception_list)
+        print("---Aging Backorder List within %s days---" % mapping_days)
+        print(tabulate(aging_backorder_list, headers="firstrow", tablefmt="psql"))
 
     def display_current_inventory(self):
         CodeCalculation = CIC(self.__class__.bu_name)

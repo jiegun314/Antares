@@ -47,8 +47,7 @@ class CurrentInventoryMenu:
             elif cmd_code == "mapping":
                 crt_inv_display.display_mapping_inventory()
             elif cmd_code == "aging":
-                crt_inv_bo_cclt = bo_cclt.CurrentInventoryBackorder(self.__class__.bu_name)
-                crt_inv_bo_cclt.display_aging_backorder()
+                crt_inv_display.display_aging_backorder()
             elif cmd_code == "sync":
                 crt_inv_display.synchronize_oneclick_data()
             elif cmd_code == "help":

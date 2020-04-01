@@ -1,6 +1,7 @@
-from wxPython_Test_01 import MyFrame1
+from gui_design import MyFrame1
 import wx
 from crt_inv_calculation import CurrentInventoryCalculation as CIC
+import public_function as pub_func
 
 
 class DragonGUI(MyFrame1):
@@ -15,12 +16,32 @@ class DragonGUI(MyFrame1):
         bu_result = self.rdbxBusinessUnit.GetStringSelection()
         self.__class__.bu_name = dict_bu_list[bu_result]
         self.txtLog.write("%s has been selected" % bu_result)
+        self.statusBar.SetStatusText("Working BU: %s" % self.__class__.bu_name, 0)
         pass
 
     # Virtual event handlers, override them in your derived class
     def codeSubmit(self, event):
         # clean the column
         self.clear_frame_content()
+        calculation_type = self.rdbxCalculationType.GetStringSelection()
+        if calculation_type == "by Code":
+            self.display_code_mapping_inventory()
+        else:
+            self.display_h5_inventory_detail()
+
+    def display_h5_inventory(self, event):
+        self.clear_frame_content()
+        h5_name = self.lstbxH5.GetStringSelection()
+        CodeCalculation = CIC(self.__class__.bu_name)
+        table_name = CodeCalculation.get_newest_date()
+        [inventory_list, inventory_total] = CodeCalculation.get_h5_inv_detail(h5_name, table_name)
+        self.show_inventory_list(inventory_list, 3)
+        self.StatusBar.SetStatusText("Total Inventory: %s" % ("{:,.0f}".format(inventory_total)), 1)
+        self.txtLog.Clear()
+        self.txtLog.write("%s has been listed" % h5_name)
+        pass
+
+    def display_code_mapping_inventory(self):
         # get code list and newest timing to mapping
         code_name_list = self.txtMaterialCode.Value.split()
         CodeCalculation = CIC(self.__class__.bu_name)
@@ -33,26 +54,27 @@ class DragonGUI(MyFrame1):
             index = self.listCtrlOutput.InsertItem(self.listCtrlOutput.GetItemCount(), str(i))
             for j in range(0, len(inventory_result[i])):
                 str_output = "{:,.0f}".format(inventory_result[i][j]) if j > 3 else str(inventory_result[i][j])
-                self.listCtrlOutput.SetItem(index, j+1, str_output)
+                self.listCtrlOutput.SetItem(index, j + 1, str_output)
         self.txtLog.write("Done, with data of %s." % table_name)
+        pass
+
+    def display_h5_inventory_detail(self):
+        self.txtLog.write("Display H5 Inventory")
+        h5_name_hint = self.txtMaterialCode.Value
+        h5_name_list = pub_func.get_available_h5_list(h5_name_hint, self.__class__.bu_name)
+        for item in h5_name_list:
+            self.lstbxH5.Append(item)
 
     def get_current_inventory_list(self, event):
         self.clear_frame_content()
         data_trigger_point = 1
         CodeCalculation = CIC(self.__class__.bu_name)
         table_name = CodeCalculation.get_newest_date()
-        inventory_result = CodeCalculation.get_current_inventory(table_name)[0]
-        column_title = ["No", ] + list(inventory_result[0])
-        for i in range(0, len(column_title)):
-            if i <= data_trigger_point:
-                self.listCtrlOutput.InsertColumn(i, column_title[i], wx.LIST_FORMAT_LEFT)
-            else:
-                self.listCtrlOutput.InsertColumn(i, column_title[i], wx.LIST_FORMAT_RIGHT)
-        for i in range(1, len(inventory_result)):
-            index = self.listCtrlOutput.InsertItem(self.listCtrlOutput.GetItemCount(), str(i))
-            for j in range(0, len(inventory_result[i])):
-                str_output = "{:,.0f}".format(inventory_result[i][j]) if j >= data_trigger_point else str(inventory_result[i][j])
-                self.listCtrlOutput.SetItem(index, j + 1, str_output)
+        [inventory_result, total_inventory] = CodeCalculation.get_current_inventory(table_name)
+        self.show_inventory_list(inventory_result, data_trigger_point)
+        self.StatusBar.SetStatusText("Total Available Stock: %s, Total Useful Stock: %s."
+                                     % ("{:,.0f}".format(total_inventory[0]), "{:,.0f}".format(total_inventory[1])), 1)
+        self.txtLog.Clear()
         self.txtLog.write("Current Inventory List done, with data of %s." % table_name)
 
     def get_current_bo_list(self, event):
@@ -61,6 +83,25 @@ class DragonGUI(MyFrame1):
         CodeCalculation = CIC(self.__class__.bu_name)
         table_name = CodeCalculation.get_newest_date()
         inventory_result = CodeCalculation.get_current_bo(table_name)
+        self.show_inventory_list(inventory_result, data_trigger_point)
+        self.txtLog.write("Current Backorder List done, with data of %s." % table_name)
+
+    def display_aging_backorder(self, event):
+        self.clear_frame_content()
+        CodeCalculation = CIC(self.__class__.bu_name)
+        # set exception list with abnormal backorder information
+        exception_list = ["INV20200330", "INV20200331"]
+        self.txtLog.Clear()
+        self.txtLog.write("Calculation ongoing, please wait a moment...")
+        [inventory_result, mapping_days] = CodeCalculation.calculate_aging_backorder(exception_list)
+        data_trigger_point = 5
+        self.show_inventory_list(inventory_result, data_trigger_point)
+        self.StatusBar.SetStatusText("Total Mapping %s days" % ("{:,.0f}".format(mapping_days)), 1)
+        self.txtLog.Clear()
+        self.txtLog.write("Aging backorder calculation finished.")
+
+    # shared function to display data in column list
+    def show_inventory_list(self, inventory_result, data_trigger_point):
         column_title = ["No", ] + list(inventory_result[0])
         for i in range(0, len(column_title)):
             if i <= data_trigger_point:
@@ -70,10 +111,9 @@ class DragonGUI(MyFrame1):
         for i in range(1, len(inventory_result)):
             index = self.listCtrlOutput.InsertItem(self.listCtrlOutput.GetItemCount(), str(i))
             for j in range(0, len(inventory_result[i])):
-                str_output = "{:,.0f}".format(inventory_result[i][j]) if j >= data_trigger_point else str(inventory_result[i][j])
+                str_output = "{:,.0f}".format(inventory_result[i][j]) if j >= data_trigger_point else str(
+                    inventory_result[i][j])
                 self.listCtrlOutput.SetItem(index, j + 1, str_output)
-        self.txtLog.write("Current Backorder List done, with data of %s." % table_name)
-        pass
 
     def sync_inventory(self, event):
         lst_xcpt = []
@@ -91,6 +131,7 @@ class DragonGUI(MyFrame1):
     def clear_frame_content(self):
         self.listCtrlOutput.ClearAll()
         self.txtLog.Clear()
+        self.StatusBar.SetStatusText(" ", 1)
         pass
 
 
