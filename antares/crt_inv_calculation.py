@@ -131,10 +131,14 @@ class CurrentInventoryCalculation:
         master_data_table_name = self.__class__.bu_name + "_SAP_Price"
         conn = sqlite3.connect(master_data_db_name)
         c = conn.cursor()
+        # create list for final total
+        # format - [ttl_qty, ttl_value, git1_fulfill, git2_fulfill, git3_fulfill, git4_fulfill, oo_fulfill]
+        backorder_summary_list = [0, 0, 0, 0, 0, 0, 0]
         # 读取SAP Price并计算价格
         bo_result = []
         for bo_item in bo_output:
-            bo_material = bo_item[0]
+            bo_material, bo_qty, git1_fulfill_qty, git2_fulfill_qty, git3_fulfill_qty, git4_fulfill_qty, oo_fulfill_qty \
+                = bo_item[0], bo_item[4], bo_item[6], bo_item[7], bo_item[8], bo_item[9], bo_item[10]
             sql_cmd = "SELECT Price from " + master_data_table_name + " WHERE Material = \'" + bo_material + "\'"
             c.execute(sql_cmd)
             result = c.fetchall()
@@ -145,12 +149,28 @@ class CurrentInventoryCalculation:
             bo_item_list = list(bo_item)
             bo_item_list[5] = bo_item_list[4] * bo_price
             bo_result.append(tuple(bo_item_list))
+            # calculate total
+            backorder_summary_list[0] += bo_qty
+            backorder_summary_list[1] += bo_item_list[5]
+            # git1 fulfill
+            backorder_summary_list[2] += min([bo_qty, git1_fulfill_qty]) * bo_price
+            # git2 fulfill
+            backorder_summary_list[3] += min([max(bo_qty - git1_fulfill_qty, 0), git2_fulfill_qty]) * bo_price
+            # git3 fulfill
+            backorder_summary_list[4] += min([max(bo_qty - git1_fulfill_qty - git2_fulfill_qty, 0), git3_fulfill_qty]) * bo_price
+            # git4 fulfill
+            backorder_summary_list[5] += min(
+                [max(bo_qty - git1_fulfill_qty - git2_fulfill_qty - git3_fulfill_qty, 0), git4_fulfill_qty]) * bo_price
+            # open order fulfill
+            backorder_summary_list[6] += min(
+                [max(bo_qty - git1_fulfill_qty - git2_fulfill_qty - git3_fulfill_qty - git4_fulfill_qty, 0),
+                 oo_fulfill_qty]) * bo_price
         # 输入表格
         title = [('Material', 'Description', 'Hierarchy_5', 'CSC', 'Qty', 'Value', 'GIT_1', 'GIT_2', 'GIT_3', 'GIT_4',
                   'Open_PO')]
         conn.commit()
         conn.close()
-        return title + bo_result
+        return title + bo_result + [tuple(["-", "-", "-", "Total"] + backorder_summary_list)]
 
     # 导出backorder给平台
     def export_backorder_data(self):

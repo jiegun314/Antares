@@ -98,13 +98,6 @@ class CurrentInventoryDisplay:
         backorder_result = CodeCalculation.get_current_bo(table_name)
         print(tabulate(backorder_result, headers="firstrow", tablefmt="github",
                        showindex=range(1, len(backorder_result)), floatfmt=",.0f"))
-        backorder_data = backorder_result[1:]
-        # 输出总数
-        bo_qty_sum, bo_value_sum = 0, 0
-        for item in backorder_data:
-            bo_qty_sum += item[4]
-            bo_value_sum += item[5]
-        print("=== Current Backorder Quantity %s, Value RMB %s ===" % (int(bo_qty_sum), format(bo_value_sum, ",.0f")))
 
     # display aging backorder list
     def display_aging_backorder(self):

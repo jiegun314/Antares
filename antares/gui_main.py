@@ -11,7 +11,7 @@ class DragonGUI(MyFrame1):
         self.__class__.bu_name = bu_name
 
     def bu_submit(self, event):
-        self.clear_frame_content()
+        self.clear_all_content()
         dict_bu_list = {'SPINE': 'SP', 'JOINT': 'JT', 'MITEK': 'MT', 'TRAUMA': 'TU', 'CMFT': 'CMF', 'PT': 'PT'}
         bu_result = self.rdbxBusinessUnit.GetStringSelection()
         self.__class__.bu_name = dict_bu_list[bu_result]
@@ -62,6 +62,7 @@ class DragonGUI(MyFrame1):
         self.txtLog.write("Display H5 Inventory")
         h5_name_hint = self.txtMaterialCode.Value
         h5_name_list = pub_func.get_available_h5_list(h5_name_hint, self.__class__.bu_name)
+        self.lstbxH5.Clear()
         for item in h5_name_list:
             self.lstbxH5.Append(item)
 
@@ -132,7 +133,13 @@ class DragonGUI(MyFrame1):
         self.listCtrlOutput.ClearAll()
         self.txtLog.Clear()
         self.StatusBar.SetStatusText(" ", 1)
-        pass
+
+    def clear_all_content(self):
+        self.listCtrlOutput.ClearAll()
+        self.lstbxH5.Clear()
+        self.txtMaterialCode.Clear()
+        self.txtLog.Clear()
+        self.StatusBar.SetStatusText(" ", 1)
 
 
 if __name__ == '__main__':

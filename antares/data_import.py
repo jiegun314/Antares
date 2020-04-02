@@ -119,17 +119,19 @@ class DataInput:
     def import_master_data(self):
         # for TU. data_type = {"Master_Data", "SAP_Price", "Phoenix_List"}
         print("==Import Master Data for %s==" % self.__class__.bu_name)
-        print("Please Choose Master Data Type (1 - Master_Data, 2 - SAP_Price, 3 - Phoenix_List)")
+        print("Please Choose Master Data Type (1 - Master_Data, 2 - SAP_Price, 3 - Phoenix_List, 4 - ROP_Setting)")
         cmd_code = input("cmd >> master_data >> ")
-        if cmd_code not in ["1", "2", "3"]:
-            print("!!Wrong code, please try again!")
-            return
-        elif cmd_code == "1":
+        if cmd_code == "1":
             data_type = "Master_Data"
         elif cmd_code == "2":
             data_type = "SAP_Price"
-        else:
+        elif cmd_code == "3":
             data_type = "Phoenix_List"
+        elif cmd_code == "4":
+            data_type = "ROP_Setting"
+        else:
+            print("!!Wrong code, please try again!")
+            return
         file_name = self.__class__.bu_name + "_" + data_type
         file_fullname = self.__class__.file_path + file_name + ".xlsx"
         db_fullname = self.__class__.db_path + self.__class__.bu_name + "_Master_Data.db"
@@ -139,6 +141,8 @@ class DataInput:
             df = pd.read_excel(file_fullname, na_values="0", dtype={'SAP_Price': np.float64})
         elif data_type == "SAP_Price":
             df = pd.read_excel(file_fullname, na_values="0", dtype={'Price': np.float64})
+        elif data_type == "ROP_Setting":
+            df = pd.read_excel(file_fullname, na_values="0", dtype={'Reorder Point': np.int32})
         else:
             df = pd.read_excel(file_fullname, na_values="0")
         # data = df.values
@@ -192,9 +196,9 @@ class DataInput:
 
 
 if __name__ == "__main__":
-    data_input = DataInput("JT")
-    # data_input.import_master_data("SAP_Price")
-    data_input.get_active_codes()
+    data_input = DataInput("TU")
+    data_input.import_master_data()
+    # data_input.get_active_codes()
     # cmd = int(input("选择需要导入的数据，1 - GTS，2 - LP Sales， 3 - IMS, 4 - LP_INV: "))
     # if cmd == 1:
     #     data_input.sales_input ("GTS")
