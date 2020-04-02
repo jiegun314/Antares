@@ -76,10 +76,7 @@ class CurrentInventoryDisplay:
             return
         # get the date
         inventory_date = input("Inventory Data (YYYYMMDD, Press Enter to get newest) : ")
-        if inventory_date == "":
-            table_name = CodeCalculation.get_newest_date()
-        else:
-            table_name = "INV" + inventory_date
+        table_name = CodeCalculation.get_newest_date() if inventory_date == "" else "INV" + inventory_date
         [inventory_result, total_inv_value] = CodeCalculation.get_h5_inv_detail(h5_name, table_name)
         print("Total Inventory Value of " + h5_name + " is %s" % (format(total_inv_value, ",.0f")))
         print(tabulate(inventory_result, headers="firstrow", tablefmt="github",
@@ -90,10 +87,7 @@ class CurrentInventoryDisplay:
         print("===Current Backorder List===")
         # 获取日期
         inventory_date = input("Inventory Data (YYYYMMDD, Press Enter to get newest) : ")
-        if inventory_date == "":
-            table_name = CodeCalculation.get_newest_date()
-        else:
-            table_name = "INV" + inventory_date
+        table_name = CodeCalculation.get_newest_date() if inventory_date == "" else "INV" + inventory_date
         print("===== <Result of %s> =====" % table_name.lstrip("INV"))
         backorder_result = CodeCalculation.get_current_bo(table_name)
         print(tabulate(backorder_result, headers="firstrow", tablefmt="github",
@@ -115,10 +109,7 @@ class CurrentInventoryDisplay:
         print("===Current Inventory List by Hierarchy_5===")
         # 获取日期
         inventory_date = input("Inventory Data (YYYYMMDD, Press Enter to get newest) : ")
-        if inventory_date == "":
-            table_name = CodeCalculation.get_newest_date()
-        else:
-            table_name = "INV" + inventory_date
+        table_name = CodeCalculation.get_newest_date() if inventory_date == "" else "INV" + inventory_date
         print("===== <Result of %s> =====" % table_name.lstrip("INV"))
         inventory_result, summary_result = CodeCalculation.get_current_inventory(table_name)
         print(tabulate(inventory_result, headers="firstrow", tablefmt="psql",
@@ -132,6 +123,26 @@ class CurrentInventoryDisplay:
                  format(total_useful_stock_value / self.__class__.currency_rate, ',.0f')))
         print("Total Stock Value: RMB - %s, USD - %s"
               % (format(total_stock_value, ',.0f'), format(total_stock_value / self.__class__.currency_rate, ',.0f')))
+
+    def export_inventory_data(self):
+        CodeCalculation = CIC(self.__class__.bu_name)
+        # print title
+        print("===Export Inventory Detail List===")
+        # get data
+        inventory_date = input("Inventory Data (YYYYMMDD, Press Enter to get newest) : ")
+        table_name = CodeCalculation.get_newest_date() if inventory_date == "" else "INV" + inventory_date
+        inventory_file = CodeCalculation.export_inventory_data(table_name)
+        print("Inventory detail exported to " + inventory_file)
+
+    def export_backorder_data(self):
+        CodeCalculation = CIC(self.__class__.bu_name)
+        # print title
+        print("===Export Backorder Detail List===")
+        # get data
+        inventory_date = input("Inventory Data (YYYYMMDD, Press Enter to get newest) : ")
+        table_name = CodeCalculation.get_newest_date() if inventory_date == "" else "INV" + inventory_date
+        backorder_file = CodeCalculation.export_backorder_data(table_name)
+        print("Backorder detail exported to " + backorder_file)
 
     def synchronize_oneclick_data(self):
         CodeCalculation = CIC(self.__class__.bu_name)

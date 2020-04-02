@@ -129,6 +129,28 @@ class DragonGUI(MyFrame1):
             self.txtLog.Clear()
             self.txtLog.write("Done. %s days succeed, %s days fail" % (sync_result[0], sync_result[1]))
 
+    # export one-day JNJ inventory detail list
+    def export_inventory(self, event):
+        self.clear_frame_content()
+        self.txtLog.write("Start to export. Please wait~")
+        CodeCalculation = CIC(self.__class__.bu_name)
+        # get newest
+        table_name = CodeCalculation.get_newest_date()
+        inventory_file = CodeCalculation.export_inventory_data(table_name)
+        self.clear_frame_content()
+        self.txtLog.write("Done, Inventory detail exported to %s." % inventory_file)
+
+    # export one-day backorder detail
+    def export_backorder(self, event):
+        self.clear_frame_content()
+        self.txtLog.write("Start to export. Please wait~")
+        CodeCalculation = CIC(self.__class__.bu_name)
+        # get newest
+        table_name = CodeCalculation.get_newest_date()
+        inventory_file = CodeCalculation.export_backorder_data(table_name)
+        self.clear_frame_content()
+        self.txtLog.write("Done, Backorder detail exported to %s." % inventory_file)
+
     def clear_frame_content(self):
         self.listCtrlOutput.ClearAll()
         self.txtLog.Clear()

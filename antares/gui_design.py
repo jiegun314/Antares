@@ -11,6 +11,9 @@ import wx
 import wx.xrc
 import wx.adv
 
+ID_EXPORT_INVENTORY = 1000
+ID_EXPORT_BACKORDER = 1001
+
 ###########################################################################
 ## Class MyFrame1
 ###########################################################################
@@ -18,7 +21,7 @@ import wx.adv
 class MyFrame1 ( wx.Frame ):
 
     def __init__( self, parent ):
-        wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = u"Project Dragon GUI v0401", pos = wx.DefaultPosition, size = wx.Size( 1024,768 ), style = wx.CAPTION|wx.CLOSE_BOX|wx.MINIMIZE_BOX|wx.TAB_TRAVERSAL )
+        wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = u"Project Dragon GUI v0401", pos = wx.DefaultPosition, size = wx.Size( 1280,800 ), style = wx.CAPTION|wx.CLOSE_BOX|wx.MINIMIZE_BOX|wx.TAB_TRAVERSAL )
 
         self.SetSizeHints( wx.DefaultSize, wx.DefaultSize )
 
@@ -93,7 +96,7 @@ class MyFrame1 ( wx.Frame ):
         bSizer5.Add( ( 10, 0), 0, wx.EXPAND, 5 )
 
         lstbxH5Choices = []
-        self.lstbxH5 = wx.ListBox( self.pnlOneclick, wx.ID_ANY, wx.DefaultPosition, wx.Size( 220,80 ), lstbxH5Choices, wx.LB_NEEDED_SB|wx.LB_SINGLE )
+        self.lstbxH5 = wx.ListBox( self.pnlOneclick, wx.ID_ANY, wx.DefaultPosition, wx.Size( 300,80 ), lstbxH5Choices, wx.LB_NEEDED_SB|wx.LB_SINGLE )
         bSizer5.Add( self.lstbxH5, 0, wx.ALL, 5 )
 
 
@@ -182,7 +185,7 @@ class MyFrame1 ( wx.Frame ):
 
         bSizer7.Add( self.m_staticText3, 0, wx.ALL, 5 )
 
-        self.listCtrlOutput = wx.ListCtrl( self.pnlOneclick, wx.ID_ANY, wx.DefaultPosition, wx.Size( 950,-1 ), wx.LC_REPORT )
+        self.listCtrlOutput = wx.ListCtrl( self.pnlOneclick, wx.ID_ANY, wx.DefaultPosition, wx.Size( 1275,-1 ), wx.LC_REPORT )
         bSizer7.Add( self.listCtrlOutput, 1, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
 
 
@@ -202,17 +205,26 @@ class MyFrame1 ( wx.Frame ):
         self.statusBar = self.CreateStatusBar( 2, wx.STB_SIZEGRIP, wx.ID_ANY )
         self.m_menubar1 = wx.MenuBar( 0 )
         self.m_menu1 = wx.Menu()
-        self.m_menuItem1 = wx.MenuItem( self.m_menu1, wx.ID_ANY, u"Open", wx.EmptyString, wx.ITEM_NORMAL )
-        self.m_menu1.Append( self.m_menuItem1 )
+        self.fileOpen = wx.MenuItem( self.m_menu1, wx.ID_ANY, u"Open", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menu1.Append( self.fileOpen )
 
-        self.m_menuItem2 = wx.MenuItem( self.m_menu1, wx.ID_ANY, u"Exit", wx.EmptyString, wx.ITEM_NORMAL )
-        self.m_menu1.Append( self.m_menuItem2 )
+        self.systemExit = wx.MenuItem( self.m_menu1, wx.ID_ANY, u"Exit", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menu1.Append( self.systemExit )
 
         self.m_menubar1.Append( self.m_menu1, u"File" )
 
+        self.dataExport = wx.Menu()
+        self.exportInventory = wx.MenuItem( self.dataExport, ID_EXPORT_INVENTORY, u"Export Inventory", wx.EmptyString, wx.ITEM_NORMAL )
+        self.dataExport.Append( self.exportInventory )
+
+        self.exportBackorder = wx.MenuItem( self.dataExport, ID_EXPORT_BACKORDER, u"Export Backorder", wx.EmptyString, wx.ITEM_NORMAL )
+        self.dataExport.Append( self.exportBackorder )
+
+        self.m_menubar1.Append( self.dataExport, u"Data Export" )
+
         self.m_menu2 = wx.Menu()
-        self.m_menuItem3 = wx.MenuItem( self.m_menu2, wx.ID_ANY, u"About", wx.EmptyString, wx.ITEM_NORMAL )
-        self.m_menu2.Append( self.m_menuItem3 )
+        self.showAbout = wx.MenuItem( self.m_menu2, wx.ID_ANY, u"About", wx.EmptyString, wx.ITEM_NORMAL )
+        self.m_menu2.Append( self.showAbout )
 
         self.m_menubar1.Append( self.m_menu2, u"About" )
 
@@ -229,6 +241,8 @@ class MyFrame1 ( wx.Frame ):
         self.btnCurrentInventory.Bind( wx.EVT_BUTTON, self.get_current_inventory_list )
         self.btnCurrentBackorder.Bind( wx.EVT_BUTTON, self.get_current_bo_list )
         self.btnAgingBO.Bind( wx.EVT_BUTTON, self.display_aging_backorder )
+        self.Bind( wx.EVT_MENU, self.export_inventory, id = self.exportInventory.GetId() )
+        self.Bind( wx.EVT_MENU, self.export_backorder, id = self.exportBackorder.GetId() )
 
     def __del__( self ):
         pass
@@ -254,6 +268,12 @@ class MyFrame1 ( wx.Frame ):
         event.Skip()
 
     def display_aging_backorder( self, event ):
+        event.Skip()
+
+    def export_inventory( self, event ):
+        event.Skip()
+
+    def export_backorder( self, event ):
         event.Skip()
 
 

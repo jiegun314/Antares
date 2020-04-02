@@ -15,7 +15,7 @@ class CurrentInventoryCalculation:
     inventory_path = "../data/_INV_Export/"
     oneclick_path = "L:\\COMPASS\\Oneclick Inventory Report\\Output\\"
     currency_rate = 7.0842
-    
+
     def __init__(self, bu):
         self.__class__.bu_name = bu
 
@@ -157,7 +157,8 @@ class CurrentInventoryCalculation:
             # git2 fulfill
             backorder_summary_list[3] += min([max(bo_qty - git1_fulfill_qty, 0), git2_fulfill_qty]) * bo_price
             # git3 fulfill
-            backorder_summary_list[4] += min([max(bo_qty - git1_fulfill_qty - git2_fulfill_qty, 0), git3_fulfill_qty]) * bo_price
+            backorder_summary_list[4] += min(
+                [max(bo_qty - git1_fulfill_qty - git2_fulfill_qty, 0), git3_fulfill_qty]) * bo_price
             # git4 fulfill
             backorder_summary_list[5] += min(
                 [max(bo_qty - git1_fulfill_qty - git2_fulfill_qty - git3_fulfill_qty, 0), git4_fulfill_qty]) * bo_price
@@ -173,12 +174,7 @@ class CurrentInventoryCalculation:
         return title + bo_result + [tuple(["-", "-", "-", "Total"] + backorder_summary_list)]
 
     # 导出backorder给平台
-    def export_backorder_data(self):
-        # print title
-        print("===Export Backorder Detail List===")
-        # get data
-        inventory_date = input("Inventory Data (YYYYMMDD, Press Enter to get newest) : ")
-        table_name = self.get_newest_date() if inventory_date == "" else "INV" + inventory_date
+    def export_backorder_data(self, table_name):
         db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
         conn = sqlite3.connect(db_name)
         sql_cmd = '''SELECT Material, Description, Hierarchy_5, Current_Backorder_Qty,
@@ -192,27 +188,25 @@ class CurrentInventoryCalculation:
                                 "GIT_3_Week": "6-8周", "not_delivered_qty": "已下订单"})
         backorder_file = self.__class__.backorder_path + "Backorder_" + table_name[3:] + ".xlsx"
         df.to_excel(backorder_file, index=False)
-        print("Backorder detail exported to " + backorder_file)
+        return backorder_file
 
     # export inventory file
-    def export_inventory_data(self):
-        # print title
-        print("===Export Inventory Detail List===")
-        # get data
-        inventory_date = input("Inventory Data (YYYYMMDD, Press Enter to get newest) : ")
-        if inventory_date == "":
-            table_name = self.get_newest_date()
-        else:
-            table_name = "INV" + inventory_date
+    def export_inventory_data(self, table_name):
         db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
         conn = sqlite3.connect(db_name)
-        sql_cmd = '''SELECT Material, Description, Available_Stock FROM ''' + table_name + ''' WHERE Available_Stock !=0'''
+        if self.__class__.bu_name == "TU":
+            sql_cmd = '''SELECT Material, Description, Available_Stock FROM ''' + table_name + \
+                      ''' WHERE Available_Stock !=0'''
+        else:
+            sql_cmd = '''SELECT Material, Description, Available_Stock, Pending_Inventory_Bonded_Total_Qty, 
+            GIT_1_Week, GIT_2_Week, GIT_3_Week, GIT_3_Week, Open_PO FROM ''' + table_name + \
+                      ''' WHERE Available_Stock !=0'''
         df = pd.read_sql(sql=sql_cmd, con=conn)
-        df = df.rename(columns={"Material": "代码", "Description": "英文描述", "Available_Stock": "可用数量"})
+        if self.__class__.bu_name == "TU":
+            df = df.rename(columns={"Material": "代码", "Description": "英文描述", "Available_Stock": "可用数量"})
         inventory_file = self.__class__.inventory_path + self.__class__.bu_name + "_Inventory_" + table_name[3:] + ".xlsx"
         df.to_excel(inventory_file, index=False)
-        print("Inventory detail exported to " + inventory_file)
-        pass
+        return inventory_file
 
     # display backorder value trend by day
     def display_backorder_trend(self):
@@ -310,8 +304,8 @@ class CurrentInventoryCalculation:
         backorder_output = []
         for backorder_item in backorder_tracing_list:
             sql_cmd = "SELECT Description, Hierarchy_5, CSC, Current_Backorder_Qty, " \
-                  "sum(GIT_1_Week + GIT_2_Week + GIT_3_Week + GIT_4_Week) as GIT_Qty, Open_PO FROM " +  \
-                  current_day_table + " WHERE Material = \'" + backorder_item[0] + "\'"
+                      "sum(GIT_1_Week + GIT_2_Week + GIT_3_Week + GIT_4_Week) as GIT_Qty, Open_PO FROM " + \
+                      current_day_table + " WHERE Material = \'" + backorder_item[0] + "\'"
             c.execute(sql_cmd)
             result_temp = list(c.fetchall()[0])
             backorder_output.append([backorder_item[1], backorder_item[0]] + result_temp)
@@ -369,7 +363,7 @@ class CurrentInventoryCalculation:
         c.execute(sql_cmd)
         result = c.fetchall()[0]
         title = ["Material", "Description", "Hierarchy_5", "Available_Stock", "Pending_Qty_BD",
-                 "Pending_Qty_NB", "CSC", "GIT_1_Qty", "GIT_2_Qty", "GIT_3_Qty", "GIT_4_Qty", "Open_PO",  "Std Cost"]
+                 "Pending_Qty_NB", "CSC", "GIT_1_Qty", "GIT_2_Qty", "GIT_3_Qty", "GIT_4_Qty", "Open_PO", "Std Cost"]
         code_inv_output = [["Item", "Value"]]
         for i in range(len(result)):
             if isinstance(result[i], str):
@@ -447,7 +441,7 @@ class CurrentInventoryCalculation:
     def get_h5_inv_detail(self, h5_name, table_name):
         # generate title
         table_title = [("Material", "Description", "CSC", "Available Stock", "Onhand_INV_Value", "Bonded Pending",
-                        "GIT_1_Week", "GIT_2_Week", "GIT_3_Week", "GIT_4_Week"),]
+                        "GIT_1_Week", "GIT_2_Week", "GIT_3_Week", "GIT_4_Week"), ]
         # Connect to database
         db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
         conn = sqlite3.connect(db_name)
@@ -532,6 +526,6 @@ class CurrentInventoryCalculation:
 
 
 if __name__ == "__main__":
-    test = CurrentInventoryCalculation("TU")
-    test.inventory_mapping()
+    test = CurrentInventoryCalculation("CMF")
+    test.export_inventory_data()
     # test.inv_data_sync(50)

@@ -25,11 +25,11 @@ class CurrentInventoryMenu:
             if cmd_code == "inv":
                 crt_inv_display.display_current_inventory()
             elif cmd_code == "inv_export":
-                crt_inv_cclt.export_inventory_data()
+                crt_inv_display.export_inventory_data()
             elif cmd_code == "bo":
                 crt_inv_display.display_current_backorder()
             elif cmd_code == "bo_export":
-                crt_inv_cclt.export_backorder_data()
+                crt_inv_display.export_backorder_data()
             elif cmd_code == "pending":
                 crt_inv_cclt.get_pending_trend()
             elif cmd_code == "pending -q":
