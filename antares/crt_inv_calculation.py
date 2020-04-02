@@ -209,7 +209,7 @@ class CurrentInventoryCalculation:
         sql_cmd = '''SELECT Material, Description, Available_Stock FROM ''' + table_name + ''' WHERE Available_Stock !=0'''
         df = pd.read_sql(sql=sql_cmd, con=conn)
         df = df.rename(columns={"Material": "代码", "Description": "英文描述", "Available_Stock": "可用数量"})
-        inventory_file = self.__class__.inventory_path + "Inventory_" + table_name[3:] + ".xlsx"
+        inventory_file = self.__class__.inventory_path + self.__class__.bu_name + "_Inventory_" + table_name[3:] + ".xlsx"
         df.to_excel(inventory_file, index=False)
         print("Inventory detail exported to " + inventory_file)
         pass
