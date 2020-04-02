@@ -308,10 +308,17 @@ class CurrentInventoryCalculation:
                       current_day_table + " WHERE Material = \'" + backorder_item[0] + "\'"
             c.execute(sql_cmd)
             result_temp = list(c.fetchall()[0])
-            backorder_output.append([backorder_item[1], backorder_item[0]] + result_temp)
+            # add alert trigger based on GIT and Open Order quantity
+            if result_temp[3] > (result_temp[4] + result_temp[5]):
+                alert_trigger = "###"
+            elif result_temp[3] > result_temp[4]:
+                alert_trigger = "---"
+            else:
+                alert_trigger = " "
+            backorder_output.append([backorder_item[1], alert_trigger, backorder_item[0]] + result_temp)
         # print out
         list_header = [
-            ["BO Days", "Material", "Description", "Hierarchy_5", "CSC", "BO Qty", "GIT Qty", "Open PO"], ]
+            ["BO Days", "Alert", "Material", "Description", "Hierarchy_5", "CSC", "BO Qty", "GIT Qty", "Open PO"], ]
         aging_backorder_list = list_header + backorder_output
         return [aging_backorder_list, len(table_list)]
 

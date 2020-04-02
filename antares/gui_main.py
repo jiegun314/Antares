@@ -95,7 +95,7 @@ class DragonGUI(MyFrame1):
         self.txtLog.Clear()
         self.txtLog.write("Calculation ongoing, please wait a moment...")
         [inventory_result, mapping_days] = CodeCalculation.calculate_aging_backorder(exception_list)
-        data_trigger_point = 5
+        data_trigger_point = 6
         self.show_inventory_list(inventory_result, data_trigger_point)
         self.StatusBar.SetStatusText("Total Mapping %s days" % ("{:,.0f}".format(mapping_days)), 1)
         self.txtLog.Clear()
