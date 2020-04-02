@@ -46,7 +46,13 @@ class MyFrame1 ( wx.Frame ):
         bSizer9.Add( self.btnSync, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
 
 
-        bSizer9.Add( ( 120, 0), 0, wx.EXPAND, 5 )
+        bSizer9.Add( ( 40, 0), 0, wx.EXPAND, 5 )
+
+        self.m_staticline5 = wx.StaticLine( self.pnlOneclick, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LI_HORIZONTAL|wx.LI_VERTICAL )
+        bSizer9.Add( self.m_staticline5, 0, wx.EXPAND |wx.ALL, 5 )
+
+
+        bSizer9.Add( ( 40, 0), 0, wx.EXPAND, 5 )
 
         rdbxBusinessUnitChoices = [ u"JOINT", u"SPINE", u"TRAUMA", u"MITEK", u"CMFT", u"PT" ]
         self.rdbxBusinessUnit = wx.RadioBox( self.pnlOneclick, wx.ID_ANY, u"Business Unit", wx.DefaultPosition, wx.Size( -1,-1 ), rdbxBusinessUnitChoices, 1, wx.RA_SPECIFY_ROWS )
@@ -71,15 +77,18 @@ class MyFrame1 ( wx.Frame ):
         bSizer5 = wx.BoxSizer( wx.HORIZONTAL )
 
         bSizer5.SetMinSize( wx.Size( -1,80 ) )
+
+        bSizer5.Add( ( 20, 0), 0, wx.EXPAND, 5 )
+
         rdbxCalculationTypeChoices = [ u"by Code", u"by Hierarchy" ]
-        self.rdbxCalculationType = wx.RadioBox( self.pnlOneclick, wx.ID_ANY, u"Calculation Type", wx.DefaultPosition, wx.DefaultSize, rdbxCalculationTypeChoices, 1, wx.RA_SPECIFY_COLS )
+        self.rdbxCalculationType = wx.RadioBox( self.pnlOneclick, wx.ID_ANY, u"Calculation Type", wx.DefaultPosition, wx.Size( -1,80 ), rdbxCalculationTypeChoices, 1, wx.RA_SPECIFY_COLS )
         self.rdbxCalculationType.SetSelection( 0 )
         bSizer5.Add( self.rdbxCalculationType, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
 
 
         bSizer5.Add( ( 10, 20), 0, wx.EXPAND, 5 )
 
-        self.m_staticText2 = wx.StaticText( self.pnlOneclick, wx.ID_ANY, u"Material / H5 Name: ", wx.DefaultPosition, wx.Size( -1,20 ), 0 )
+        self.m_staticText2 = wx.StaticText( self.pnlOneclick, wx.ID_ANY, u"Material / H5 \nName: ", wx.DefaultPosition, wx.Size( -1,40 ), wx.ALIGN_CENTER_HORIZONTAL )
         self.m_staticText2.Wrap( -1 )
 
         self.m_staticText2.SetMaxSize( wx.Size( -1,30 ) )
@@ -96,15 +105,18 @@ class MyFrame1 ( wx.Frame ):
         bSizer5.Add( ( 10, 0), 0, wx.EXPAND, 5 )
 
         lstbxH5Choices = []
-        self.lstbxH5 = wx.ListBox( self.pnlOneclick, wx.ID_ANY, wx.DefaultPosition, wx.Size( 300,80 ), lstbxH5Choices, wx.LB_NEEDED_SB|wx.LB_SINGLE )
+        self.lstbxH5 = wx.ListBox( self.pnlOneclick, wx.ID_ANY, wx.DefaultPosition, wx.Size( 250,80 ), lstbxH5Choices, wx.LB_NEEDED_SB|wx.LB_SINGLE )
         bSizer5.Add( self.lstbxH5, 0, wx.ALL, 5 )
 
 
-        bSizer5.Add( ( 10, 0), 1, wx.EXPAND, 5 )
+        bSizer5.Add( ( 10, 0), 0, wx.EXPAND, 5 )
 
         bSizer71 = wx.BoxSizer( wx.VERTICAL )
 
         bSizer71.SetMinSize( wx.Size( 0,60 ) )
+
+        bSizer71.Add( ( 1, 15), 0, wx.EXPAND, 5 )
+
         self.m_staticText4 = wx.StaticText( self.pnlOneclick, wx.ID_ANY, u"Select Date:", wx.Point( 0,0 ), wx.Size( -1,20 ), 0 )
         self.m_staticText4.Wrap( -1 )
 
@@ -117,15 +129,63 @@ class MyFrame1 ( wx.Frame ):
         bSizer5.Add( bSizer71, 0, wx.EXPAND, 5 )
 
 
-        bSizer5.Add( ( 20, 0), 1, wx.EXPAND, 5 )
+        bSizer5.Add( ( 10, 0), 0, wx.EXPAND, 5 )
 
-        self.btnSubmit = wx.Button( self.pnlOneclick, wx.ID_ANY, u"Submit", wx.DefaultPosition, wx.Size( -1,30 ), 0 )
+        bSizer10 = wx.BoxSizer( wx.VERTICAL )
+
+
+        bSizer10.Add( ( 1, 5), 0, wx.EXPAND, 5 )
+
+        self.bntClear = wx.Button( self.pnlOneclick, wx.ID_ANY, u"Clear", wx.DefaultPosition, wx.Size( 120,-1 ), 0 )
+        self.bntClear.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_INACTIVECAPTIONTEXT ) )
+
+        bSizer10.Add( self.bntClear, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
+
+        self.btnSubmit = wx.Button( self.pnlOneclick, wx.ID_ANY, u"Submit", wx.DefaultPosition, wx.Size( 120,-1 ), 0 )
         self.btnSubmit.SetMaxSize( wx.Size( -1,30 ) )
 
-        bSizer5.Add( self.btnSubmit, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
+        bSizer10.Add( self.btnSubmit, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
 
 
-        bSizer5.Add( ( 0, 0), 1, wx.EXPAND, 5 )
+        bSizer5.Add( bSizer10, 0, wx.EXPAND, 5 )
+
+
+        bSizer5.Add( ( 20, 0), 0, wx.EXPAND, 5 )
+
+        self.m_staticline4 = wx.StaticLine( self.pnlOneclick, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LI_HORIZONTAL|wx.LI_VERTICAL )
+        bSizer5.Add( self.m_staticline4, 0, wx.EXPAND |wx.ALL, 5 )
+
+        bSizer11 = wx.BoxSizer( wx.VERTICAL )
+
+        bSizer12 = wx.BoxSizer( wx.HORIZONTAL )
+
+        self.btnCurrentInventory = wx.Button( self.pnlOneclick, wx.ID_ANY, u"Current INV", wx.DefaultPosition, wx.DefaultSize, 0 )
+        bSizer12.Add( self.btnCurrentInventory, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
+
+        self.btnCurrentBackorder = wx.Button( self.pnlOneclick, wx.ID_ANY, u"Current Backorder", wx.DefaultPosition, wx.DefaultSize, 0 )
+        bSizer12.Add( self.btnCurrentBackorder, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
+
+
+        bSizer11.Add( bSizer12, 1, wx.EXPAND, 5 )
+
+        bSizer13 = wx.BoxSizer( wx.HORIZONTAL )
+
+        self.btnAgingBO = wx.Button( self.pnlOneclick, wx.ID_ANY, u"Aging Backorder", wx.DefaultPosition, wx.DefaultSize, 0 )
+        self.btnAgingBO.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_HIGHLIGHT ) )
+        self.btnAgingBO.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_3DLIGHT ) )
+
+        bSizer13.Add( self.btnAgingBO, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
+
+        self.m_button6 = wx.Button( self.pnlOneclick, wx.ID_ANY, u"MyButton", wx.DefaultPosition, wx.DefaultSize, 0 )
+        self.m_button6.Hide()
+
+        bSizer13.Add( self.m_button6, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
+
+
+        bSizer11.Add( bSizer13, 1, wx.EXPAND, 5 )
+
+
+        bSizer5.Add( bSizer11, 1, wx.EXPAND|wx.RIGHT|wx.LEFT, 5 )
 
 
         bSizer4.Add( bSizer5, 0, wx.EXPAND, 5 )
@@ -137,23 +197,6 @@ class MyFrame1 ( wx.Frame ):
 
         bSizer6.SetMinSize( wx.Size( -1,30 ) )
         bSizer8 = wx.BoxSizer( wx.HORIZONTAL )
-
-        self.btnCurrentInventory = wx.Button( self.pnlOneclick, wx.ID_ANY, u"Current INV", wx.DefaultPosition, wx.DefaultSize, 0 )
-        bSizer8.Add( self.btnCurrentInventory, 0, wx.ALL, 5 )
-
-        self.btnCurrentBackorder = wx.Button( self.pnlOneclick, wx.ID_ANY, u"Current Backorder", wx.DefaultPosition, wx.DefaultSize, 0 )
-        bSizer8.Add( self.btnCurrentBackorder, 0, wx.ALL, 5 )
-
-        self.btnAgingBO = wx.Button( self.pnlOneclick, wx.ID_ANY, u"Aging Backorder", wx.DefaultPosition, wx.DefaultSize, 0|wx.BORDER_NONE )
-        self.btnAgingBO.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_HIGHLIGHTTEXT ) )
-        self.btnAgingBO.SetBackgroundColour( wx.Colour( 255, 128, 0 ) )
-
-        bSizer8.Add( self.btnAgingBO, 0, wx.ALL, 5 )
-
-        self.m_button6 = wx.Button( self.pnlOneclick, wx.ID_ANY, u"MyButton", wx.DefaultPosition, wx.DefaultSize, 0 )
-        self.m_button6.Hide()
-
-        bSizer8.Add( self.m_button6, 0, wx.ALL, 5 )
 
 
         bSizer8.Add( ( 20, 0), 0, wx.EXPAND, 5 )
@@ -205,9 +248,6 @@ class MyFrame1 ( wx.Frame ):
         self.statusBar = self.CreateStatusBar( 2, wx.STB_SIZEGRIP, wx.ID_ANY )
         self.m_menubar1 = wx.MenuBar( 0 )
         self.m_menu1 = wx.Menu()
-        self.fileOpen = wx.MenuItem( self.m_menu1, wx.ID_ANY, u"Open", wx.EmptyString, wx.ITEM_NORMAL )
-        self.m_menu1.Append( self.fileOpen )
-
         self.systemExit = wx.MenuItem( self.m_menu1, wx.ID_ANY, u"Exit", wx.EmptyString, wx.ITEM_NORMAL )
         self.m_menu1.Append( self.systemExit )
 
@@ -237,6 +277,7 @@ class MyFrame1 ( wx.Frame ):
         self.btnSync.Bind( wx.EVT_BUTTON, self.sync_inventory )
         self.btnBUSubmit.Bind( wx.EVT_BUTTON, self.bu_submit )
         self.lstbxH5.Bind( wx.EVT_LEFT_DCLICK, self.display_h5_inventory )
+        self.bntClear.Bind( wx.EVT_BUTTON, self.clear_input )
         self.btnSubmit.Bind( wx.EVT_BUTTON, self.codeSubmit )
         self.btnCurrentInventory.Bind( wx.EVT_BUTTON, self.get_current_inventory_list )
         self.btnCurrentBackorder.Bind( wx.EVT_BUTTON, self.get_current_bo_list )
@@ -256,6 +297,9 @@ class MyFrame1 ( wx.Frame ):
         event.Skip()
 
     def display_h5_inventory( self, event ):
+        event.Skip()
+
+    def clear_input( self, event ):
         event.Skip()
 
     def codeSubmit( self, event ):

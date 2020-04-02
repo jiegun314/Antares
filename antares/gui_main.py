@@ -151,6 +151,13 @@ class DragonGUI(MyFrame1):
         self.clear_frame_content()
         self.txtLog.write("Done, Backorder detail exported to %s." % inventory_file)
 
+    # clear input area:
+    def clear_input(self, event):
+        self.txtMaterialCode.Clear()
+        self.lstbxH5.Clear()
+        self.txtLog.Clear()
+        self.listCtrlOutput.ClearAll()
+
     def clear_frame_content(self):
         self.listCtrlOutput.ClearAll()
         self.txtLog.Clear()
