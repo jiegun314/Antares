@@ -43,6 +43,18 @@ def check_future_month(month_item, month_quantity):
 #     print(tabulate(final_display_result, tablefmt="psql", headers="firstrow", colalign=("left","left")))
 #     pass
 
+# generate exception list for multi-function
+def get_exception_list(bu_name, calculation_type):
+    exception_list = []
+    if calculation_type == "Aging_Backorder":
+        if bu_name == "TU":
+            exception_list = ["INV20200330", "INV20200331"]
+        elif bu_name == "PT":
+            exception_list = ["INV20200327", "INV20200330", "INV20200331", "INV20200401"]
+    else:
+        pass
+    return exception_list
+
 
 def get_available_h5_name(h5_name, bu_name):
     h5_output = get_available_h5_list(h5_name, bu_name)

@@ -136,8 +136,9 @@ class MyFrame1 ( wx.Frame ):
 
         bSizer10.Add( ( 1, 5), 0, wx.EXPAND, 5 )
 
-        self.bntClear = wx.Button( self.pnlOneclick, wx.ID_ANY, u"Clear", wx.DefaultPosition, wx.Size( 120,-1 ), 0 )
-        self.bntClear.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_INACTIVECAPTIONTEXT ) )
+        self.bntClear = wx.Button( self.pnlOneclick, wx.ID_ANY, u"Clear", wx.DefaultPosition, wx.Size( 120,-1 ), 0|wx.BORDER_NONE )
+        self.bntClear.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_HIGHLIGHTTEXT ) )
+        self.bntClear.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_3DDKSHADOW ) )
 
         bSizer10.Add( self.bntClear, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
 
@@ -198,6 +199,17 @@ class MyFrame1 ( wx.Frame ):
         bSizer6.SetMinSize( wx.Size( -1,30 ) )
         bSizer8 = wx.BoxSizer( wx.HORIZONTAL )
 
+        self.btnExportInv = wx.Button( self.pnlOneclick, wx.ID_ANY, u"INV Exp.", wx.DefaultPosition, wx.DefaultSize, 0 )
+        bSizer8.Add( self.btnExportInv, 0, wx.ALL, 5 )
+
+        self.btnBOExp = wx.Button( self.pnlOneclick, wx.ID_ANY, u"BO Exp.", wx.DefaultPosition, wx.DefaultSize, 0 )
+        bSizer8.Add( self.btnBOExp, 0, wx.ALL, 5 )
+
+        self.m_staticline6 = wx.StaticLine( self.pnlOneclick, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LI_VERTICAL )
+        self.m_staticline6.SetFont( wx.Font( wx.NORMAL_FONT.GetPointSize(), wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, wx.EmptyString ) )
+
+        bSizer8.Add( self.m_staticline6, 0, wx.EXPAND |wx.ALL, 5 )
+
 
         bSizer8.Add( ( 20, 0), 0, wx.EXPAND, 5 )
 
@@ -228,7 +240,7 @@ class MyFrame1 ( wx.Frame ):
 
         bSizer7.Add( self.m_staticText3, 0, wx.ALL, 5 )
 
-        self.listCtrlOutput = wx.ListCtrl( self.pnlOneclick, wx.ID_ANY, wx.DefaultPosition, wx.Size( 1275,-1 ), wx.LC_REPORT )
+        self.listCtrlOutput = wx.ListCtrl( self.pnlOneclick, wx.ID_ANY, wx.DefaultPosition, wx.Size( 1275,-1 ), wx.LC_REPORT|wx.LC_VRULES )
         bSizer7.Add( self.listCtrlOutput, 1, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
 
 
@@ -282,6 +294,8 @@ class MyFrame1 ( wx.Frame ):
         self.btnCurrentInventory.Bind( wx.EVT_BUTTON, self.get_current_inventory_list )
         self.btnCurrentBackorder.Bind( wx.EVT_BUTTON, self.get_current_bo_list )
         self.btnAgingBO.Bind( wx.EVT_BUTTON, self.display_aging_backorder )
+        self.btnExportInv.Bind( wx.EVT_BUTTON, self.export_inventory )
+        self.btnBOExp.Bind( wx.EVT_BUTTON, self.export_backorder )
         self.Bind( wx.EVT_MENU, self.export_inventory, id = self.exportInventory.GetId() )
         self.Bind( wx.EVT_MENU, self.export_backorder, id = self.exportBackorder.GetId() )
 
@@ -319,5 +333,7 @@ class MyFrame1 ( wx.Frame ):
 
     def export_backorder( self, event ):
         event.Skip()
+
+
 
 

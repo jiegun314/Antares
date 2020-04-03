@@ -1,7 +1,7 @@
 from gui_design import MyFrame1
 import wx
 from crt_inv_calculation import CurrentInventoryCalculation as CIC
-import public_function as pub_func
+import public_function as pb_func
 
 
 class DragonGUI(MyFrame1):
@@ -61,7 +61,7 @@ class DragonGUI(MyFrame1):
     def display_h5_inventory_detail(self):
         self.txtLog.write("Display H5 Inventory")
         h5_name_hint = self.txtMaterialCode.Value
-        h5_name_list = pub_func.get_available_h5_list(h5_name_hint, self.__class__.bu_name)
+        h5_name_list = pb_func.get_available_h5_list(h5_name_hint, self.__class__.bu_name)
         self.lstbxH5.Clear()
         for item in h5_name_list:
             self.lstbxH5.Append(item)
@@ -84,14 +84,17 @@ class DragonGUI(MyFrame1):
         CodeCalculation = CIC(self.__class__.bu_name)
         table_name = CodeCalculation.get_newest_date()
         inventory_result = CodeCalculation.get_current_bo(table_name)
+        [backorder_total_qty, backorder_total_value] = inventory_result[-1][4:6]
         self.show_inventory_list(inventory_result, data_trigger_point)
         self.txtLog.write("Current Backorder List done, with data of %s." % table_name)
+        self.StatusBar.SetStatusText("Total Backorder Qty; %s, Value: %s" %
+                                     ("{:,.0f}".format(backorder_total_qty), "{:,.0f}".format(backorder_total_value)), 1)
 
     def display_aging_backorder(self, event):
         self.clear_frame_content()
         CodeCalculation = CIC(self.__class__.bu_name)
         # set exception list with abnormal backorder information
-        exception_list = ["INV20200330", "INV20200331"]
+        exception_list = pb_func.get_exception_list(self.__class__.bu_name, "Aging_Backorder")
         self.txtLog.Clear()
         self.txtLog.write("Calculation ongoing, please wait a moment...")
         [inventory_result, mapping_days] = CodeCalculation.calculate_aging_backorder(exception_list)
@@ -127,7 +130,8 @@ class DragonGUI(MyFrame1):
             self.txtLog.write("Sync failure. Please make sure you've connected to JNJ network")
         else:
             self.txtLog.Clear()
-            self.txtLog.write("Done. %s days succeed, %s days fail" % (sync_result[0], sync_result[1]))
+            self.txtLog.write("Done. %s days succeed, %s days fail. Update to %s" %
+                              (sync_result[0], sync_result[1], sync_result[2]))
 
     # export one-day JNJ inventory detail list
     def export_inventory(self, event):

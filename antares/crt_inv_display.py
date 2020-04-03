@@ -98,7 +98,7 @@ class CurrentInventoryDisplay:
         # print title
         print("===Display Aging Backorder===")
         # set exception list with abnormal backorder information
-        exception_list = ["INV20200330", "INV20200331"]
+        exception_list = pb_func.get_exception_list(self.__class__.bu_name, "Aging_Backorder")
         CodeCalculation = CIC(self.__class__.bu_name)
         [aging_backorder_list, mapping_days] = CodeCalculation.calculate_aging_backorder(exception_list)
         print("---Aging Backorder List within %s days---" % mapping_days)
@@ -153,7 +153,7 @@ class CurrentInventoryDisplay:
             print("!Error, the sharefolder cannot be opened. Make sure you've connected to JNJ network and try again.")
         else:
             print(">> Synchronization succeed!")
-            print(">> %s days succeed, %s days fail" % (sync_result[0], sync_result[1]))
+            print(">> %s days succeed, %s days fail. Updated to %s" % (sync_result[0], sync_result[1], sync_result[2]))
 
 
 if __name__ == "__main__":
