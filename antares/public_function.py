@@ -51,6 +51,9 @@ def get_exception_list(bu_name, calculation_type):
             exception_list = ["INV20200330", "INV20200331"]
         elif bu_name == "PT":
             exception_list = ["INV20200327", "INV20200330", "INV20200331", "INV20200401"]
+        elif bu_name == "CMF":
+            exception_list = ["INV20200325", "INV20200326", "INV20200327", "INV20200330", "INV20200331", "INV20200401",
+                              "INV20200402"]
     else:
         pass
     return exception_list

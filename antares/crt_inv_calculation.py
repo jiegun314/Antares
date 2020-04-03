@@ -523,7 +523,8 @@ class CurrentInventoryCalculation:
                     import_success_count += 1
                 else:
                     import_fail_count += 1
-        return [import_success_count, import_fail_count, lst_current_database[-1]]
+        most_updated_table = self.get_tbl_list()[-1]
+        return [import_success_count, import_fail_count, most_updated_table]
 
     # Display command list
     @staticmethod
