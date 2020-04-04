@@ -380,47 +380,29 @@ class CurrentInventoryCalculation:
         return code_inv_output
 
     # 查询单个代码可用库存趋势
-    def code_inv_trend(self):
-        title = "===Single Code Available Stock Trend==="
-        print(title)
-        # 获取日期
-        code_name = input("Input Material Code : ")
-        if self.check_code(code_name):
-            # 获取日期清单
-            tbl_list = self.get_tbl_list()
-            db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
-            conn = sqlite3.connect(db_name)
-            c = conn.cursor()
-            inv_result = []
-            for tbl_item in tbl_list:
-                sql_cmd = "SELECT Available_Stock from " + tbl_item + " WHERE Material = \'" + code_name + "\'"
-                c.execute(sql_cmd)
-                result = c.fetchone()
-                if not result:
-                    inv_result.append(0)
-                else:
-                    inv_result.append(result[0])
-            conn.commit()
-            conn.close()
-            # print charter
-            x_value = [item[-4:] for item in tbl_list]
-            chart.line_chart(code_name, x_value, inv_result, "Date", "INV Qty", "Inventory Trend of " + code_name)
-        else:
-            print("!!Error - This Material Code does NOT exist, Please re-input! ")
+    def generate_code_inv_trend(self, code_name):
+        # 获取日期清单
+        tbl_list = self.get_tbl_list()
+        db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
+        conn = sqlite3.connect(db_name)
+        c = conn.cursor()
+        inv_result = []
+        for tbl_item in tbl_list:
+            sql_cmd = "SELECT Available_Stock from " + tbl_item + " WHERE Material = \'" + code_name + "\'"
+            c.execute(sql_cmd)
+            result = c.fetchone()
+            if not result:
+                inv_result.append(0)
+            else:
+                inv_result.append(result[0])
+        conn.commit()
+        conn.close()
+        # print charter
+        x_value = [item[-4:] for item in tbl_list]
+        chart.line_chart(code_name, x_value, inv_result, "Date", "INV Qty", "Inventory Trend of " + code_name)
 
     # 查询H5库存趋势
-    def h5_inv_trend(self):
-        print("===Hierarchy_5 Available Stock Trend===")
-        # 获取H5名称
-        h5_input = input("Input Hierarchy_5 Name : ")
-        if h5_input == "" or h5_input.upper() == "ALL":
-            h5_result = "ALL"
-        else:
-            h5_result = pb_func.get_available_h5_name(h5_input, self.__class__.bu_name)
-        # if not right h5 name, return
-        if h5_result == "NULL":
-            print("!!Error, No such Hierarchy_5 name. Please try again!")
-            return
+    def generate_h5_inventory_trend(self, h5_result):
         # 获取日期清单
         tbl_list = self.get_tbl_list()
         # 连接数据库

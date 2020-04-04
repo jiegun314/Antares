@@ -144,6 +144,31 @@ class CurrentInventoryDisplay:
         backorder_file = CodeCalculation.export_backorder_data(table_name)
         print("Backorder detail exported to " + backorder_file)
 
+    def display_code_inventory_trend(self):
+        CodeCalculation = CIC(self.__class__.bu_name)
+        print("===Single Code Available Stock Trend===")
+        code_name = input("Input Material Code: ")
+        if CodeCalculation.check_code(code_name):
+            CodeCalculation.generate_code_inv_trend(code_name)
+        else:
+            print("!!Error - This Material Code does NOT exist, Please re-input! ")
+
+    def dispaly_h5_inventory_trend(self):
+        CodeCalculation = CIC(self.__class__.bu_name)
+        print("===Hierarchy_5 Available Stock Trend===")
+        # 获取H5名称
+        h5_input = input("Input Hierarchy_5 Name: ")
+        if h5_input == "" or h5_input.upper() == "ALL":
+            h5_result = "ALL"
+        else:
+            h5_result = pb_func.get_available_h5_name(h5_input, self.__class__.bu_name)
+        # if not right h5 name, return
+        if h5_result != "NULL":
+            CodeCalculation.generate_h5_inventory_trend(h5_result)
+        else:
+            print("!!Error, No such Hierarchy_5 name. Please try again!")
+            return
+
     def synchronize_oneclick_data(self):
         CodeCalculation = CIC(self.__class__.bu_name)
         lst_xcpt = ['20190118', ]

@@ -10,12 +10,21 @@ class DragonGUI(MyFrame1):
     def set_bu_name(self, bu_name):
         self.__class__.bu_name = bu_name
 
-    def bu_submit(self, event):
-        self.clear_all_content()
-        dict_bu_list = {'SPINE': 'SP', 'JOINT': 'JT', 'MITEK': 'MT', 'TRAUMA': 'TU', 'CMFT': 'CMF', 'PT': 'PT'}
-        bu_result = self.rdbxBusinessUnit.GetStringSelection()
-        self.__class__.bu_name = dict_bu_list[bu_result]
-        self.txtLog.write("%s has been selected" % bu_result)
+    def select_bu_CMFT(self, event):
+        self.__class__.bu_name = "CMF"
+        self.display_bu_update()
+
+    def select_bu_TU(self, event):
+        self.__class__.bu_name = "TU"
+        self.display_bu_update()
+
+    def select_bu_PT(self, event):
+        self.__class__.bu_name = "PT"
+        self.display_bu_update()
+
+    def display_bu_update(self):
+        self.txtLog.Clear()
+        self.txtLog.write("%s has been selected" % self.__class__.bu_name)
         self.statusBar.SetStatusText("Working BU: %s" % self.__class__.bu_name, 0)
         pass
 
@@ -31,7 +40,7 @@ class DragonGUI(MyFrame1):
 
     def display_h5_inventory(self, event):
         self.clear_frame_content()
-        h5_name = self.lstbxH5.GetStringSelection()
+        h5_name = self.lstbxCodeSelection.GetStringSelection()
         CodeCalculation = CIC(self.__class__.bu_name)
         table_name = CodeCalculation.get_newest_date()
         [inventory_list, inventory_total] = CodeCalculation.get_h5_inv_detail(h5_name, table_name)
@@ -43,7 +52,14 @@ class DragonGUI(MyFrame1):
 
     def display_code_mapping_inventory(self):
         # get code list and newest timing to mapping
-        code_name_list = self.txtMaterialCode.Value.split()
+        code_name_input = self.txtMaterialCode.Value.split()
+        code_name_list = []
+        for item in code_name_input:
+            code_name_list.append(item.upper())
+        # show in code list
+        self.lstbxCodeSelection.Clear()
+        for code_item in code_name_list:
+            self.lstbxCodeSelection.Append(code_item)
         CodeCalculation = CIC(self.__class__.bu_name)
         table_name = CodeCalculation.get_newest_date()
         inventory_result = CodeCalculation.inventory_mapping(code_name_list, table_name)
@@ -62,9 +78,9 @@ class DragonGUI(MyFrame1):
         self.txtLog.write("Display H5 Inventory")
         h5_name_hint = self.txtMaterialCode.Value
         h5_name_list = pb_func.get_available_h5_list(h5_name_hint, self.__class__.bu_name)
-        self.lstbxH5.Clear()
+        self.lstbxCodeSelection.Clear()
         for item in h5_name_list:
-            self.lstbxH5.Append(item)
+            self.lstbxCodeSelection.Append(item)
 
     def get_current_inventory_list(self, event):
         self.clear_frame_content()
@@ -155,10 +171,31 @@ class DragonGUI(MyFrame1):
         self.clear_frame_content()
         self.txtLog.write("Done, Backorder detail exported to %s." % inventory_file)
 
+    # display code trend
+    def display_code_trend(self, event):
+        self.clear_frame_content()
+        code_name = self.lstbxCodeSelection.GetStringSelection()
+        self.txtLog.write("Inventory Trend of %s is under generating. Please wait~" % code_name)
+        CodeCalculation = CIC(self.__class__.bu_name)
+        CodeCalculation.generate_code_inv_trend(code_name)
+        self.clear_frame_content()
+        self.txtLog.write("Done. The chart would be opened in your web browser.")
+
+    # display h5 trend
+    def display_h5_trend(self, event):
+        self.clear_frame_content()
+        h5_name = self.lstbxCodeSelection.GetStringSelection()
+        self.txtLog.write("Inventory Trend of %s is under generating. Please wait~" % h5_name)
+        CodeCalculation = CIC(self.__class__.bu_name)
+        CodeCalculation.generate_h5_inventory_trend(h5_name)
+        self.clear_frame_content()
+        self.txtLog.write("Done. The chart would be opened in your web browser.")
+        pass
+
     # clear input area:
     def clear_input(self, event):
         self.txtMaterialCode.Clear()
-        self.lstbxH5.Clear()
+        self.lstbxCodeSelection.Clear()
         self.txtLog.Clear()
         self.listCtrlOutput.ClearAll()
 
@@ -169,7 +206,7 @@ class DragonGUI(MyFrame1):
 
     def clear_all_content(self):
         self.listCtrlOutput.ClearAll()
-        self.lstbxH5.Clear()
+        self.lstbxCodeSelection.Clear()
         self.txtMaterialCode.Clear()
         self.txtLog.Clear()
         self.StatusBar.SetStatusText(" ", 1)

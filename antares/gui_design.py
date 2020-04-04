@@ -12,7 +12,6 @@ import wx.xrc
 import wx.adv
 
 ID_EXPORT_INVENTORY = 1000
-ID_EXPORT_BACKORDER = 1001
 
 ###########################################################################
 ## Class MyFrame1
@@ -21,7 +20,7 @@ ID_EXPORT_BACKORDER = 1001
 class MyFrame1 ( wx.Frame ):
 
     def __init__( self, parent ):
-        wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = u"Project Dragon GUI v0401", pos = wx.DefaultPosition, size = wx.Size( 1280,800 ), style = wx.CAPTION|wx.CLOSE_BOX|wx.MINIMIZE_BOX|wx.TAB_TRAVERSAL )
+        wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = u"Project Dragon GUI v0404", pos = wx.DefaultPosition, size = wx.Size( 1280,800 ), style = wx.CAPTION|wx.CLOSE_BOX|wx.MINIMIZE_BOX|wx.TAB_TRAVERSAL )
 
         self.SetSizeHints( wx.DefaultSize, wx.DefaultSize )
 
@@ -31,52 +30,24 @@ class MyFrame1 ( wx.Frame ):
         self.pnlOneclick = wx.Panel( self.ntbkOneclick, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
         bSizer4 = wx.BoxSizer( wx.VERTICAL )
 
-        bSizer81 = wx.BoxSizer( wx.VERTICAL )
-
-        bSizer81.SetMinSize( wx.Size( -1,30 ) )
-        bSizer9 = wx.BoxSizer( wx.HORIZONTAL )
-
-
-        bSizer9.Add( ( 20, 0), 0, wx.EXPAND, 5 )
-
-        self.btnSync = wx.Button( self.pnlOneclick, wx.ID_ANY, u"Synchronize", wx.DefaultPosition, wx.Size( 160,-1 ), wx.BORDER_NONE )
-        self.btnSync.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_BTNFACE ) )
-        self.btnSync.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_HIGHLIGHT ) )
-
-        bSizer9.Add( self.btnSync, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
-
-
-        bSizer9.Add( ( 40, 0), 0, wx.EXPAND, 5 )
-
-        self.m_staticline5 = wx.StaticLine( self.pnlOneclick, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LI_HORIZONTAL|wx.LI_VERTICAL )
-        bSizer9.Add( self.m_staticline5, 0, wx.EXPAND |wx.ALL, 5 )
-
-
-        bSizer9.Add( ( 40, 0), 0, wx.EXPAND, 5 )
-
-        rdbxBusinessUnitChoices = [ u"JOINT", u"SPINE", u"TRAUMA", u"MITEK", u"CMFT", u"PT" ]
-        self.rdbxBusinessUnit = wx.RadioBox( self.pnlOneclick, wx.ID_ANY, u"Business Unit", wx.DefaultPosition, wx.Size( -1,-1 ), rdbxBusinessUnitChoices, 1, wx.RA_SPECIFY_ROWS )
-        self.rdbxBusinessUnit.SetSelection( 2 )
-        bSizer9.Add( self.rdbxBusinessUnit, 0, wx.ALL, 5 )
-
-
-        bSizer9.Add( ( 20, 0), 0, wx.EXPAND, 5 )
-
-        self.btnBUSubmit = wx.Button( self.pnlOneclick, wx.ID_ANY, u"BU Confirm", wx.DefaultPosition, wx.DefaultSize, 0 )
-        bSizer9.Add( self.btnBUSubmit, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
-
-
-        bSizer81.Add( bSizer9, 1, wx.EXPAND, 5 )
-
-        self.m_staticline3 = wx.StaticLine( self.pnlOneclick, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LI_HORIZONTAL )
-        bSizer81.Add( self.m_staticline3, 0, wx.EXPAND |wx.ALL, 5 )
-
-
-        bSizer4.Add( bSizer81, 0, wx.EXPAND, 5 )
-
         bSizer5 = wx.BoxSizer( wx.HORIZONTAL )
 
         bSizer5.SetMinSize( wx.Size( -1,80 ) )
+
+        bSizer5.Add( ( 20, 0), 0, wx.EXPAND, 5 )
+
+        self.btnSync = wx.Button( self.pnlOneclick, wx.ID_ANY, u"Synchronize", wx.DefaultPosition, wx.Size( 160,45 ), wx.BORDER_NONE|wx.BU_EXACTFIT )
+        self.btnSync.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_BTNFACE ) )
+        self.btnSync.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_HIGHLIGHT ) )
+
+        bSizer5.Add( self.btnSync, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
+
+
+        bSizer5.Add( ( 20, 0), 0, wx.EXPAND, 5 )
+
+        self.m_staticline7 = wx.StaticLine( self.pnlOneclick, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LI_VERTICAL )
+        bSizer5.Add( self.m_staticline7, 0, wx.EXPAND |wx.ALL, 5 )
+
 
         bSizer5.Add( ( 20, 0), 0, wx.EXPAND, 5 )
 
@@ -104,9 +75,9 @@ class MyFrame1 ( wx.Frame ):
 
         bSizer5.Add( ( 10, 0), 0, wx.EXPAND, 5 )
 
-        lstbxH5Choices = []
-        self.lstbxH5 = wx.ListBox( self.pnlOneclick, wx.ID_ANY, wx.DefaultPosition, wx.Size( 250,80 ), lstbxH5Choices, wx.LB_NEEDED_SB|wx.LB_SINGLE )
-        bSizer5.Add( self.lstbxH5, 0, wx.ALL, 5 )
+        lstbxCodeSelectionChoices = []
+        self.lstbxCodeSelection = wx.ListBox( self.pnlOneclick, wx.ID_ANY, wx.DefaultPosition, wx.Size( 300,80 ), lstbxCodeSelectionChoices, wx.LB_NEEDED_SB|wx.LB_SINGLE )
+        bSizer5.Add( self.lstbxCodeSelection, 0, wx.ALL, 5 )
 
 
         bSizer5.Add( ( 10, 0), 0, wx.EXPAND, 5 )
@@ -152,41 +123,6 @@ class MyFrame1 ( wx.Frame ):
 
 
         bSizer5.Add( ( 20, 0), 0, wx.EXPAND, 5 )
-
-        self.m_staticline4 = wx.StaticLine( self.pnlOneclick, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LI_HORIZONTAL|wx.LI_VERTICAL )
-        bSizer5.Add( self.m_staticline4, 0, wx.EXPAND |wx.ALL, 5 )
-
-        bSizer11 = wx.BoxSizer( wx.VERTICAL )
-
-        bSizer12 = wx.BoxSizer( wx.HORIZONTAL )
-
-        self.btnCurrentInventory = wx.Button( self.pnlOneclick, wx.ID_ANY, u"Current INV", wx.DefaultPosition, wx.DefaultSize, 0 )
-        bSizer12.Add( self.btnCurrentInventory, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
-
-        self.btnCurrentBackorder = wx.Button( self.pnlOneclick, wx.ID_ANY, u"Current Backorder", wx.DefaultPosition, wx.DefaultSize, 0 )
-        bSizer12.Add( self.btnCurrentBackorder, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
-
-
-        bSizer11.Add( bSizer12, 1, wx.EXPAND, 5 )
-
-        bSizer13 = wx.BoxSizer( wx.HORIZONTAL )
-
-        self.btnAgingBO = wx.Button( self.pnlOneclick, wx.ID_ANY, u"Aging Backorder", wx.DefaultPosition, wx.DefaultSize, 0 )
-        self.btnAgingBO.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_HIGHLIGHT ) )
-        self.btnAgingBO.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_3DLIGHT ) )
-
-        bSizer13.Add( self.btnAgingBO, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
-
-        self.m_button6 = wx.Button( self.pnlOneclick, wx.ID_ANY, u"MyButton", wx.DefaultPosition, wx.DefaultSize, 0 )
-        self.m_button6.Hide()
-
-        bSizer13.Add( self.m_button6, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
-
-
-        bSizer11.Add( bSizer13, 1, wx.EXPAND, 5 )
-
-
-        bSizer5.Add( bSizer11, 1, wx.EXPAND|wx.RIGHT|wx.LEFT, 5 )
 
 
         bSizer4.Add( bSizer5, 0, wx.EXPAND, 5 )
@@ -265,14 +201,17 @@ class MyFrame1 ( wx.Frame ):
 
         self.m_menubar1.Append( self.m_menu1, u"File" )
 
-        self.dataExport = wx.Menu()
-        self.exportInventory = wx.MenuItem( self.dataExport, ID_EXPORT_INVENTORY, u"Export Inventory", wx.EmptyString, wx.ITEM_NORMAL )
-        self.dataExport.Append( self.exportInventory )
+        self.buDefine = wx.Menu()
+        self.mTrauma = wx.MenuItem( self.buDefine, ID_EXPORT_INVENTORY, u"Trauma", wx.EmptyString, wx.ITEM_RADIO )
+        self.buDefine.Append( self.mTrauma )
 
-        self.exportBackorder = wx.MenuItem( self.dataExport, ID_EXPORT_BACKORDER, u"Export Backorder", wx.EmptyString, wx.ITEM_NORMAL )
-        self.dataExport.Append( self.exportBackorder )
+        self.mCMFT = wx.MenuItem( self.buDefine, wx.ID_ANY, u"CMFT", wx.EmptyString, wx.ITEM_RADIO )
+        self.buDefine.Append( self.mCMFT )
 
-        self.m_menubar1.Append( self.dataExport, u"Data Export" )
+        self.mPT = wx.MenuItem( self.buDefine, wx.ID_ANY, u"PT", wx.EmptyString, wx.ITEM_NORMAL )
+        self.buDefine.Append( self.mPT )
+
+        self.m_menubar1.Append( self.buDefine, u"Business Unit" )
 
         self.m_menu2 = wx.Menu()
         self.showAbout = wx.MenuItem( self.m_menu2, wx.ID_ANY, u"About", wx.EmptyString, wx.ITEM_NORMAL )
@@ -282,22 +221,47 @@ class MyFrame1 ( wx.Frame ):
 
         self.SetMenuBar( self.m_menubar1 )
 
+        self.m_toolBar1 = self.CreateToolBar( wx.TB_HORIZONTAL, wx.ID_ANY )
+        self.m_toolBar1.SetToolBitmapSize( wx.Size( 20,20 ) )
+        self.m_toolBar1.SetToolPacking( 0 )
+        self.m_toolBar1.AddSeparator()
+
+        self.mDisplayCurrentInventory = self.m_toolBar1.AddLabelTool( wx.ID_ANY, u"tool", wx.Bitmap( u".icon/current_day.png", wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, wx.EmptyString, wx.EmptyString, None )
+
+        self.m_toolBar1.AddSeparator()
+
+        self.mCurrentBackorder = self.m_toolBar1.AddLabelTool( wx.ID_ANY, u"tool", wx.Bitmap( u".icon/backorder.png", wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, wx.EmptyString, wx.EmptyString, None )
+
+        self.mAgingBackorder = self.m_toolBar1.AddLabelTool( wx.ID_ANY, u"tool", wx.Bitmap( u".icon/aging_backorder.png", wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, wx.EmptyString, wx.EmptyString, None )
+
+        self.m_toolBar1.AddSeparator()
+
+        self.mCodeTrend = self.m_toolBar1.AddLabelTool( wx.ID_ANY, u"tool", wx.Bitmap( u".icon/code_trend.ico", wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, u"Display inventory trend by code", wx.EmptyString, None )
+
+        self.mH5Trend = self.m_toolBar1.AddLabelTool( wx.ID_ANY, u"tool", wx.Bitmap( u".icon/h5_trend.png", wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, u"Display inventory trend of one hierarchy", wx.EmptyString, None )
+
+        self.m_toolBar1.AddSeparator()
+
+        self.m_toolBar1.Realize()
+
 
         self.Centre( wx.BOTH )
 
         # Connect Events
         self.btnSync.Bind( wx.EVT_BUTTON, self.sync_inventory )
-        self.btnBUSubmit.Bind( wx.EVT_BUTTON, self.bu_submit )
-        self.lstbxH5.Bind( wx.EVT_LEFT_DCLICK, self.display_h5_inventory )
+        self.lstbxCodeSelection.Bind( wx.EVT_LEFT_DCLICK, self.display_h5_inventory )
         self.bntClear.Bind( wx.EVT_BUTTON, self.clear_input )
         self.btnSubmit.Bind( wx.EVT_BUTTON, self.codeSubmit )
-        self.btnCurrentInventory.Bind( wx.EVT_BUTTON, self.get_current_inventory_list )
-        self.btnCurrentBackorder.Bind( wx.EVT_BUTTON, self.get_current_bo_list )
-        self.btnAgingBO.Bind( wx.EVT_BUTTON, self.display_aging_backorder )
         self.btnExportInv.Bind( wx.EVT_BUTTON, self.export_inventory )
         self.btnBOExp.Bind( wx.EVT_BUTTON, self.export_backorder )
-        self.Bind( wx.EVT_MENU, self.export_inventory, id = self.exportInventory.GetId() )
-        self.Bind( wx.EVT_MENU, self.export_backorder, id = self.exportBackorder.GetId() )
+        self.Bind( wx.EVT_MENU, self.select_bu_TU, id = self.mTrauma.GetId() )
+        self.Bind( wx.EVT_MENU, self.select_bu_CMFT, id = self.mCMFT.GetId() )
+        self.Bind( wx.EVT_MENU, self.select_bu_PT, id = self.mPT.GetId() )
+        self.Bind( wx.EVT_TOOL, self.get_current_inventory_list, id = self.mDisplayCurrentInventory.GetId() )
+        self.Bind( wx.EVT_TOOL, self.get_current_bo_list, id = self.mCurrentBackorder.GetId() )
+        self.Bind( wx.EVT_TOOL, self.display_aging_backorder, id = self.mAgingBackorder.GetId() )
+        self.Bind( wx.EVT_TOOL, self.display_code_trend, id = self.mCodeTrend.GetId() )
+        self.Bind( wx.EVT_TOOL, self.display_h5_trend, id = self.mH5Trend.GetId() )
 
     def __del__( self ):
         pass
@@ -305,9 +269,6 @@ class MyFrame1 ( wx.Frame ):
 
     # Virtual event handlers, overide them in your derived class
     def sync_inventory( self, event ):
-        event.Skip()
-
-    def bu_submit( self, event ):
         event.Skip()
 
     def display_h5_inventory( self, event ):
@@ -319,6 +280,21 @@ class MyFrame1 ( wx.Frame ):
     def codeSubmit( self, event ):
         event.Skip()
 
+    def export_inventory( self, event ):
+        event.Skip()
+
+    def export_backorder( self, event ):
+        event.Skip()
+
+    def select_bu_TU( self, event ):
+        event.Skip()
+
+    def select_bu_CMFT( self, event ):
+        event.Skip()
+
+    def select_bu_PT( self, event ):
+        event.Skip()
+
     def get_current_inventory_list( self, event ):
         event.Skip()
 
@@ -328,12 +304,10 @@ class MyFrame1 ( wx.Frame ):
     def display_aging_backorder( self, event ):
         event.Skip()
 
-    def export_inventory( self, event ):
+    def display_code_trend( self, event ):
         event.Skip()
 
-    def export_backorder( self, event ):
+    def display_h5_trend( self, event ):
         event.Skip()
-
-
 
 

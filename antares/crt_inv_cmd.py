@@ -37,9 +37,9 @@ class CurrentInventoryMenu:
             elif cmd_code == "check":
                 crt_inv_display.display_code_status()
             elif cmd_code == "trend":
-                crt_inv_cclt.code_inv_trend()
+                crt_inv_display.display_code_inventory_trend()
             elif cmd_code == "bu_trend":
-                crt_inv_cclt.h5_inv_trend()
+                crt_inv_cclt.generate_h5_inventory_trend()
             elif cmd_code == "h5_detail":
                 crt_inv_display.display_h5_inv_detail()
             elif cmd_code == "bo_trend":
