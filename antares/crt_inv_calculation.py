@@ -209,11 +209,7 @@ class CurrentInventoryCalculation:
         return inventory_file
 
     # display backorder value trend by day
-    def display_backorder_trend(self):
-        # print title
-        print("===Display Backorder Trend===")
-        # get table list
-        print("---Get Backorder Data---")
+    def generate_backorder_trend(self):
         db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
         conn = sqlite3.connect(db_name)
         c = conn.cursor()
@@ -231,7 +227,6 @@ class CurrentInventoryCalculation:
         # get selling price
         # generate final list for backorder value
         backorder_value_summary = [[], [], []]
-        print("---Generate Value with Selling Price---")
         db_name = self.__class__.db_path + self.__class__.bu_name + "_Master_Data.db"
         data_table_name = self.__class__.bu_name + "_SAP_Price"
         conn = sqlite3.connect(db_name)
@@ -327,8 +322,7 @@ class CurrentInventoryCalculation:
         return elem[1]
 
     # Daily pending inventory trend display
-    def get_pending_trend(self, data_type="value"):
-        print("===Display Pending Inventory Trend===")
+    def generate_pending_trend(self, data_type="value"):
         pending_result = []
         # 链接数据库
         db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
@@ -507,12 +501,6 @@ class CurrentInventoryCalculation:
                     import_fail_count += 1
         most_updated_table = self.get_tbl_list()[-1]
         return [import_success_count, import_fail_count, most_updated_table]
-
-    # Display command list
-    @staticmethod
-    def show_command_list():
-        import public_function
-        public_function.display_command_list("current_inventory_command")
 
 
 if __name__ == "__main__":

@@ -1,6 +1,4 @@
-import crt_inv_calculation as cclt
 import crt_inv_display as dpl
-import crt_inv_backorder as bo_cclt
 
 
 class CurrentInventoryMenu:
@@ -16,9 +14,7 @@ class CurrentInventoryMenu:
         public_function.display_ascii_graph("crt_inv")
 
     def crt_inv_entrance(self):
-        # self.db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
         self.__welcome_page()
-        crt_inv_cclt = cclt.CurrentInventoryCalculation(self.__class__.bu_name)
         crt_inv_display = dpl.CurrentInventoryDisplay(self.__class__.bu_name)
         cmd_code = input("cmd >> crt_inv >> ")
         while cmd_code != "exit":
@@ -31,19 +27,19 @@ class CurrentInventoryMenu:
             elif cmd_code == "bo_export":
                 crt_inv_display.export_backorder_data()
             elif cmd_code == "pending":
-                crt_inv_cclt.get_pending_trend()
+                crt_inv_display.display_pending_trend()
             elif cmd_code == "pending -q":
-                crt_inv_cclt.get_pending_trend("quantity")
+                crt_inv_display.display_pending_trend("quantity")
             elif cmd_code == "check":
                 crt_inv_display.display_code_status()
             elif cmd_code == "trend":
                 crt_inv_display.display_code_inventory_trend()
             elif cmd_code == "bu_trend":
-                crt_inv_cclt.generate_h5_inventory_trend()
+                crt_inv_display.display_h5_inventory_trend()
             elif cmd_code == "h5_detail":
                 crt_inv_display.display_h5_inv_detail()
             elif cmd_code == "bo_trend":
-                crt_inv_cclt.display_backorder_trend()
+                crt_inv_display.display_backorder_trend()
             elif cmd_code == "mapping":
                 crt_inv_display.display_mapping_inventory()
             elif cmd_code == "aging":
@@ -51,12 +47,11 @@ class CurrentInventoryMenu:
             elif cmd_code == "sync":
                 crt_inv_display.synchronize_oneclick_data()
             elif cmd_code == "help":
-                crt_inv_cclt.show_command_list()
+                dpl.CurrentInventoryDisplay.show_command_list()
             else:
                 print("!!ERROR: Wrong CMD code. Plz input correct cmd code, or type \"exit\" to quit.")
             cmd_code = input("cmd >> crt_inv >> ")
         print("==============================<Back to Main Menu>==============================")
-        pass
 
 
 if __name__ == "__main__":

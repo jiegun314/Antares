@@ -93,6 +93,14 @@ class CurrentInventoryDisplay:
         print(tabulate(backorder_result, headers="firstrow", tablefmt="github",
                        showindex=range(1, len(backorder_result)), floatfmt=",.0f"))
 
+    def display_backorder_trend(self):
+        # print title
+        print("===Display Backorder Trend===")
+        print(">> Calculation ongoing, please wait~")
+        CodeCalculation = CIC(self.__class__.bu_name)
+        CodeCalculation.generate_backorder_trend()
+        print(">> Done, the chart is opened in web browser.")
+
     # display aging backorder list
     def display_aging_backorder(self):
         # print title
@@ -153,7 +161,7 @@ class CurrentInventoryDisplay:
         else:
             print("!!Error - This Material Code does NOT exist, Please re-input! ")
 
-    def dispaly_h5_inventory_trend(self):
+    def display_h5_inventory_trend(self):
         CodeCalculation = CIC(self.__class__.bu_name)
         print("===Hierarchy_5 Available Stock Trend===")
         # 获取H5名称
@@ -169,6 +177,12 @@ class CurrentInventoryDisplay:
             print("!!Error, No such Hierarchy_5 name. Please try again!")
             return
 
+    def display_pending_trend(self, data_type="value"):
+        CodeCalculation = CIC(self.__class__.bu_name)
+        print("===Display Pending Inventory Trend===")
+        CodeCalculation.generate_pending_trend(data_type)
+        pass
+
     def synchronize_oneclick_data(self):
         CodeCalculation = CIC(self.__class__.bu_name)
         lst_xcpt = ['20190118', ]
@@ -179,6 +193,12 @@ class CurrentInventoryDisplay:
         else:
             print(">> Synchronization succeed!")
             print(">> %s days succeed, %s days fail. Updated to %s" % (sync_result[0], sync_result[1], sync_result[2]))
+
+    # Display command list
+    @staticmethod
+    def show_command_list():
+        import public_function
+        public_function.display_command_list("current_inventory_command")
 
 
 if __name__ == "__main__":
