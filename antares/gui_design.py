@@ -37,8 +37,10 @@ class DragonFrame ( wx.Frame ):
         bSizer5.Add( ( 20, 0), 0, wx.EXPAND, 5 )
 
         self.btnSync = wx.Button( self.pnlOneclick, wx.ID_ANY, u"Synchronize", wx.DefaultPosition, wx.Size( 160,45 ), wx.BORDER_NONE|wx.BU_EXACTFIT )
+        self.btnSync.SetFont( wx.Font( 15, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, wx.EmptyString ) )
         self.btnSync.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_BTNFACE ) )
         self.btnSync.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_HIGHLIGHT ) )
+        self.btnSync.SetToolTip( u"Sync data with oneclick file in sharepoint" )
 
         bSizer5.Add( self.btnSync, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
 
@@ -103,10 +105,11 @@ class DragonFrame ( wx.Frame ):
 
         bSizer71.Add( ( 1, 25), 0, wx.EXPAND, 5 )
 
-        self.m_staticText4 = wx.StaticText( self.pnlOneclick, wx.ID_ANY, u"Select Date", wx.Point( 0,0 ), wx.Size( -1,15 ), 0 )
-        self.m_staticText4.Wrap( -1 )
+        self.chkbxToday = wx.CheckBox( self.pnlOneclick, wx.ID_ANY, u"Today", wx.DefaultPosition, wx.DefaultSize, 0 )
+        bSizer71.Add( self.chkbxToday, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
 
-        bSizer71.Add( self.m_staticText4, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
+
+        bSizer71.Add( ( 0, 5), 0, wx.EXPAND, 5 )
 
         self.dtpkDate = wx.adv.DatePickerCtrl( self.pnlOneclick, wx.ID_ANY, wx.DefaultDateTime, wx.Point( 0,0 ), wx.Size( 110,30 ), wx.adv.DP_DROPDOWN|wx.BORDER_SUNKEN )
         bSizer71.Add( self.dtpkDate, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5 )
@@ -150,11 +153,19 @@ class DragonFrame ( wx.Frame ):
         bSizer6.SetMinSize( wx.Size( -1,30 ) )
         bSizer8 = wx.BoxSizer( wx.HORIZONTAL )
 
-        self.btnExportInv = wx.Button( self.pnlOneclick, wx.ID_ANY, u"INV Exp.", wx.DefaultPosition, wx.DefaultSize, 0 )
-        bSizer8.Add( self.btnExportInv, 0, wx.ALL, 5 )
+        self.btnInventoryExport = wx.BitmapButton( self.pnlOneclick, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.DefaultSize, wx.BU_AUTODRAW|wx.BORDER_NONE )
 
-        self.btnBOExp = wx.Button( self.pnlOneclick, wx.ID_ANY, u"BO Exp.", wx.DefaultPosition, wx.DefaultSize, 0 )
-        bSizer8.Add( self.btnBOExp, 0, wx.ALL, 5 )
+        self.btnInventoryExport.SetBitmap( wx.Bitmap( u".icon/inventory_export.png", wx.BITMAP_TYPE_ANY ) )
+        self.btnInventoryExport.SetToolTip( u"Export Inventory" )
+
+        bSizer8.Add( self.btnInventoryExport, 0, wx.ALL, 5 )
+
+        self.btnBackorderExport = wx.BitmapButton( self.pnlOneclick, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.DefaultSize, wx.BU_AUTODRAW|wx.BORDER_NONE )
+
+        self.btnBackorderExport.SetBitmap( wx.Bitmap( u".icon/backorder_export.png", wx.BITMAP_TYPE_ANY ) )
+        self.btnBackorderExport.SetToolTip( u"Export Backorder" )
+
+        bSizer8.Add( self.btnBackorderExport, 0, wx.ALL, 5 )
 
         self.m_staticline6 = wx.StaticLine( self.pnlOneclick, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LI_VERTICAL )
         self.m_staticline6.SetFont( wx.Font( wx.NORMAL_FONT.GetPointSize(), wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, wx.EmptyString ) )
@@ -185,11 +196,6 @@ class DragonFrame ( wx.Frame ):
         bSizer4.Add( self.m_staticline2, 0, wx.EXPAND |wx.ALL, 5 )
 
         bSizer7 = wx.BoxSizer( wx.VERTICAL )
-
-        self.m_staticText3 = wx.StaticText( self.pnlOneclick, wx.ID_ANY, u"Result", wx.DefaultPosition, wx.DefaultSize, 0 )
-        self.m_staticText3.Wrap( -1 )
-
-        bSizer7.Add( self.m_staticText3, 0, wx.ALL, 5 )
 
         self.listCtrlOutput = wx.ListCtrl( self.pnlOneclick, wx.ID_ANY, wx.DefaultPosition, wx.Size( 1275,-1 ), wx.LC_REPORT|wx.LC_VRULES )
         bSizer7.Add( self.listCtrlOutput, 1, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
@@ -247,7 +253,7 @@ class DragonFrame ( wx.Frame ):
 
         self.mCurrentBackorder = self.m_toolBar1.AddLabelTool( wx.ID_ANY, u"tool", wx.Bitmap( u".icon/backorder.png", wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, u"Display current backorder", wx.EmptyString, None )
 
-        self.mAgingBackorder = self.m_toolBar1.AddLabelTool( wx.ID_ANY, u"tool", wx.Bitmap( u".icon/aging_backorder.png", wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, u"display aging backorder", wx.EmptyString, None )
+        self.mAgingBackorder = self.m_toolBar1.AddLabelTool( wx.ID_ANY, u"tool", wx.Bitmap( u".icon/aging_backorder.ico", wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, u"display aging backorder", wx.EmptyString, None )
 
         self.m_toolBar1.AddSeparator()
 
@@ -270,10 +276,12 @@ class DragonFrame ( wx.Frame ):
         self.btnSync.Bind( wx.EVT_BUTTON, self.sync_inventory )
         self.chkbxWholeBU.Bind( wx.EVT_CHECKBOX, self.bu_level_selected )
         self.lstbxCodeSelection.Bind( wx.EVT_LEFT_DCLICK, self.display_h5_inventory )
+        self.chkbxToday.Bind( wx.EVT_CHECKBOX, self.set_date_as_today )
+        self.dtpkDate.Bind( wx.adv.EVT_DATE_CHANGED, self.set_checking_date )
         self.bntClear.Bind( wx.EVT_BUTTON, self.clear_input )
         self.btnSubmit.Bind( wx.EVT_BUTTON, self.codeSubmit )
-        self.btnExportInv.Bind( wx.EVT_BUTTON, self.export_inventory )
-        self.btnBOExp.Bind( wx.EVT_BUTTON, self.export_backorder )
+        self.btnInventoryExport.Bind( wx.EVT_BUTTON, self.export_inventory )
+        self.btnBackorderExport.Bind( wx.EVT_BUTTON, self.export_backorder )
         self.Bind( wx.EVT_MENU, self.select_bu_TU, id = self.mTrauma.GetId() )
         self.Bind( wx.EVT_MENU, self.select_bu_CMFT, id = self.mCMFT.GetId() )
         self.Bind( wx.EVT_MENU, self.select_bu_PT, id = self.mPT.GetId() )
@@ -296,6 +304,12 @@ class DragonFrame ( wx.Frame ):
         event.Skip()
 
     def display_h5_inventory( self, event ):
+        event.Skip()
+
+    def set_date_as_today( self, event ):
+        event.Skip()
+
+    def set_checking_date( self, event ):
         event.Skip()
 
     def clear_input( self, event ):

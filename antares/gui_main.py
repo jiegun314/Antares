@@ -6,13 +6,21 @@ import public_function as pb_func
 
 class DragonGUI(DragonFrame):
     bu_name = ""
+    table_to_use = ""
 
     def __init__(self, parent):
         DragonFrame.__init__(self, parent)
+        # set TU as default BU
         self.__class__.bu_name = "TU"
         self.display_bu_update()
+        # set ICON
         self.icon = wx.Icon(u'.icon/logo.png', wx.BITMAP_TYPE_PNG)
         self.SetIcon(self.icon)
+        # set default as today
+        self.chkbxToday.SetValue(1)
+        self.dtpkDate.Disable()
+        # set default date as most fresh
+        self.set_db_table("newest")
 
     def set_bu_name(self, bu_name):
         self.__class__.bu_name = bu_name
@@ -35,6 +43,33 @@ class DragonGUI(DragonFrame):
         self.statusBar.SetStatusText("Working BU: %s" % self.__class__.bu_name, 0)
         pass
 
+    def set_date_as_today(self, event):
+        # clean the column
+        self.clear_frame_content()
+        today_status = self.chkbxToday.GetValue()
+        if today_status:
+            self.dtpkDate.Disable()
+            self.set_db_table("newest")
+        else:
+            self.dtpkDate.Enable()
+        pass
+
+    def set_checking_date(self, event):
+        [date_year, date_month, date_day] = str(self.dtpkDate.GetValue()).split()[0].split("/")
+        if len(date_month) == 1:
+            date_month = "0" + date_month
+        if len(date_day) == 1:
+            date_day = "0" + date_day
+        date_to_check = date_year + date_month + date_day
+        self.set_db_table(date_to_check)
+        self.txtLog.Clear()
+        self.txtLog.AppendText("%s would be used." % date_to_check)
+
+    # define the table for calculation in datepicker
+    def set_db_table(self, date):
+        CodeCalculation = CIC(self.__class__.bu_name)
+        self.table_to_use = CodeCalculation.get_newest_date() if date == "newest" else "INV" + date
+
     # Virtual event handlers, override them in your derived class
     def codeSubmit(self, event):
         # clean the column
@@ -49,8 +84,7 @@ class DragonGUI(DragonFrame):
         self.clear_frame_content()
         h5_name = self.lstbxCodeSelection.GetStringSelection()
         CodeCalculation = CIC(self.__class__.bu_name)
-        table_name = CodeCalculation.get_newest_date()
-        [inventory_list, inventory_total] = CodeCalculation.get_h5_inv_detail(h5_name, table_name)
+        [inventory_list, inventory_total] = CodeCalculation.get_h5_inv_detail(h5_name, self.table_to_use)
         self.show_inventory_list(inventory_list, 3)
         self.StatusBar.SetStatusText("Total Inventory: %s" % ("{:,.0f}".format(inventory_total)), 1)
         self.txtLog.Clear()
@@ -67,8 +101,7 @@ class DragonGUI(DragonFrame):
         for code_item in code_name_list:
             self.lstbxCodeSelection.Append(code_item)
         CodeCalculation = CIC(self.__class__.bu_name)
-        table_name = CodeCalculation.get_newest_date()
-        inventory_result = CodeCalculation.inventory_mapping(code_name_list, table_name)
+        inventory_result = CodeCalculation.inventory_mapping(code_name_list, self.table_to_use)
         column_title = ["No", ] + inventory_result[0]
         for i in range(0, len(column_title)):
             self.listCtrlOutput.InsertColumn(i, column_title[i])
@@ -92,23 +125,21 @@ class DragonGUI(DragonFrame):
         self.clear_frame_content()
         data_trigger_point = 1
         CodeCalculation = CIC(self.__class__.bu_name)
-        table_name = CodeCalculation.get_newest_date()
-        [inventory_result, total_inventory] = CodeCalculation.get_current_inventory(table_name)
+        [inventory_result, total_inventory] = CodeCalculation.get_current_inventory(self.table_to_use)
         self.show_inventory_list(inventory_result, data_trigger_point)
         self.StatusBar.SetStatusText("Total Available Stock: %s, Total Useful Stock: %s."
                                      % ("{:,.0f}".format(total_inventory[0]), "{:,.0f}".format(total_inventory[1])), 1)
         self.txtLog.Clear()
-        self.txtLog.write("Current Inventory List done, with data of %s." % table_name)
+        self.txtLog.write("Current Inventory List done, with data of %s." % self.table_to_use)
 
     def get_current_bo_list(self, event):
         self.clear_frame_content()
         data_trigger_point = 4
         CodeCalculation = CIC(self.__class__.bu_name)
-        table_name = CodeCalculation.get_newest_date()
-        inventory_result = CodeCalculation.get_current_bo(table_name)
+        inventory_result = CodeCalculation.get_current_bo(self.table_to_use)
         [backorder_total_qty, backorder_total_value] = inventory_result[-1][4:6]
         self.show_inventory_list(inventory_result, data_trigger_point)
-        self.txtLog.write("Current Backorder List done, with data of %s." % table_name)
+        self.txtLog.write("Current Backorder List done, with data of %s." % self.table_to_use)
         self.StatusBar.SetStatusText("Total Backorder Qty; %s, Value: %s" %
                                      ("{:,.0f}".format(backorder_total_qty), "{:,.0f}".format(backorder_total_value)), 1)
 
@@ -161,8 +192,7 @@ class DragonGUI(DragonFrame):
         self.txtLog.write("Start to export. Please wait~")
         CodeCalculation = CIC(self.__class__.bu_name)
         # get newest
-        table_name = CodeCalculation.get_newest_date()
-        inventory_file = CodeCalculation.export_inventory_data(table_name)
+        inventory_file = CodeCalculation.export_inventory_data(self.table_to_use)
         self.clear_frame_content()
         self.txtLog.write("Done, Inventory detail exported to %s." % inventory_file)
 
@@ -171,9 +201,7 @@ class DragonGUI(DragonFrame):
         self.clear_frame_content()
         self.txtLog.write("Start to export. Please wait~")
         CodeCalculation = CIC(self.__class__.bu_name)
-        # get newest
-        table_name = CodeCalculation.get_newest_date()
-        inventory_file = CodeCalculation.export_backorder_data(table_name)
+        inventory_file = CodeCalculation.export_backorder_data(self.table_to_use)
         self.clear_frame_content()
         self.txtLog.write("Done, Backorder detail exported to %s." % inventory_file)
 
