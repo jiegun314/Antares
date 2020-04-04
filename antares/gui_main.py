@@ -1,11 +1,18 @@
-from gui_design import MyFrame1
+from gui_design import DragonFrame
 import wx
 from crt_inv_calculation import CurrentInventoryCalculation as CIC
 import public_function as pb_func
 
 
-class DragonGUI(MyFrame1):
-    bu_name = "TU"
+class DragonGUI(DragonFrame):
+    bu_name = ""
+
+    def __init__(self, parent):
+        DragonFrame.__init__(self, parent)
+        self.__class__.bu_name = "TU"
+        self.display_bu_update()
+        self.icon = wx.Icon(u'.icon/logo.png', wx.BITMAP_TYPE_PNG)
+        self.SetIcon(self.icon)
 
     def set_bu_name(self, bu_name):
         self.__class__.bu_name = bu_name
@@ -203,6 +210,16 @@ class DragonGUI(MyFrame1):
         else:
             self.txtMaterialCode.Enable()
             self.txtLog.write("BU Level of %s is unselected" % self.__class__.bu_name)
+
+    # display pending inventory
+    def display_pending_inventory(self, event):
+        self.clear_frame_content()
+        CodeCalculation = CIC(self.__class__.bu_name)
+        self.txtLog.write("Generating pending inventory trend. Please wait~")
+        CodeCalculation.generate_pending_trend()
+        self.txtLog.Clear()
+        self.txtLog.write("Done. The chart would be opened in your web browser.")
+        pass
 
     # clear input area:
     def clear_input(self, event):
