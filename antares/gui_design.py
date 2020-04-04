@@ -59,53 +59,68 @@ class MyFrame1 ( wx.Frame ):
 
         bSizer5.Add( ( 10, 20), 0, wx.EXPAND, 5 )
 
-        self.m_staticText2 = wx.StaticText( self.pnlOneclick, wx.ID_ANY, u"Material / H5 \nName: ", wx.DefaultPosition, wx.Size( -1,40 ), wx.ALIGN_CENTER_HORIZONTAL )
+        bSizer9 = wx.BoxSizer( wx.VERTICAL )
+
+        bSizer101 = wx.BoxSizer( wx.HORIZONTAL )
+
+        self.m_staticText2 = wx.StaticText( self.pnlOneclick, wx.ID_ANY, u"Material / H5 Name: ", wx.DefaultPosition, wx.Size( -1,15 ), wx.ALIGN_CENTER_HORIZONTAL )
         self.m_staticText2.Wrap( -1 )
 
         self.m_staticText2.SetMaxSize( wx.Size( -1,30 ) )
 
-        bSizer5.Add( self.m_staticText2, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
+        bSizer101.Add( self.m_staticText2, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
 
 
-        bSizer5.Add( ( 5, 20), 0, wx.EXPAND, 5 )
+        bSizer101.Add( ( 280, 0), 0, wx.EXPAND, 5 )
 
-        self.txtMaterialCode = wx.TextCtrl( self.pnlOneclick, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 140,80 ), wx.TE_MULTILINE )
-        bSizer5.Add( self.txtMaterialCode, 0, wx.ALL, 5 )
+        self.chkbxWholeBU = wx.CheckBox( self.pnlOneclick, wx.ID_ANY, u"BU Level", wx.DefaultPosition, wx.DefaultSize, 0 )
+        bSizer101.Add( self.chkbxWholeBU, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
 
 
-        bSizer5.Add( ( 10, 0), 0, wx.EXPAND, 5 )
+        bSizer9.Add( bSizer101, 1, wx.EXPAND, 5 )
+
+        bSizer11 = wx.BoxSizer( wx.HORIZONTAL )
+
+        self.txtMaterialCode = wx.TextCtrl( self.pnlOneclick, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 120,80 ), wx.TE_MULTILINE )
+        bSizer11.Add( self.txtMaterialCode, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
 
         lstbxCodeSelectionChoices = []
-        self.lstbxCodeSelection = wx.ListBox( self.pnlOneclick, wx.ID_ANY, wx.DefaultPosition, wx.Size( 300,80 ), lstbxCodeSelectionChoices, wx.LB_NEEDED_SB|wx.LB_SINGLE )
-        bSizer5.Add( self.lstbxCodeSelection, 0, wx.ALL, 5 )
+        self.lstbxCodeSelection = wx.ListBox( self.pnlOneclick, wx.ID_ANY, wx.DefaultPosition, wx.Size( 350,80 ), lstbxCodeSelectionChoices, wx.LB_NEEDED_SB|wx.LB_SINGLE )
+        bSizer11.Add( self.lstbxCodeSelection, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
 
 
-        bSizer5.Add( ( 10, 0), 0, wx.EXPAND, 5 )
+        bSizer9.Add( bSizer11, 0, wx.EXPAND, 5 )
+
+
+        bSizer5.Add( bSizer9, 0, wx.EXPAND|wx.ALIGN_CENTER_VERTICAL, 5 )
+
+
+        bSizer5.Add( ( 25, 0), 0, wx.EXPAND, 5 )
 
         bSizer71 = wx.BoxSizer( wx.VERTICAL )
 
         bSizer71.SetMinSize( wx.Size( 0,60 ) )
 
-        bSizer71.Add( ( 1, 15), 0, wx.EXPAND, 5 )
+        bSizer71.Add( ( 1, 25), 0, wx.EXPAND, 5 )
 
-        self.m_staticText4 = wx.StaticText( self.pnlOneclick, wx.ID_ANY, u"Select Date:", wx.Point( 0,0 ), wx.Size( -1,20 ), 0 )
+        self.m_staticText4 = wx.StaticText( self.pnlOneclick, wx.ID_ANY, u"Select Date", wx.Point( 0,0 ), wx.Size( -1,15 ), 0 )
         self.m_staticText4.Wrap( -1 )
 
         bSizer71.Add( self.m_staticText4, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
 
-        self.dtpkDate = wx.adv.DatePickerCtrl( self.pnlOneclick, wx.ID_ANY, wx.DefaultDateTime, wx.Point( 0,0 ), wx.Size( 100,20 ), wx.adv.DP_DEFAULT )
+        self.dtpkDate = wx.adv.DatePickerCtrl( self.pnlOneclick, wx.ID_ANY, wx.DefaultDateTime, wx.Point( 0,0 ), wx.Size( 110,30 ), wx.adv.DP_DROPDOWN|wx.BORDER_SUNKEN )
         bSizer71.Add( self.dtpkDate, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5 )
 
 
-        bSizer5.Add( bSizer71, 0, wx.EXPAND, 5 )
+        bSizer5.Add( bSizer71, 0, wx.EXPAND|wx.ALIGN_CENTER_VERTICAL, 5 )
 
 
-        bSizer5.Add( ( 10, 0), 0, wx.EXPAND, 5 )
+        bSizer5.Add( ( 25, 0), 0, wx.EXPAND, 5 )
 
         bSizer10 = wx.BoxSizer( wx.VERTICAL )
 
 
-        bSizer10.Add( ( 1, 5), 0, wx.EXPAND, 5 )
+        bSizer10.Add( ( 1, 25), 0, wx.EXPAND, 5 )
 
         self.bntClear = wx.Button( self.pnlOneclick, wx.ID_ANY, u"Clear", wx.DefaultPosition, wx.Size( 120,-1 ), 0|wx.BORDER_NONE )
         self.bntClear.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_HIGHLIGHTTEXT ) )
@@ -119,7 +134,7 @@ class MyFrame1 ( wx.Frame ):
         bSizer10.Add( self.btnSubmit, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
 
 
-        bSizer5.Add( bSizer10, 0, wx.EXPAND, 5 )
+        bSizer5.Add( bSizer10, 0, wx.EXPAND|wx.ALIGN_CENTER_VERTICAL, 5 )
 
 
         bSizer5.Add( ( 20, 0), 0, wx.EXPAND, 5 )
@@ -154,7 +169,7 @@ class MyFrame1 ( wx.Frame ):
 
         bSizer8.Add( self.m_staticText41, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
 
-        self.txtLog = wx.TextCtrl( self.pnlOneclick, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 550,-1 ), wx.TE_CENTER|wx.TE_READONLY|wx.BORDER_SUNKEN )
+        self.txtLog = wx.TextCtrl( self.pnlOneclick, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 800,-1 ), wx.TE_CENTER|wx.TE_READONLY|wx.BORDER_SUNKEN )
         self.txtLog.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_CAPTIONTEXT ) )
         self.txtLog.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_INFOBK ) )
 
@@ -249,6 +264,7 @@ class MyFrame1 ( wx.Frame ):
 
         # Connect Events
         self.btnSync.Bind( wx.EVT_BUTTON, self.sync_inventory )
+        self.chkbxWholeBU.Bind( wx.EVT_CHECKBOX, self.bu_level_selected )
         self.lstbxCodeSelection.Bind( wx.EVT_LEFT_DCLICK, self.display_h5_inventory )
         self.bntClear.Bind( wx.EVT_BUTTON, self.clear_input )
         self.btnSubmit.Bind( wx.EVT_BUTTON, self.codeSubmit )
@@ -269,6 +285,9 @@ class MyFrame1 ( wx.Frame ):
 
     # Virtual event handlers, overide them in your derived class
     def sync_inventory( self, event ):
+        event.Skip()
+
+    def bu_level_selected( self, event ):
         event.Skip()
 
     def display_h5_inventory( self, event ):

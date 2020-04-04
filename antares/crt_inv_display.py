@@ -1,11 +1,6 @@
-import sqlite3
-# import numpy as np
 from crt_inv_calculation import CurrentInventoryCalculation as CIC
 from tabulate import tabulate
-import draw_chart as chart
-import os
 import public_function as pb_func
-import pandas as pd
 
 
 class CurrentInventoryDisplay:

@@ -36,7 +36,7 @@ class DragonGUI(MyFrame1):
         if calculation_type == "by Code":
             self.display_code_mapping_inventory()
         else:
-            self.display_h5_inventory_detail()
+            self.list_code_in_h5()
 
     def display_h5_inventory(self, event):
         self.clear_frame_content()
@@ -48,7 +48,6 @@ class DragonGUI(MyFrame1):
         self.StatusBar.SetStatusText("Total Inventory: %s" % ("{:,.0f}".format(inventory_total)), 1)
         self.txtLog.Clear()
         self.txtLog.write("%s has been listed" % h5_name)
-        pass
 
     def display_code_mapping_inventory(self):
         # get code list and newest timing to mapping
@@ -74,7 +73,7 @@ class DragonGUI(MyFrame1):
         self.txtLog.write("Done, with data of %s." % table_name)
         pass
 
-    def display_h5_inventory_detail(self):
+    def list_code_in_h5(self):
         self.txtLog.write("Display H5 Inventory")
         h5_name_hint = self.txtMaterialCode.Value
         h5_name_list = pb_func.get_available_h5_list(h5_name_hint, self.__class__.bu_name)
@@ -191,6 +190,19 @@ class DragonGUI(MyFrame1):
         self.clear_frame_content()
         self.txtLog.write("Done. The chart would be opened in your web browser.")
         pass
+
+    # click bu total option
+    def bu_level_selected(self, event):
+        self.clear_all_content()
+        bu_level_status = self.chkbxWholeBU.GetValue()
+        if bu_level_status:
+            self.txtMaterialCode.Disable()
+            self.txtLog.write("BU Level of %s is selected" % self.__class__.bu_name)
+            self.lstbxCodeSelection.Append("ALL")
+            self.lstbxCodeSelection.SetSelection(0)
+        else:
+            self.txtMaterialCode.Enable()
+            self.txtLog.write("BU Level of %s is unselected" % self.__class__.bu_name)
 
     # clear input area:
     def clear_input(self, event):
