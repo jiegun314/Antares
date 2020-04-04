@@ -135,7 +135,10 @@ class CurrentInventoryDisplay:
         inventory_date = input("Inventory Data (YYYYMMDD, Press Enter to get newest) : ")
         table_name = CodeCalculation.get_newest_date() if inventory_date == "" else "INV" + inventory_date
         inventory_file = CodeCalculation.export_inventory_data(table_name)
-        print("Inventory detail exported to " + inventory_file)
+        if inventory_file:
+            print("Inventory detail exported to " + inventory_file)
+        else:
+            print("Error. No data in that day, please choose the correct date")
 
     def export_backorder_data(self):
         CodeCalculation = CIC(self.__class__.bu_name)
@@ -145,7 +148,10 @@ class CurrentInventoryDisplay:
         inventory_date = input("Inventory Data (YYYYMMDD, Press Enter to get newest) : ")
         table_name = CodeCalculation.get_newest_date() if inventory_date == "" else "INV" + inventory_date
         backorder_file = CodeCalculation.export_backorder_data(table_name)
-        print("Backorder detail exported to " + backorder_file)
+        if backorder_file:
+            print("Backorder detail exported to " + backorder_file)
+        else:
+            print("Error. No data in that day, please choose the correct date")
 
     def display_code_inventory_trend(self):
         CodeCalculation = CIC(self.__class__.bu_name)

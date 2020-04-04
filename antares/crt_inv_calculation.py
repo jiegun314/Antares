@@ -102,8 +102,12 @@ class CurrentInventoryCalculation:
                         sum(Pending_Inventory_NonB_Total_Qty * Standard_Cost) AS NB_Pending_Value from ''' + table_name + ''' 
                         WHERE (Available_Stock + GIT_1_Week + GIT_2_Week + Pending_Inventory_Bonded_Total_Qty + Pending_Inventory_NonB_Total_Qty) > 0  
                         GROUP BY Hierarchy_5 ORDER BY onhand_inv DESC'''
-        c.execute(sql_cmd)
-        inventory_output = c.fetchall()
+        try:
+            c.execute(sql_cmd)
+        except sqlite3.OperationalError:
+            inventory_output = [(0, 0, 0, 0, 0, 0)]
+        else:
+            inventory_output = c.fetchall()
         # calculate inventory total value.
         total_available_stock_value, total_useful_stock_value, total_stock_value = 0, 0, 0
         for item in inventory_output:
@@ -117,6 +121,8 @@ class CurrentInventoryCalculation:
 
     # 获取当前BO
     def get_current_bo(self, table_name):
+        title = [('Material', 'Description', 'Hierarchy_5', 'CSC', 'Qty', 'Value', 'GIT_1', 'GIT_2', 'GIT_3', 'GIT_4',
+                  'Open_PO')]
         db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
         conn = sqlite3.connect(db_name)
         c = conn.cursor()
@@ -124,8 +130,12 @@ class CurrentInventoryCalculation:
                         (Current_Backorder_Qty * Standard_Cost) as bo_value, GIT_1_Week, GIT_2_Week, GIT_3_Week, 
                         GIT_4_Week, Open_PO from ''' + table_name + ''' 
                         WHERE Current_Backorder_Qty > 0 ORDER by CSC DESC, bo_value DESC'''
-        c.execute(sql_cmd)
-        bo_output = c.fetchall()
+        try:
+            c.execute(sql_cmd)
+        except sqlite3.OperationalError:
+            return title + [tuple(["-", "-", "-", "Total", 0, 0, 0, 0, 0, 0])]
+        else:
+            bo_output = c.fetchall()
         # 连接master data数据库
         master_data_db_name = self.__class__.db_path + self.__class__.bu_name + "_Master_Data.db"
         master_data_table_name = self.__class__.bu_name + "_SAP_Price"
@@ -166,9 +176,7 @@ class CurrentInventoryCalculation:
             backorder_summary_list[6] += min(
                 [max(bo_qty - git1_fulfill_qty - git2_fulfill_qty - git3_fulfill_qty - git4_fulfill_qty, 0),
                  oo_fulfill_qty]) * bo_price
-        # 输入表格
-        title = [('Material', 'Description', 'Hierarchy_5', 'CSC', 'Qty', 'Value', 'GIT_1', 'GIT_2', 'GIT_3', 'GIT_4',
-                  'Open_PO')]
+
         conn.commit()
         conn.close()
         return title + bo_result + [tuple(["-", "-", "-", "Total"] + backorder_summary_list)]
@@ -181,14 +189,19 @@ class CurrentInventoryCalculation:
                     (Current_Backorder_Qty * Standard_Cost) AS bo_value, GIT_1_Week, GIT_2_Week, GIT_3_Week, 
                     (GIT_4_Week + Open_PO) AS not_delivered_qty FROM ''' + table_name + ''' 
                     WHERE Current_Backorder_Qty > 0 ORDER by bo_value DESC'''
-        df = pd.read_sql(sql=sql_cmd, con=conn)
-        df = df.drop(columns=["bo_value", ])
-        df = df.rename(columns={"Material": "代码", "Description": "英文描述", "Hierarchy_5": "产品分类",
-                                "Current_Backorder_Qty": "缺货数量", "GIT_1_Week": "2周左右", "GIT_2_Week": "3-4周",
-                                "GIT_3_Week": "6-8周", "not_delivered_qty": "已下订单"})
-        backorder_file = self.__class__.backorder_path + self.__class__.bu_name + "_Backorder_" + table_name[3:] + ".xlsx"
-        df.to_excel(backorder_file, index=False)
-        return backorder_file
+        try:
+            df = pd.read_sql(sql=sql_cmd, con=conn)
+        except pd.io.sql.DatabaseError:
+            return 0
+        else:
+            df = df.drop(columns=["bo_value", ])
+            df = df.rename(columns={"Material": "代码", "Description": "英文描述", "Hierarchy_5": "产品分类",
+                                    "Current_Backorder_Qty": "缺货数量", "GIT_1_Week": "2周左右", "GIT_2_Week": "3-4周",
+                                    "GIT_3_Week": "6-8周", "not_delivered_qty": "已下订单"})
+            backorder_file = self.__class__.backorder_path + self.__class__.bu_name + "_Backorder_" + table_name[
+                                                                                                      3:] + ".xlsx"
+            df.to_excel(backorder_file, index=False)
+            return backorder_file
 
     # export inventory file
     def export_inventory_data(self, table_name):
@@ -201,12 +214,17 @@ class CurrentInventoryCalculation:
             sql_cmd = '''SELECT Material, Description, Available_Stock, Pending_Inventory_Bonded_Total_Qty, 
             GIT_1_Week, GIT_2_Week, GIT_3_Week, GIT_3_Week, Open_PO FROM ''' + table_name + \
                       ''' WHERE Available_Stock !=0'''
-        df = pd.read_sql(sql=sql_cmd, con=conn)
-        if self.__class__.bu_name == "TU":
-            df = df.rename(columns={"Material": "代码", "Description": "英文描述", "Available_Stock": "可用数量"})
-        inventory_file = self.__class__.inventory_path + self.__class__.bu_name + "_Inventory_" + table_name[3:] + ".xlsx"
-        df.to_excel(inventory_file, index=False)
-        return inventory_file
+        try:
+            df = pd.read_sql(sql=sql_cmd, con=conn)
+        except pd.io.sql.DatabaseError:
+            return 0
+        else:
+            if self.__class__.bu_name == "TU":
+                df = df.rename(columns={"Material": "代码", "Description": "英文描述", "Available_Stock": "可用数量"})
+            inventory_file = self.__class__.inventory_path + self.__class__.bu_name \
+                             + "_Inventory_" + table_name[3:] + ".xlsx"
+            df.to_excel(inventory_file, index=False)
+            return inventory_file
 
     # display backorder value trend by day
     def generate_backorder_trend(self):
@@ -433,8 +451,12 @@ class CurrentInventoryCalculation:
                   "Onhand_INV_Value, Pending_Inventory_Bonded_Total_Qty, GIT_1_Week, GIT_2_Week, GIT_3_Week, " \
                   "GIT_4_Week FROM " + table_name + " WHERE Hierarchy_5 = \"" + h5_name.upper() + \
                   "\" AND Available_Stock != 0 ORDER by Material"
-        c.execute(sql_cmd)
-        result = c.fetchall()
+        try:
+            c.execute(sql_cmd)
+        except sqlite3.OperationalError:
+            result = [(0, 0, 0, 0, 0, 0, 0, 0, 0, 0)]
+        else:
+            result = c.fetchall()
         # calculate total inventory value
         total_inv_value = 0
         for item in result:
@@ -454,8 +476,12 @@ class CurrentInventoryCalculation:
             sql_cmd = "SELECT Material, Description, Hierarchy_5, CSC, Available_Stock, " \
                       "Pending_Inventory_Bonded_Total_Qty, Pending_Inventory_NonB_Total_Qty, GIT_1_Week, GIT_2_Week, " \
                       "GIT_3_Week, GIT_4_Week, Open_PO FROM " + table_name + " WHERE Material = \'" + code_item.upper() + "\'"
-            c.execute(sql_cmd)
-            result = c.fetchall()
+            try:
+                c.execute(sql_cmd)
+            except sqlite3.OperationalError:
+                result = [(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)]
+            else:
+                result = c.fetchall()
             if result:
                 inventory_result.append(result[0])
             else:
@@ -504,6 +530,6 @@ class CurrentInventoryCalculation:
 
 
 if __name__ == "__main__":
-    test = CurrentInventoryCalculation("CMF")
-    test.export_inventory_data()
+    test = CurrentInventoryCalculation("TU")
+    test.export_inventory_data("INV20200329")
     # test.inv_data_sync(50)

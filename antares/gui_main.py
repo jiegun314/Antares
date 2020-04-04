@@ -19,7 +19,6 @@ class DragonGUI(DragonFrame):
         # set default as today
         self.chkbxToday.SetValue(1)
         self.dtpkDate.Disable()
-        # set default date as most fresh
         self.set_db_table("newest")
 
     def set_bu_name(self, bu_name):
@@ -41,7 +40,6 @@ class DragonGUI(DragonFrame):
         self.txtLog.Clear()
         self.txtLog.write("%s has been selected" % self.__class__.bu_name)
         self.statusBar.SetStatusText("Working BU: %s" % self.__class__.bu_name, 0)
-        pass
 
     def set_date_as_today(self, event):
         # clean the column
@@ -110,8 +108,7 @@ class DragonGUI(DragonFrame):
             for j in range(0, len(inventory_result[i])):
                 str_output = "{:,.0f}".format(inventory_result[i][j]) if j > 3 else str(inventory_result[i][j])
                 self.listCtrlOutput.SetItem(index, j + 1, str_output)
-        self.txtLog.write("Done, with data of %s." % table_name)
-        pass
+        self.txtLog.write("Done, with data of %s." % self.table_to_use)
 
     def list_code_in_h5(self):
         self.txtLog.write("Display H5 Inventory")
@@ -191,10 +188,12 @@ class DragonGUI(DragonFrame):
         self.clear_frame_content()
         self.txtLog.write("Start to export. Please wait~")
         CodeCalculation = CIC(self.__class__.bu_name)
-        # get newest
         inventory_file = CodeCalculation.export_inventory_data(self.table_to_use)
         self.clear_frame_content()
-        self.txtLog.write("Done, Inventory detail exported to %s." % inventory_file)
+        if inventory_file:
+            self.txtLog.write("Done, Inventory detail exported to %s." % inventory_file)
+        else:
+            self.txtLog.write("Error. No data in that day, please choose the correct date")
 
     # export one-day backorder detail
     def export_backorder(self, event):
@@ -203,7 +202,10 @@ class DragonGUI(DragonFrame):
         CodeCalculation = CIC(self.__class__.bu_name)
         inventory_file = CodeCalculation.export_backorder_data(self.table_to_use)
         self.clear_frame_content()
-        self.txtLog.write("Done, Backorder detail exported to %s." % inventory_file)
+        if inventory_file:
+            self.txtLog.write("Done, Backorder detail exported to %s." % inventory_file)
+        else:
+            self.txtLog.write("Error. No data in that day, please choose the correct date")
 
     # display code trend
     def display_code_trend(self, event):
