@@ -160,10 +160,11 @@ class InfoCheck:
         sql_cmd = "SELECT Month, [Target SKU] FROM " + filename + " WHERE [Exit SKU] = \'" + material_code + "\'"
         c.execute(sql_cmd)
         phoenix_result = c.fetchall()
-        if len(phoenix_result) ==0:
-            return ["Non-Phoenix Product", "None", "None"]
+        phoenix_title = ["Phoenix Status", "Stop Manufacturing Date", "Target SKU"]
+        if len(phoenix_result) == 0:
+            return [["Phoenix Status"], ["N"]]
         else:
-            return ["Phoenix Product", ] + list(phoenix_result[0])
+            return [phoenix_title, ["Y"] + list(phoenix_result[0])]
         pass
 
     # by code的销量数据

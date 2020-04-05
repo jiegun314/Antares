@@ -8,10 +8,10 @@ db_path = "../data/_DB/"
 
 # check if this code is in the master data
 def check_code_availability(bu_name, code_name):
-    db_fullname = db_path + bu_name + "_Master_Data.db"
-    filename = bu_name + "_Master_Data"
+    db_fullname = db_path + "Master_Data.db"
     conn = sqlite3.connect(db_fullname)
-    sql_cmd = "SELECT count(Material) from " + filename + " WHERE Material = \'" + code_name + "\'"
+    sql_cmd = "SELECT count(Material) from MATERIAL_MASTER WHERE Material = \'" + code_name + \
+              "\' AND Business_Unit = \'" + bu_name + "\'"
     c = conn.cursor()
     c.execute(sql_cmd)
     trigger = False if c.fetchall()[0][0] == 0 else True
@@ -86,19 +86,17 @@ def get_available_h5_name(h5_name, bu_name):
 
 
 def get_available_h5_list(h5_name, bu_name):
-    # 文件名，无后缀
-    tbl_name = bu_name + "_Master_Data"
-    # 数据库完整路径加名称
-    db_fullname = db_path + tbl_name + ".db"
+    db_fullname = db_path + "Master_Data.db"
     conn = sqlite3.connect(db_fullname)
     c = conn.cursor()
-    str_cmd = "SELECT distinct Hierarchy_5 COLLATE NOCASE from " + tbl_name + " WHERE Hierarchy_5 LIKE \'%" + \
-              h5_name + "%\' ORDER BY Hierarchy_5"
+    str_cmd = "SELECT distinct Hierarchy_5 COLLATE NOCASE from MATERIAL_MASTER WHERE Hierarchy_5 LIKE \'%" + \
+              h5_name + "%\' AND Business_Unit = \'" + bu_name + "\' ORDER BY Hierarchy_5"
     c.execute(str_cmd)
     result = c.fetchall()
     h5_output = [item[0] for item in result]
     conn.close()
     return h5_output
+
 
 # read the command list from json file
 def display_command_list(command_type):

@@ -87,11 +87,10 @@ class InfoShow:
             print("GTIN: ", infocheck.get_code_gtin(material_code))
             # show Phoenix information
             if self.__class__.bu_name == "TU":
-                phoenix_result = infocheck.get_code_phoenix_result(material_code)
                 print("======= <Phoenix Information> =======")
-                print("Phoenix Status: ", phoenix_result[0])
-                print("Stop Manufacturing Date: ", phoenix_result[1])
-                print("Target SKU: ", phoenix_result[2])
+                phoenix_result = infocheck.get_code_phoenix_result(material_code)
+                for i in range(0, len(phoenix_result[0])):
+                    print(phoenix_result[0][i], " - ", phoenix_result[1][i])
             # show the RAG license information
             print("======= <License Information> =======")
             license_info = [["License", "Start", 'End']] + infocheck.get_code_rag(material_code)
