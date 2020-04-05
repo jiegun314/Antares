@@ -54,6 +54,8 @@ def get_exception_list(bu_name, calculation_type):
         elif bu_name == "CMF":
             exception_list = ["INV20200325", "INV20200326", "INV20200327", "INV20200330", "INV20200331", "INV20200401",
                               "INV20200402"]
+        else:
+            pass
     else:
         pass
     return exception_list
@@ -90,7 +92,8 @@ def get_available_h5_list(h5_name, bu_name):
     db_fullname = db_path + tbl_name + ".db"
     conn = sqlite3.connect(db_fullname)
     c = conn.cursor()
-    str_cmd = "SELECT distinct Hierarchy_5 COLLATE NOCASE from " + tbl_name + " WHERE Hierarchy_5 LIKE \'%" + h5_name + "%\'"
+    str_cmd = "SELECT distinct Hierarchy_5 COLLATE NOCASE from " + tbl_name + " WHERE Hierarchy_5 LIKE \'%" + \
+              h5_name + "%\' ORDER BY Hierarchy_5"
     c.execute(str_cmd)
     result = c.fetchall()
     h5_output = [item[0] for item in result]

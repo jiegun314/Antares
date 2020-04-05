@@ -76,7 +76,7 @@ class DragonGUI(DragonFrame):
         if calculation_type == "by Code":
             self.display_code_mapping_inventory()
         else:
-            self.list_code_in_h5()
+            self.list_h5_name()
 
     def display_h5_inventory(self, event):
         self.clear_frame_content()
@@ -110,7 +110,7 @@ class DragonGUI(DragonFrame):
                 self.listCtrlOutput.SetItem(index, j + 1, str_output)
         self.txtLog.write("Done, with data of %s." % self.table_to_use)
 
-    def list_code_in_h5(self):
+    def list_h5_name(self):
         self.txtLog.write("Display H5 Inventory")
         h5_name_hint = self.txtMaterialCode.Value
         h5_name_list = pb_func.get_available_h5_list(h5_name_hint, self.__class__.bu_name)
