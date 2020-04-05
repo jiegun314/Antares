@@ -1,4 +1,4 @@
-from gui_design import DragonFrame
+from gui_design import DragonFrame, dlgAbout
 import wx
 from crt_inv_calculation import CurrentInventoryCalculation as CIC
 import public_function as pb_func
@@ -269,6 +269,21 @@ class DragonGUI(DragonFrame):
         self.txtMaterialCode.Clear()
         self.txtLog.Clear()
         self.StatusBar.SetStatusText(" ", 1)
+
+    # show about dialog
+    def show_about_dialog(self, event):
+        DragonDialog(self).Show()
+
+    # close program
+    def exit_dragon(self, event):
+        self.Close(True)
+
+
+#
+class DragonDialog(dlgAbout):
+
+    def close_about_dialog(self, event):
+        self.Close(True)
 
 
 if __name__ == '__main__':

@@ -20,7 +20,7 @@ ID_EXPORT_INVENTORY = 1000
 class DragonFrame ( wx.Frame ):
 
     def __init__( self, parent ):
-        wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = u"Project Dragon GUI v0404", pos = wx.DefaultPosition, size = wx.Size( 1280,800 ), style = wx.CAPTION|wx.CLOSE_BOX|wx.MINIMIZE_BOX|wx.TAB_TRAVERSAL )
+        wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = u"Project Dragon GUI v0405", pos = wx.DefaultPosition, size = wx.Size( 1280,800 ), style = wx.CAPTION|wx.CLOSE_BOX|wx.MINIMIZE_BOX|wx.TAB_TRAVERSAL )
 
         self.SetSizeHints( wx.DefaultSize, wx.DefaultSize )
 
@@ -126,6 +126,7 @@ class DragonFrame ( wx.Frame ):
         self.btnCodeSubmit.SetBitmap( wx.Bitmap( u".icon/submit.png", wx.BITMAP_TYPE_ANY ) )
         self.btnCodeSubmit.SetBitmapCurrent( wx.Bitmap( u".icon/submit_green.png", wx.BITMAP_TYPE_ANY ) )
         self.btnCodeSubmit.SetBackgroundColour( wx.Colour( 255, 255, 255 ) )
+        self.btnCodeSubmit.SetToolTip( u"Submit" )
 
         bSizer5.Add( self.btnCodeSubmit, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
 
@@ -137,6 +138,7 @@ class DragonFrame ( wx.Frame ):
         self.btnReset.SetBitmap( wx.Bitmap( u".icon/reset.png", wx.BITMAP_TYPE_ANY ) )
         self.btnReset.SetBitmapCurrent( wx.Bitmap( u".icon/reset_red.png", wx.BITMAP_TYPE_ANY ) )
         self.btnReset.SetBackgroundColour( wx.Colour( 255, 255, 255 ) )
+        self.btnReset.SetToolTip( u"Reset Input" )
 
         bSizer5.Add( self.btnReset, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
 
@@ -216,29 +218,29 @@ class DragonFrame ( wx.Frame ):
         self.Layout()
         self.statusBar = self.CreateStatusBar( 2, wx.STB_SIZEGRIP, wx.ID_ANY )
         self.m_menubar1 = wx.MenuBar( 0 )
-        self.m_menu1 = wx.Menu()
-        self.systemExit = wx.MenuItem( self.m_menu1, wx.ID_ANY, u"Exit", wx.EmptyString, wx.ITEM_NORMAL )
-        self.m_menu1.Append( self.systemExit )
+        self.menuFile = wx.Menu()
+        self.mExit = wx.MenuItem( self.menuFile, wx.ID_ANY, u"Exit", wx.EmptyString, wx.ITEM_NORMAL )
+        self.menuFile.Append( self.mExit )
 
-        self.m_menubar1.Append( self.m_menu1, u"File" )
+        self.m_menubar1.Append( self.menuFile, u"File" )
 
-        self.buDefine = wx.Menu()
-        self.mTrauma = wx.MenuItem( self.buDefine, ID_EXPORT_INVENTORY, u"Trauma", wx.EmptyString, wx.ITEM_RADIO )
-        self.buDefine.Append( self.mTrauma )
+        self.menuDefineBU = wx.Menu()
+        self.mTrauma = wx.MenuItem( self.menuDefineBU, ID_EXPORT_INVENTORY, u"Trauma", wx.EmptyString, wx.ITEM_RADIO )
+        self.menuDefineBU.Append( self.mTrauma )
 
-        self.mCMFT = wx.MenuItem( self.buDefine, wx.ID_ANY, u"CMFT", wx.EmptyString, wx.ITEM_RADIO )
-        self.buDefine.Append( self.mCMFT )
+        self.mCMFT = wx.MenuItem( self.menuDefineBU, wx.ID_ANY, u"CMFT", wx.EmptyString, wx.ITEM_RADIO )
+        self.menuDefineBU.Append( self.mCMFT )
 
-        self.mPT = wx.MenuItem( self.buDefine, wx.ID_ANY, u"PT", wx.EmptyString, wx.ITEM_NORMAL )
-        self.buDefine.Append( self.mPT )
+        self.mPT = wx.MenuItem( self.menuDefineBU, wx.ID_ANY, u"PT", wx.EmptyString, wx.ITEM_NORMAL )
+        self.menuDefineBU.Append( self.mPT )
 
-        self.m_menubar1.Append( self.buDefine, u"Business Unit" )
+        self.m_menubar1.Append( self.menuDefineBU, u"Business Unit" )
 
-        self.m_menu2 = wx.Menu()
-        self.showAbout = wx.MenuItem( self.m_menu2, wx.ID_ANY, u"About", wx.EmptyString, wx.ITEM_NORMAL )
-        self.m_menu2.Append( self.showAbout )
+        self.menuAbout = wx.Menu()
+        self.showAbout = wx.MenuItem( self.menuAbout, wx.ID_ANY, u"About", wx.EmptyString, wx.ITEM_NORMAL )
+        self.menuAbout.Append( self.showAbout )
 
-        self.m_menubar1.Append( self.m_menu2, u"About" )
+        self.m_menubar1.Append( self.menuAbout, u"About" )
 
         self.SetMenuBar( self.m_menubar1 )
 
@@ -257,7 +259,7 @@ class DragonFrame ( wx.Frame ):
 
         self.m_toolBar1.AddSeparator()
 
-        self.mPendingInventory = self.m_toolBar1.AddLabelTool( wx.ID_ANY, u"tool", wx.Bitmap( u".icon/pending.png", wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, wx.EmptyString, wx.EmptyString, None )
+        self.mPendingInventory = self.m_toolBar1.AddLabelTool( wx.ID_ANY, u"tool", wx.Bitmap( u".icon/pending.png", wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, u"Display trend for pending inventory value", wx.EmptyString, None )
 
         self.m_toolBar1.AddSeparator()
 
@@ -282,9 +284,11 @@ class DragonFrame ( wx.Frame ):
         self.btnReset.Bind( wx.EVT_BUTTON, self.clear_input )
         self.btnInventoryExport.Bind( wx.EVT_BUTTON, self.export_inventory )
         self.btnBackorderExport.Bind( wx.EVT_BUTTON, self.export_backorder )
+        self.Bind( wx.EVT_MENU, self.exit_dragon, id = self.mExit.GetId() )
         self.Bind( wx.EVT_MENU, self.select_bu_TU, id = self.mTrauma.GetId() )
         self.Bind( wx.EVT_MENU, self.select_bu_CMFT, id = self.mCMFT.GetId() )
         self.Bind( wx.EVT_MENU, self.select_bu_PT, id = self.mPT.GetId() )
+        self.Bind( wx.EVT_MENU, self.show_about_dialog, id = self.showAbout.GetId() )
         self.Bind( wx.EVT_TOOL, self.get_current_inventory_list, id = self.mDisplayCurrentInventory.GetId() )
         self.Bind( wx.EVT_TOOL, self.get_current_bo_list, id = self.mCurrentBackorder.GetId() )
         self.Bind( wx.EVT_TOOL, self.display_aging_backorder, id = self.mAgingBackorder.GetId() )
@@ -324,6 +328,9 @@ class DragonFrame ( wx.Frame ):
     def export_backorder( self, event ):
         event.Skip()
 
+    def exit_dragon( self, event ):
+        event.Skip()
+
     def select_bu_TU( self, event ):
         event.Skip()
 
@@ -331,6 +338,9 @@ class DragonFrame ( wx.Frame ):
         event.Skip()
 
     def select_bu_PT( self, event ):
+        event.Skip()
+
+    def show_about_dialog( self, event ):
         event.Skip()
 
     def get_current_inventory_list( self, event ):
@@ -349,6 +359,80 @@ class DragonFrame ( wx.Frame ):
         event.Skip()
 
     def display_h5_trend( self, event ):
+        event.Skip()
+
+
+###########################################################################
+## Class dlgAbout
+###########################################################################
+
+class dlgAbout ( wx.Dialog ):
+
+    def __init__( self, parent ):
+        wx.Dialog.__init__ ( self, parent, id = wx.ID_ANY, title = u"About", pos = wx.DefaultPosition, size = wx.Size( 400,260 ), style = wx.DEFAULT_DIALOG_STYLE|wx.STAY_ON_TOP )
+
+        self.SetSizeHints( wx.DefaultSize, wx.DefaultSize )
+
+        bSizer11 = wx.BoxSizer( wx.HORIZONTAL )
+
+        bSizer13 = wx.BoxSizer( wx.VERTICAL )
+
+
+        bSizer13.Add( ( 0, 10), 0, wx.EXPAND, 5 )
+
+        bSizer14 = wx.BoxSizer( wx.HORIZONTAL )
+
+        self.bitmapLogo = wx.StaticBitmap( self, wx.ID_ANY, wx.Bitmap( u".icon/logo.png", wx.BITMAP_TYPE_ANY ), wx.DefaultPosition, wx.Size( -1,-1 ), 0 )
+        bSizer14.Add( self.bitmapLogo, 0, wx.ALL, 5 )
+
+        bSizer15 = wx.BoxSizer( wx.VERTICAL )
+
+        self.txtCtrlAbout = wx.TextCtrl( self, wx.ID_ANY, u"The program is GUI only for Project Dragon, to collect and centralize data from oneclick and display historical business information.", wx.DefaultPosition, wx.Size( 200,120 ), wx.TE_MULTILINE|wx.TE_NO_VSCROLL|wx.TE_READONLY|wx.BORDER_NONE )
+        self.txtCtrlAbout.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_BTNFACE ) )
+
+        bSizer15.Add( self.txtCtrlAbout, 0, wx.ALL, 5 )
+
+
+        bSizer15.Add( ( 0, 0), 1, wx.EXPAND, 5 )
+
+        self.txtAuthor = wx.StaticText( self, wx.ID_ANY, u"by Jeffrey Zhou", wx.DefaultPosition, wx.DefaultSize, 0 )
+        self.txtAuthor.Wrap( -1 )
+
+        bSizer15.Add( self.txtAuthor, 0, wx.ALL|wx.ALIGN_RIGHT, 5 )
+
+
+        bSizer15.Add( ( 0, 0), 1, wx.EXPAND, 5 )
+
+        self.btnAboutClose = wx.Button( self, wx.ID_ANY, u"OK", wx.DefaultPosition, wx.DefaultSize, 0 )
+        bSizer15.Add( self.btnAboutClose, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
+
+
+        bSizer14.Add( bSizer15, 1, wx.EXPAND, 5 )
+
+
+        bSizer13.Add( bSizer14, 1, wx.EXPAND, 5 )
+
+
+        bSizer13.Add( ( 0, 0), 1, wx.EXPAND, 5 )
+
+
+        bSizer11.Add( bSizer13, 1, wx.EXPAND, 5 )
+
+
+        self.SetSizer( bSizer11 )
+        self.Layout()
+
+        self.Centre( wx.BOTH )
+
+        # Connect Events
+        self.btnAboutClose.Bind( wx.EVT_BUTTON, self.close_about_dialog )
+
+    def __del__( self ):
+        pass
+
+
+    # Virtual event handlers, overide them in your derived class
+    def close_about_dialog( self, event ):
         event.Skip()
 
 
