@@ -264,8 +264,8 @@ class InfoShow:
         # 读取final forecast
         code_forecast = infocheck.get_code_forecast(material_code, "Final", 12)[1]
         # 读取库存数据
-        historical_jnj_inv = infocheck.data_mapping(infocheck.get_code_inventory(material_code, "JNJ", 24))
-        historical_lp_inv = infocheck.data_mapping(infocheck.get_code_inventory(material_code, "LP", 24))
+        historical_jnj_inv = infocheck.get_code_inventory(material_code, "JNJ", 24)
+        historical_lp_inv = infocheck.get_code_inventory(material_code, "LP", 24)
         historical_inv = [historical_jnj_inv, historical_lp_inv]
         self.draw_sales_inv_fcst_chart(material_code, sales_output, historical_inv, code_forecast, 12, "code")
 
