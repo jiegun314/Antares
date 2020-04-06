@@ -38,10 +38,10 @@ class InfoShow:
             infocheck = calculation.InfoCheck(self.__class__.bu_name)
             mm_result = infocheck.get_master_data(material_code)
             print(mm_result[0][0], ": ", mm_result[1][0])
-            self.display_code_sales_data(material_code, month_number)
+            self.format_output(self.list_code_sales_data(material_code, month_number))
 
     # display sales for single code
-    def display_code_sales_data(self, material_code, month_number):
+    def list_code_sales_data(self, material_code, month_number):
         infocheck = calculation.InfoCheck(self.__class__.bu_name)
         # generate month list
         date_list = infocheck.get_time_list(self.get_current_month(), 0 - month_number)
@@ -50,10 +50,10 @@ class InfoShow:
         sale_type = ["GTS", "LPSales", "IMS"]
         for sales_item in sale_type:
             sales_output.append([sales_item] + infocheck.get_code_sales(sales_item, material_code, month_number))
-        self.format_output(sales_output)
+        return sales_output
 
     # 显示单个代码历史库存量
-    def show_code_hstr_inv(self, month_number=12):
+    def show_code_historical_inventory(self, month_number=12):
         # Print title
         print("---- -Historical Inventory for Single Code---")
         material_code = input("Material code: ").upper()
@@ -66,12 +66,21 @@ class InfoShow:
             mm_result = infocheck.get_master_data(material_code)
             print(mm_result[0][0], ": ", mm_result[1][0])
             # Generate date list
-            output = [["Month"] + infocheck.get_time_list(self.get_current_month(), 0-month_number)]
-            jnj_inv_result = infocheck.get_code_jnj_inv(material_code)
-            output.append(["JNJ"] + infocheck.data_mapping(jnj_inv_result, self.get_current_month(), 0-month_number))
-            lp_inv_result = infocheck.get_code_lp_inv(material_code)
-            output.append(["LP"] + infocheck.data_mapping(lp_inv_result, self.get_current_month(), 0-month_number))
-            self.format_output(output)
+            self.format_output(self.list_code_historical_inventory(material_code, month_number))
+
+    # generate code level historical inventory quantity and month
+    def list_code_historical_inventory(self, material_code, month_number):
+        infocheck = calculation.InfoCheck(self.__class__.bu_name)
+        month_list = ["Month"] + infocheck.get_time_list(self.get_current_month(), 0-month_number)
+        jnj_inventory_quantity = infocheck.get_code_inventory(material_code, "JNJ", month_number)
+        lp_inventory_quantity = infocheck.get_code_inventory(material_code, "LP", month_number)
+        gts_quantity = infocheck.get_code_sales("GTS", material_code, month_number)
+        lpsales_quantity = infocheck.get_code_sales("LPSales", material_code, month_number)
+        jnj_inventory_month = infocheck.get_inventory_month(jnj_inventory_quantity, gts_quantity, month_number)
+        lp_inventory_month = infocheck.get_inventory_month(lp_inventory_quantity, lpsales_quantity, month_number)
+        inventory_output = [month_list, ["JNJ_INV", ] + jnj_inventory_quantity, ["JNJ_INV_Mth", ] + jnj_inventory_month,
+                            ["LP_INV", ] + lp_inventory_quantity, ["LP_INV_Mth", ] + lp_inventory_month]
+        return inventory_output
 
     # 显示单个代码全部信息
     def show_code_all_info(self, month_number=12):
@@ -102,21 +111,10 @@ class InfoShow:
             self.format_output(license_info)
             # 开始输出销售量
             print("--%s Months Historical Sales Data --" % month_number)
-            output_sales = [["Month", ], ["GTS", ], ["LP Sales", ], ["IMS", ]]
-            self.display_code_sales_data(material_code, month_number)
+            self.format_output(self.list_code_sales_data(material_code, month_number))
             # 开始输出库存历史量
             print("--%s Months Historical Inventory Data --" % month_number)
-            output_inv = [["Month", ], ["JNJ_INV", ], ["JNJ_INV_Month", ], ["LP_INV", ], ["LP_INV_Month", ]]
-            # 写入日期列表
-            output_inv[0].extend(infocheck.get_time_list(self.get_current_month(), 0 - month_number))
-            # 读取数据
-            jnj_inv_result = infocheck.get_code_jnj_inv(material_code)
-            output_inv[1].extend(infocheck.data_mapping(jnj_inv_result, self.get_current_month(), 0 - month_number))
-            output_inv[2].extend(infocheck.get_inventory_month(output_inv[1][1:], output_sales[1][1:], month_number))
-            lp_inv_result = infocheck.get_code_lp_inv(material_code)
-            output_inv[3].extend(infocheck.data_mapping(lp_inv_result, self.get_current_month(), 0 - month_number))
-            output_inv[4].extend(infocheck.get_inventory_month(output_inv[3][1:], output_sales[2][1:], month_number))
-            self.format_output(output_inv)
+            self.format_output(self.list_code_historical_inventory(material_code, month_number))
             # 显示Statistical Forecast
             print("--Next 12 Months Statistical Forecast--")
             forecast_quantity = infocheck.get_code_forecast(material_code, "Statistical", 12)
@@ -266,10 +264,8 @@ class InfoShow:
         # 读取final forecast
         code_forecast = infocheck.get_code_forecast(material_code, "Final", 12)[1]
         # 读取库存数据
-        inventory_result = infocheck.get_code_jnj_inv(material_code)
-        historical_jnj_inv = infocheck.data_mapping(inventory_result, self.get_current_month(), -24)
-        inventory_result = infocheck.get_code_lp_inv(material_code)
-        historical_lp_inv = infocheck.data_mapping(inventory_result, self.get_current_month(), -24)
+        historical_jnj_inv = infocheck.data_mapping(infocheck.get_code_inventory(material_code, "JNJ", 24))
+        historical_lp_inv = infocheck.data_mapping(infocheck.get_code_inventory(material_code, "LP", 24))
         historical_inv = [historical_jnj_inv, historical_lp_inv]
         self.draw_sales_inv_fcst_chart(material_code, sales_output, historical_inv, code_forecast, 12, "code")
 
@@ -337,4 +333,4 @@ class InfoShow:
 
 if __name__ == "__main__":
     test = InfoShow("TU", "Jeffrey")
-    test.show_code_sales_data()
+    test.show_code_historical_inventory()

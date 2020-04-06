@@ -181,6 +181,25 @@ class InfoCheck:
         conn.close()
         return sales_result
 
+    # get inventory data by code
+    # inventory_type: "JNJ", "LP", month_number: positive integer
+    def get_code_inventory(self, material_code, inventory_type, month_number):
+        tbl_name = self.__class__.bu_name + "_" + inventory_type + "_INV"
+        db_fullname = self.__class__.db_path + tbl_name + ".db"
+        conn = sqlite3.connect(db_fullname)
+        c = conn.cursor()
+        if inventory_type == "JNJ":
+            str_cmd = "SELECT month, SUM(Available_Stock) from " + tbl_name + " WHERE Material = \'" + material_code \
+                      + "\' GROUP BY month ORDER BY month"
+        elif inventory_type == "LP":
+            str_cmd = "SELECT month, SUM(quantity) from " + tbl_name + " WHERE Material = \'" + material_code \
+                      + "\' GROUP BY month ORDER BY month"
+        else:
+            pass
+        c.execute(str_cmd)
+        inventory_result = self.data_mapping(c.fetchall(), pb_fnc.get_current_month(), 0 - month_number)
+        return inventory_result
+
     # 获取单个代码的LP库存
     def get_code_lp_inv(self, code):
         # 文件名，无后缀

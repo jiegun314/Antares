@@ -68,7 +68,7 @@ class SystemIndex:
                 else:
                     print("!!ERROR: Wrong CMD code. Plz input right cmd code, or input exit to quit.")
             elif cmd_code == "420":
-                cmd_info_index.show_code_hstr_inv()
+                cmd_info_index.show_code_historical_inventory()
             elif cmd_code == "310":
                 cmd_info_index.show_h5_sales_data()
             elif cmd_code == "320":
