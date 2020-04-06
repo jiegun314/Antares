@@ -35,18 +35,23 @@ class InfoShow:
             return
         else:
             # Get master data
-            sale_type = ["GTS", "LPSales", "IMS"]
             infocheck = calculation.InfoCheck(self.__class__.bu_name)
             mm_result = infocheck.get_master_data(material_code)
             print(mm_result[0][0], ": ", mm_result[1][0])
-            date_list = infocheck.get_time_list(self.get_current_month(), 0-month_number)
-            sales_output = [["Month"] + date_list, ]
-            for sales_item in sale_type:
-                sales_result = infocheck.get_code_sales(sales_item, material_code)
-                sales_output.append(
-                    [sales_item] + infocheck.data_mapping(sales_result, self.get_current_month(), 0-month_number))
-            self.format_output(sales_output)
-            
+            self.display_code_sales_data(material_code, month_number)
+
+    # display sales for single code
+    def display_code_sales_data(self, material_code, month_number):
+        infocheck = calculation.InfoCheck(self.__class__.bu_name)
+        # generate month list
+        date_list = infocheck.get_time_list(self.get_current_month(), 0 - month_number)
+        sales_output = [["Month"] + date_list, ]
+        # get sales data
+        sale_type = ["GTS", "LPSales", "IMS"]
+        for sales_item in sale_type:
+            sales_output.append([sales_item] + infocheck.get_code_sales(sales_item, material_code, month_number))
+        self.format_output(sales_output)
+
     # 显示单个代码历史库存量
     def show_code_hstr_inv(self, month_number=12):
         # Print title
@@ -98,17 +103,7 @@ class InfoShow:
             # 开始输出销售量
             print("--%s Months Historical Sales Data --" % month_number)
             output_sales = [["Month", ], ["GTS", ], ["LP Sales", ], ["IMS", ]]
-            # 写入日期列表
-            output_sales[0].extend(infocheck.get_time_list(self.get_current_month(), 0 - month_number))
-            # 读取数据
-            cmd_list = ("GTS", "LPSales", "IMS")
-            index = 1
-            for cmd_item in cmd_list:
-                sales_result = infocheck.get_code_sales(cmd_item, material_code)
-                output_sales[index].extend(infocheck.data_mapping(sales_result, self.get_current_month(),
-                                                                  0 - month_number))
-                index += 1
-            self.format_output(output_sales)
+            self.display_code_sales_data(material_code, month_number)
             # 开始输出库存历史量
             print("--%s Months Historical Inventory Data --" % month_number)
             output_inv = [["Month", ], ["JNJ_INV", ], ["JNJ_INV_Month", ], ["LP_INV", ], ["LP_INV_Month", ]]
@@ -156,8 +151,8 @@ class InfoShow:
             h5_sales_result = [["Month", ] + h5_info_check.get_time_list(self.get_current_month(), 0 - month_number)]
             # get data
             for sales_item in sales_type:
-                h5_temp = h5_info_check.get_H5_sales(sales_item, price_item, h5_name)
-                h5_sales_result.append([sales_item, ] + h5_info_check.data_mapping(h5_temp, self.get_current_month(), 0 - month_number))
+                h5_temp = h5_info_check.get_h5_sales_data(sales_item, price_item, h5_name, month_number)
+                h5_sales_result.append([sales_item, ] + h5_temp)
             self.format_output(h5_sales_result)
 
     # show sales data for one Hierarchy_5
@@ -182,7 +177,7 @@ class InfoShow:
         print("-With Standard_Cost-")
         h5_inv_result = [month_list, ]
         for inv_item in inv_type:
-            h5_inv_temp = h5_info_check.get_H5_hstr_inv(inv_item, "Standard_Cost", h5_name)
+            h5_inv_temp = h5_info_check.get_h5_inventory_data(inv_item, "Standard_Cost", h5_name)
             h5_inv_output = h5_info_check.data_mapping(h5_inv_temp, self.get_current_month(), 0 - month_number)
             h5_inv_result.append([inv_item] + h5_inv_output)
         self.format_output(h5_inv_result)
@@ -190,26 +185,24 @@ class InfoShow:
         print("-With SAP Price-")
         h5_inv_result = [month_list, ]
         # get sales data
-        h5_gts_temp = h5_info_check.get_H5_sales("GTS", "SAP_Price", h5_name)
-        h5_gts_result = h5_info_check.data_mapping(h5_gts_temp, self.get_current_month(), 0 - month_number)
-        h5_lpsales_temp = h5_info_check.get_H5_sales("LPSales", "SAP_Price", h5_name)
-        h5_lpsales_result = h5_info_check.data_mapping(h5_lpsales_temp, self.get_current_month(), 0 - month_number)
+        h5_gts_result = h5_info_check.get_h5_sales_data("GTS", "SAP_Price", h5_name, month_number)
+        h5_lpsales_result = h5_info_check.get_h5_sales_data("LPSales", "SAP_Price", h5_name, month_number)
         # generate inventory value and inventory month
         # generate JNJ inventory
-        h5_inv_temp = h5_info_check.get_H5_hstr_inv("JNJ", "SAP_Price", h5_name)
+        h5_inv_temp = h5_info_check.get_h5_inventory_data("JNJ", "SAP_Price", h5_name)
         h5_inv_output = h5_info_check.data_mapping(h5_inv_temp, self.get_current_month(), 0 - month_number)
         h5_inv_result.append(["JNJ", ] + h5_inv_output)
         h5_inv_result.append(
             ["JNJ_Month", ] + h5_info_check.get_inventory_month(h5_inv_output, h5_gts_result, month_number))
         # generate LP inventory
-        h5_inv_temp = h5_info_check.get_H5_hstr_inv("LP", "SAP_Price", h5_name)
+        h5_inv_temp = h5_info_check.get_h5_inventory_data("LP", "SAP_Price", h5_name)
         h5_inv_output = h5_info_check.data_mapping(h5_inv_temp, self.get_current_month(), 0 - month_number)
         h5_inv_result.append(["LP", ] + h5_inv_output)
         h5_inv_result.append(
             ["LP_Month", ] + h5_info_check.get_inventory_month(h5_inv_output, h5_lpsales_result, month_number))
         self.format_output(h5_inv_result)
 
-    def show_h5_inv(self, month_number=12):
+    def show_h5_inventory(self, month_number=12):
         h5_name = self.get_h5_name()
         if h5_name != "NULL":
             self.get_h5_inventory(h5_name, month_number)
@@ -269,8 +262,7 @@ class InfoShow:
         sales_list = ("GTS", "LPSales", "IMS")
         sales_output = []
         for index in range(0, 3):
-            sales_result = infocheck.get_code_sales(sales_list[index], material_code)
-            sales_output.append(infocheck.data_mapping(sales_result, self.get_current_month(), -24))
+            sales_output.append(infocheck.get_code_sales(sales_list[index], material_code, 24))
         # 读取final forecast
         code_forecast = infocheck.get_code_forecast(material_code, "Final", 12)[1]
         # 读取库存数据
@@ -294,13 +286,12 @@ class InfoShow:
         sales_type = ("GTS", "LPSales", "IMS")
         h5_sales_result = []
         for sales_item in sales_type:
-            h5_temp = h5_info_check.get_H5_sales(sales_item, "SAP_Price", h5_name)
-            h5_sales_result.append(h5_info_check.data_mapping(h5_temp, self.get_current_month(), -24))
+            h5_sales_result.append(h5_info_check.get_h5_sales_data(sales_item, "SAP_Price", h5_name, 24))
         # 读取库存量
         inv_type = ("JNJ", "LP")
         h5_inv_result = []
         for inv_item in inv_type:
-            h5_temp = h5_info_check.get_H5_hstr_inv(inv_item, "SAP_Price", h5_name)
+            h5_temp = h5_info_check.get_h5_inventory_data(inv_item, "SAP_Price", h5_name)
             h5_inv_result.append(h5_info_check.data_mapping(h5_temp, self.get_current_month(), -24))
         # 读取final forecast
         h5_forecast = h5_info_check.get_h5_forecast(h5_name, "Final", 12)
@@ -346,4 +337,4 @@ class InfoShow:
 
 if __name__ == "__main__":
     test = InfoShow("TU", "Jeffrey")
-    test.display_material_eso("VA Ankle", "H5")
+    test.show_code_sales_data()

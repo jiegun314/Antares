@@ -18,6 +18,10 @@ def check_code_availability(bu_name, code_name):
     return trigger
 
 
+# get current month
+def get_current_month():
+    return time.strftime("%Y-%m", time.localtime())
+
 # check if right future month item
 def check_future_month(month_item, month_quantity):
     current_year = int(time.strftime("%Y", time.localtime()))
