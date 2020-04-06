@@ -10,6 +10,7 @@
 import wx
 import wx.xrc
 import wx.adv
+import wx.dataview
 
 ID_EXPORT_INVENTORY = 1000
 
@@ -211,8 +212,149 @@ class DragonFrame ( wx.Frame ):
         bSizer4.Fit( self.pnlOneclick )
         self.ntbkOneclick.AddPage( self.pnlOneclick, u"Oneclick", True )
         self.pnlSummary = wx.Panel( self.ntbkOneclick, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
+        self.pnlSummary.Enable( False )
+        self.pnlSummary.Hide()
         self.pnlSummary.SetToolTip( u"Show historical data summary" )
 
+        bSizer15 = wx.BoxSizer( wx.VERTICAL )
+
+        bSizer51 = wx.BoxSizer( wx.HORIZONTAL )
+
+        bSizer51.SetMinSize( wx.Size( -1,80 ) )
+        rdbxSumaryCalculationTypeChoices = [ u"by Code", u"by Hierarchy" ]
+        self.rdbxSumaryCalculationType = wx.RadioBox( self.pnlSummary, wx.ID_ANY, u"Calculation Type", wx.DefaultPosition, wx.Size( -1,88 ), rdbxSumaryCalculationTypeChoices, 1, wx.RA_SPECIFY_COLS )
+        self.rdbxSumaryCalculationType.SetSelection( 0 )
+        bSizer51.Add( self.rdbxSumaryCalculationType, 0, wx.ALL|wx.ALIGN_BOTTOM, 5 )
+
+
+        bSizer51.Add( ( 10, 20), 0, wx.EXPAND, 5 )
+
+        bSizer91 = wx.BoxSizer( wx.VERTICAL )
+
+        bSizer1011 = wx.BoxSizer( wx.HORIZONTAL )
+
+        self.m_staticText21 = wx.StaticText( self.pnlSummary, wx.ID_ANY, u"Material / H5 Name: ", wx.DefaultPosition, wx.Size( -1,15 ), wx.ALIGN_CENTER_HORIZONTAL )
+        self.m_staticText21.Wrap( -1 )
+
+        self.m_staticText21.SetMaxSize( wx.Size( -1,30 ) )
+
+        bSizer1011.Add( self.m_staticText21, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
+
+
+        bSizer1011.Add( ( 280, 0), 0, wx.EXPAND, 5 )
+
+        self.chkbxSummaryWholeBU = wx.CheckBox( self.pnlSummary, wx.ID_ANY, u"BU Level", wx.DefaultPosition, wx.DefaultSize, 0 )
+        bSizer1011.Add( self.chkbxSummaryWholeBU, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
+
+
+        bSizer91.Add( bSizer1011, 1, wx.EXPAND, 5 )
+
+        bSizer111 = wx.BoxSizer( wx.HORIZONTAL )
+
+        self.txtSummaryMaterialCode = wx.TextCtrl( self.pnlSummary, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 120,80 ), wx.TE_MULTILINE )
+        bSizer111.Add( self.txtSummaryMaterialCode, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
+
+        lstbxSummaryH5SelectionChoices = []
+        self.lstbxSummaryH5Selection = wx.ListBox( self.pnlSummary, wx.ID_ANY, wx.DefaultPosition, wx.Size( 350,80 ), lstbxSummaryH5SelectionChoices, wx.LB_NEEDED_SB|wx.LB_SINGLE )
+        bSizer111.Add( self.lstbxSummaryH5Selection, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
+
+
+        bSizer91.Add( bSizer111, 0, wx.EXPAND, 5 )
+
+
+        bSizer51.Add( bSizer91, 0, wx.EXPAND|wx.ALIGN_CENTER_VERTICAL, 5 )
+
+
+        bSizer51.Add( ( 10, 0), 0, wx.EXPAND, 5 )
+
+        self.btnCodeSubmit1 = wx.BitmapButton( self.pnlSummary, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.DefaultSize, wx.BU_AUTODRAW|wx.BORDER_NONE )
+
+        self.btnCodeSubmit1.SetBitmap( wx.Bitmap( u".icon/submit.png", wx.BITMAP_TYPE_ANY ) )
+        self.btnCodeSubmit1.SetBitmapCurrent( wx.Bitmap( u".icon/submit_green.png", wx.BITMAP_TYPE_ANY ) )
+        self.btnCodeSubmit1.SetBackgroundColour( wx.Colour( 255, 255, 255 ) )
+        self.btnCodeSubmit1.SetToolTip( u"Submit" )
+
+        bSizer51.Add( self.btnCodeSubmit1, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
+
+
+        bSizer51.Add( ( 10, 0), 0, wx.EXPAND, 5 )
+
+        self.btnReset1 = wx.BitmapButton( self.pnlSummary, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.DefaultSize, wx.BU_AUTODRAW|wx.BORDER_NONE )
+
+        self.btnReset1.SetBitmap( wx.Bitmap( u".icon/reset.png", wx.BITMAP_TYPE_ANY ) )
+        self.btnReset1.SetBitmapCurrent( wx.Bitmap( u".icon/reset_red.png", wx.BITMAP_TYPE_ANY ) )
+        self.btnReset1.SetBackgroundColour( wx.Colour( 255, 255, 255 ) )
+        self.btnReset1.SetToolTip( u"Reset Input" )
+
+        bSizer51.Add( self.btnReset1, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
+
+
+        bSizer51.Add( ( 15, 0), 0, wx.EXPAND, 5 )
+
+        self.m_staticline9 = wx.StaticLine( self.pnlSummary, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LI_VERTICAL )
+        bSizer51.Add( self.m_staticline9, 0, wx.EXPAND |wx.ALL, 5 )
+
+        bSizer36 = wx.BoxSizer( wx.VERTICAL )
+
+        self.m_staticText9 = wx.StaticText( self.pnlSummary, wx.ID_ANY, u"Log", wx.DefaultPosition, wx.DefaultSize, 0 )
+        self.m_staticText9.Wrap( -1 )
+
+        bSizer36.Add( self.m_staticText9, 0, wx.ALL, 5 )
+
+        self.txtSummaryLog = wx.TextCtrl( self.pnlSummary, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.TE_MULTILINE|wx.TE_NO_VSCROLL|wx.TE_READONLY )
+        self.txtSummaryLog.SetMinSize( wx.Size( 430,-1 ) )
+
+        bSizer36.Add( self.txtSummaryLog, 0, wx.ALL, 5 )
+
+
+        bSizer51.Add( bSizer36, 1, wx.EXPAND, 5 )
+
+
+        bSizer15.Add( bSizer51, 1, wx.EXPAND, 5 )
+
+        self.m_staticline8 = wx.StaticLine( self.pnlSummary, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LI_HORIZONTAL )
+        bSizer15.Add( self.m_staticline8, 0, wx.EXPAND |wx.ALL, 5 )
+
+        bSizer16 = wx.BoxSizer( wx.HORIZONTAL )
+
+        bSizer34 = wx.BoxSizer( wx.HORIZONTAL )
+
+        bSizer35 = wx.BoxSizer( wx.VERTICAL )
+
+        self.m_staticText8 = wx.StaticText( self.pnlSummary, wx.ID_ANY, u"View Select", wx.DefaultPosition, wx.DefaultSize, 0 )
+        self.m_staticText8.Wrap( -1 )
+
+        bSizer35.Add( self.m_staticText8, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
+
+        chklstReviewItemChoices = []
+        self.chklstReviewItem = wx.CheckListBox( self.pnlSummary, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, chklstReviewItemChoices, 0 )
+        self.chklstReviewItem.SetMinSize( wx.Size( -1,350 ) )
+
+        bSizer35.Add( self.chklstReviewItem, 0, wx.ALL, 5 )
+
+        rdbxSummaryUnitChoices = [ u"by Quantity", u"by Std. Cost", u"by SAP Price" ]
+        self.rdbxSummaryUnit = wx.RadioBox( self.pnlSummary, wx.ID_ANY, u"wxRadioBox", wx.DefaultPosition, wx.DefaultSize, rdbxSummaryUnitChoices, 1, wx.RA_SPECIFY_COLS )
+        self.rdbxSummaryUnit.SetSelection( 0 )
+        bSizer35.Add( self.rdbxSummaryUnit, 0, wx.ALL, 5 )
+
+
+        bSizer34.Add( bSizer35, 1, wx.EXPAND, 5 )
+
+        self.dtvwlstctrlSummaryOutput = wx.dataview.DataViewListCtrl( self.pnlSummary, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
+        self.dtvwlstctrlSummaryOutput.SetMinSize( wx.Size( 1000,600 ) )
+
+        bSizer34.Add( self.dtvwlstctrlSummaryOutput, 0, wx.ALL, 5 )
+
+
+        bSizer16.Add( bSizer34, 0, wx.EXPAND, 5 )
+
+
+        bSizer15.Add( bSizer16, 1, wx.EXPAND, 5 )
+
+
+        self.pnlSummary.SetSizer( bSizer15 )
+        self.pnlSummary.Layout()
+        bSizer15.Fit( self.pnlSummary )
         self.ntbkOneclick.AddPage( self.pnlSummary, u"Summary", False )
 
         bSizer1.Add( self.ntbkOneclick, 1, wx.EXPAND |wx.ALL, 5 )
@@ -288,6 +430,10 @@ class DragonFrame ( wx.Frame ):
         self.btnReset.Bind( wx.EVT_BUTTON, self.clear_input )
         self.btnInventoryExport.Bind( wx.EVT_BUTTON, self.export_inventory )
         self.btnBackorderExport.Bind( wx.EVT_BUTTON, self.export_backorder )
+        self.chkbxSummaryWholeBU.Bind( wx.EVT_CHECKBOX, self.summary_bu_level_selected )
+        self.lstbxSummaryH5Selection.Bind( wx.EVT_LEFT_DCLICK, self.display_h5_summary )
+        self.btnCodeSubmit1.Bind( wx.EVT_BUTTON, self.summary_view_submit )
+        self.btnReset1.Bind( wx.EVT_BUTTON, self.summary_view_rest )
         self.Bind( wx.EVT_MENU, self.exit_dragon, id = self.mExit.GetId() )
         self.Bind( wx.EVT_MENU, self.select_bu_TU, id = self.mTrauma.GetId() )
         self.Bind( wx.EVT_MENU, self.select_bu_CMFT, id = self.mCMFT.GetId() )
@@ -330,6 +476,18 @@ class DragonFrame ( wx.Frame ):
         event.Skip()
 
     def export_backorder( self, event ):
+        event.Skip()
+
+    def summary_bu_level_selected( self, event ):
+        event.Skip()
+
+    def display_h5_summary( self, event ):
+        event.Skip()
+
+    def summary_view_submit( self, event ):
+        event.Skip()
+
+    def summary_view_rest( self, event ):
         event.Skip()
 
     def exit_dragon( self, event ):
