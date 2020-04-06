@@ -101,7 +101,7 @@ class InfoCheck:
         sales_result = self.data_mapping(c.fetchall(), pb_fnc.get_current_month(), 0 - month_number)
         return sales_result
     
-    def get_h5_inventory_data(self, inv_type, price_type, h5_name):
+    def get_h5_inventory_data(self, inv_type, price_type, h5_name, month_number):
         # 文件名，无后缀
         file_name = self.__class__.bu_name + "_" + inv_type + "_INV"
         # 数据库完整路径加名称
@@ -115,7 +115,8 @@ class InfoCheck:
         else:
             str_cmd = "SELECT month, SUM(Value_" + price_type + ") from " + tbl_name + " WHERE Hierarchy_5 = \'" \
                   + h5_name + "\' COLLATE NOCASE GROUP BY month "
-        h5_inv_result = c.execute(str_cmd).fetchall()
+        c.execute(str_cmd)
+        h5_inv_result = self.data_mapping(c.fetchall(), pb_fnc.get_current_month(), 0 - month_number)
         return h5_inv_result
 
     # get sap_price by code
