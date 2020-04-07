@@ -213,7 +213,6 @@ class DragonFrame ( wx.Frame ):
         self.ntbkOneclick.AddPage( self.pnlOneclick, u"Oneclick", True )
         self.pnlSummary = wx.Panel( self.ntbkOneclick, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
         self.pnlSummary.Enable( False )
-        self.pnlSummary.Hide()
         self.pnlSummary.SetToolTip( u"Show historical data summary" )
 
         bSizer15 = wx.BoxSizer( wx.VERTICAL )
