@@ -1,5 +1,6 @@
 import sqlite3
 import time
+import public_function as pb_fnc
 
 
 class InfoCheck:
@@ -76,13 +77,11 @@ class InfoCheck:
             return ""
 
     # by H5的销量数据
-    def get_H5_sales(self, data_type, price_type, hierarchy):
+    def get_h5_sales_data(self, data_type, price_type, hierarchy, month_number):
         # 文件名，无后缀
-        file_name = self.__class__.bu_name + "_" + data_type
+        tbl_name = self.__class__.bu_name + "_" + data_type
         # 数据库完整路径加名称
-        db_fullname = self.__class__.db_path + file_name + ".db"
-        # 表格名称，等于文件名称
-        tbl_name = file_name
+        db_fullname = self.__class__.db_path + tbl_name + ".db"
         conn = sqlite3.connect(db_fullname)
         c = conn.cursor()
         # 创建命令
@@ -99,10 +98,10 @@ class InfoCheck:
                 str_cmd = "SELECT month, sum(Value_SAP_Price) from " + tbl_name + " WHERE Hierarchy_5 = \'" + \
                       hierarchy + "\' COLLATE NOCASE GROUP BY month ORDER BY month"
         c.execute(str_cmd)
-        result = c.fetchall()
-        return result
+        sales_result = self.data_mapping(c.fetchall(), pb_fnc.get_current_month(), 0 - month_number)
+        return sales_result
     
-    def get_H5_hstr_inv(self, inv_type, price_type, h5_name):
+    def get_h5_inventory_data(self, inv_type, price_type, h5_name, month_number):
         # 文件名，无后缀
         file_name = self.__class__.bu_name + "_" + inv_type + "_INV"
         # 数据库完整路径加名称
@@ -116,7 +115,8 @@ class InfoCheck:
         else:
             str_cmd = "SELECT month, SUM(Value_" + price_type + ") from " + tbl_name + " WHERE Hierarchy_5 = \'" \
                   + h5_name + "\' COLLATE NOCASE GROUP BY month "
-        h5_inv_result = c.execute(str_cmd).fetchall()
+        c.execute(str_cmd)
+        h5_inv_result = self.data_mapping(c.fetchall(), pb_fnc.get_current_month(), 0 - month_number)
         return h5_inv_result
 
     # get sap_price by code
@@ -168,21 +168,38 @@ class InfoCheck:
         pass
 
     # by code的销量数据
-    def get_code_sales(self, data_type, code):
+    def get_code_sales(self, data_type, code, month_number):
         # 文件名，无后缀
-        file_name = self.__class__.bu_name + "_" + data_type
+        tbl_name = self.__class__.bu_name + "_" + data_type
         # 数据库完整路径加名称
-        db_fullname = self.__class__.db_path + file_name + ".db"
-        # 表格名称，等于文件名称
-        tbl_name = file_name
+        db_fullname = self.__class__.db_path + tbl_name + ".db"
         conn = sqlite3.connect(db_fullname)
         c = conn.cursor()
         str_cmd = "SELECT month, SUM(quantity) from " + tbl_name + " WHERE material = \'" + code \
                   + "\' GROUP BY month ORDER BY month"
         c.execute(str_cmd)
-        result = c.fetchall()
+        sales_result = self.data_mapping(c.fetchall(), pb_fnc.get_current_month(), 0 - month_number)
         conn.close()
-        return result
+        return sales_result
+
+    # get inventory data by code
+    # inventory_type: "JNJ", "LP", month_number: positive integer
+    def get_code_inventory(self, material_code, inventory_type, month_number):
+        tbl_name = self.__class__.bu_name + "_" + inventory_type + "_INV"
+        db_fullname = self.__class__.db_path + tbl_name + ".db"
+        conn = sqlite3.connect(db_fullname)
+        c = conn.cursor()
+        if inventory_type == "JNJ":
+            str_cmd = "SELECT month, SUM(Available_Stock) from " + tbl_name + " WHERE Material = \'" + material_code \
+                      + "\' GROUP BY month ORDER BY month"
+        elif inventory_type == "LP":
+            str_cmd = "SELECT month, SUM(quantity) from " + tbl_name + " WHERE Material = \'" + material_code \
+                      + "\' GROUP BY month ORDER BY month"
+        else:
+            pass
+        c.execute(str_cmd)
+        inventory_result = self.data_mapping(c.fetchall(), pb_fnc.get_current_month(), 0 - month_number)
+        return inventory_result
 
     # 获取单个代码的LP库存
     def get_code_lp_inv(self, code):
@@ -326,7 +343,8 @@ class InfoCheck:
         else:
             if material_name.upper() != "ALL":
                 sql_cmd = "SELECT Month, sum(ESO_Value_Standard_Cost), sum(ESO_Value_SAP_Price) FROM " + filename + \
-                      " WHERE Hierarchy_5 = \'" + material_name + "\' GROUP by Month, Hierarchy_5 ORDER BY Month"
+                      " WHERE Hierarchy_5 = \'" + material_name + "\' COLLATE NOCASE GROUP by Month, Hierarchy_5 " \
+                                                                  "ORDER BY Month"
             else:
                 sql_cmd = "SELECT Month, sum(ESO_Value_Standard_Cost), sum(ESO_Value_SAP_Price) FROM " + filename + \
                           " GROUP by Month ORDER BY Month"
@@ -341,7 +359,7 @@ class InfoCheck:
 
 if __name__ == "__main__":
     info_check = InfoCheck("TU")
-    result = info_check.get_material_eso("VA Ankle", eso_type="H5")
+    result = info_check.get_code_sales("GTS", "440.834", 12)
     print(result)
     # info_check.get_code_phoenix_result("689.893")
 

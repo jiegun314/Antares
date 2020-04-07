@@ -18,6 +18,10 @@ def check_code_availability(bu_name, code_name):
     return trigger
 
 
+# get current month
+def get_current_month():
+    return time.strftime("%Y-%m", time.localtime())
+
 # check if right future month item
 def check_future_month(month_item, month_quantity):
     current_year = int(time.strftime("%Y", time.localtime()))
@@ -31,17 +35,13 @@ def check_future_month(month_item, month_quantity):
     return True if month_item in forecast_month_list else False
 
 
-# display the command list
-# def display_command_list_sql(command_type):
-#     db_fullname = db_path + "Master_Data.db"
-#     conn = sqlite3.connect(db_fullname)
-#     sql_cmd = "SELECT Command_Code, Description from Command_List WHERE Type = \'" + command_type \
-#               + "\' ORDER by Command_Code"
-#     c = conn.cursor()
-#     c.execute(sql_cmd)
-#     final_display_result = [("Code", "Command_Detail"), ] + c.fetchall()
-#     print(tabulate(final_display_result, tablefmt="psql", headers="firstrow", colalign=("left","left")))
-#     pass
+# Add Index column to a 2 dimension table
+def add_table_index(lst_data, lst_index):
+    lst_length = len(lst_data)
+    for i in range(lst_length):
+        lst_data[i].insert(0, lst_index[i])
+    return lst_data
+
 
 # generate exception list for multi-function
 def get_exception_list(bu_name, calculation_type):

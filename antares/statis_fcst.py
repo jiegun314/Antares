@@ -131,8 +131,7 @@ class GetStatisticalForecast:
         num = 5
         for code in code_list:
             get_sales_qty = calculation.InfoCheck(self.__class__.bu_name)
-            sales_qty = get_sales_qty.get_code_sales(data_type, code)
-            sales_code_result = get_sales_qty.data_mapping(sales_qty, self.get_current_month(), 0 - self.__class__.base_year * 12)
+            sales_code_result = get_sales_qty.get_code_sales(data_type, code, self.__class__.base_year * 12)
             sales_qty_result.append(sales_code_result)
             # 显示计数
             counter += 1
