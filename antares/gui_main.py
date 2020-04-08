@@ -104,18 +104,12 @@ class DragonGUI(DragonFrame):
             code_name_list.append(item.upper())
         # show in code list
         self.lstbxCodeSelection.Clear()
-        for code_item in code_name_list:
-            self.lstbxCodeSelection.Append(code_item)
+        # for code_item in code_name_list:
+        #     self.lstbxCodeSelection.Append(code_item)
         CodeCalculation = CIC(self.__class__.bu_name)
         inventory_result = CodeCalculation.inventory_mapping(code_name_list, self.table_to_use)
-        column_title = ["No", ] + inventory_result[0]
-        for i in range(0, len(column_title)):
-            self.listCtrlOutput.InsertColumn(i, column_title[i])
-        for i in range(1, len(inventory_result)):
-            index = self.listCtrlOutput.InsertItem(self.listCtrlOutput.GetItemCount(), str(i))
-            for j in range(0, len(inventory_result[i])):
-                str_output = "{:,.0f}".format(inventory_result[i][j]) if j > 3 else str(inventory_result[i][j])
-                self.listCtrlOutput.SetItem(index, j + 1, str_output)
+        data_trigger_point = 4
+        self.show_inventory_list(inventory_result, data_trigger_point)
         self.txtLog.write("Done, with data of %s." % self.table_to_use)
 
     def list_h5_name(self):
@@ -173,8 +167,11 @@ class DragonGUI(DragonFrame):
         for i in range(1, len(inventory_result)):
             index = self.listCtrlOutput.InsertItem(self.listCtrlOutput.GetItemCount(), str(i))
             for j in range(0, len(inventory_result[i])):
-                str_output = "{:,.0f}".format(inventory_result[i][j]) if j >= data_trigger_point else str(
-                    inventory_result[i][j])
+                if j >= data_trigger_point:
+                    # replace 0 with "-" for numbers
+                    str_output = "-" if inventory_result[i][j] == 0 else "{:,.0f}".format(inventory_result[i][j])
+                else:
+                    str_output = str(inventory_result[i][j])
                 self.listCtrlOutput.SetItem(index, j + 1, str_output)
 
     def sync_inventory(self, event):
