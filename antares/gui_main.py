@@ -10,6 +10,8 @@ class DragonGUI(DragonFrame):
 
     def __init__(self, parent):
         DragonFrame.__init__(self, parent)
+        self.pnlSummary.Hide()
+        self.Layout()
         # set TU as default BU
         self.__class__.bu_name = "TU"
         self.display_bu_update()
@@ -27,14 +29,20 @@ class DragonGUI(DragonFrame):
     def select_bu_CMFT(self, event):
         self.__class__.bu_name = "CMF"
         self.display_bu_update()
+        # update current date to CMF
+        self.set_db_table("newest")
 
     def select_bu_TU(self, event):
         self.__class__.bu_name = "TU"
         self.display_bu_update()
+        # update current date to TU
+        self.set_db_table("newest")
 
     def select_bu_PT(self, event):
         self.__class__.bu_name = "PT"
         self.display_bu_update()
+        # update current date to PT
+        self.set_db_table("newest")
 
     def display_bu_update(self):
         self.txtLog.Clear()
