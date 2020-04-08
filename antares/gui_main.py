@@ -88,6 +88,8 @@ class DragonGUI(DragonFrame):
 
     def display_h5_inventory(self, event):
         self.clear_frame_content()
+        if self.rdbxCalculationType.GetStringSelection() == "by Code":
+            return
         h5_name = self.lstbxCodeSelection.GetStringSelection()
         CodeCalculation = CIC(self.__class__.bu_name)
         [inventory_list, inventory_total] = CodeCalculation.get_h5_inv_detail(h5_name, self.table_to_use)
@@ -104,8 +106,8 @@ class DragonGUI(DragonFrame):
             code_name_list.append(item.upper())
         # show in code list
         self.lstbxCodeSelection.Clear()
-        # for code_item in code_name_list:
-        #     self.lstbxCodeSelection.Append(code_item)
+        for code_item in code_name_list:
+            self.lstbxCodeSelection.Append(code_item)
         CodeCalculation = CIC(self.__class__.bu_name)
         inventory_result = CodeCalculation.inventory_mapping(code_name_list, self.table_to_use)
         data_trigger_point = 4
