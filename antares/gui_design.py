@@ -12,8 +12,6 @@ import wx.xrc
 import wx.adv
 import wx.dataview
 
-ID_EXPORT_INVENTORY = 1000
-
 ###########################################################################
 ## Class DragonFrame
 ###########################################################################
@@ -370,13 +368,13 @@ class DragonFrame ( wx.Frame ):
         self.m_menubar1.Append( self.menuFile, u"File" )
 
         self.menuDefineBU = wx.Menu()
-        self.mTrauma = wx.MenuItem( self.menuDefineBU, ID_EXPORT_INVENTORY, u"Trauma", wx.EmptyString, wx.ITEM_RADIO )
+        self.mTrauma = wx.MenuItem( self.menuDefineBU, wx.ID_ANY, u"Trauma", wx.EmptyString, wx.ITEM_RADIO )
         self.menuDefineBU.Append( self.mTrauma )
 
         self.mCMFT = wx.MenuItem( self.menuDefineBU, wx.ID_ANY, u"CMFT", wx.EmptyString, wx.ITEM_RADIO )
         self.menuDefineBU.Append( self.mCMFT )
 
-        self.mPT = wx.MenuItem( self.menuDefineBU, wx.ID_ANY, u"PT", wx.EmptyString, wx.ITEM_NORMAL )
+        self.mPT = wx.MenuItem( self.menuDefineBU, wx.ID_ANY, u"PT", wx.EmptyString, wx.ITEM_RADIO )
         self.menuDefineBU.Append( self.mPT )
 
         self.m_menubar1.Append( self.menuDefineBU, u"Business Unit" )
