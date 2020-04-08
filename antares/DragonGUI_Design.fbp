@@ -1742,7 +1742,7 @@
                         <property name="checked">0</property>
                         <property name="enabled">1</property>
                         <property name="help"></property>
-                        <property name="id">ID_EXPORT_INVENTORY</property>
+                        <property name="id">IDwxID_ANY</property>
                         <property name="kind">wxITEM_RADIO</property>
                         <property name="label">Trauma</property>
                         <property name="name">mTrauma</property>
@@ -1771,7 +1771,7 @@
                         <property name="enabled">1</property>
                         <property name="help"></property>
                         <property name="id">wxID_ANY</property>
-                        <property name="kind">wxITEM_NORMAL</property>
+                        <property name="kind">wxITEM_RADIO</property>
                         <property name="label">PT</property>
                         <property name="name">mPT</property>
                         <property name="permission">none</property>
