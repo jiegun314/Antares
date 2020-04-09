@@ -61,12 +61,7 @@ class DragonGUI(DragonFrame):
         pass
 
     def set_checking_date(self, event):
-        [date_year, date_month, date_day] = str(self.dtpkDate.GetValue()).split()[0].split("/")
-        if len(date_month) == 1:
-            date_month = "0" + date_month
-        if len(date_day) == 1:
-            date_day = "0" + date_day
-        date_to_check = date_year + date_month + date_day
+        date_to_check = self.dtpkDate.GetValue().Format("%Y%m%d")
         self.set_db_table(date_to_check)
         self.txtLog.Clear()
         self.txtLog.AppendText("%s would be used." % date_to_check)
