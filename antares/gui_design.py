@@ -39,7 +39,7 @@ class DragonFrame ( wx.Frame ):
 
         self.btnSync.SetBitmap( wx.Bitmap( u".icon/sync_black.png", wx.BITMAP_TYPE_ANY ) )
         self.btnSync.SetBitmapCurrent( wx.Bitmap( u".icon/sync_blue.png", wx.BITMAP_TYPE_ANY ) )
-        self.btnSync.SetBackgroundColour( wx.Colour( 255, 255, 255 ) )
+        self.btnSync.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOW ) )
         self.btnSync.SetToolTip( u"Sync Inventory with oneclick file" )
 
         bSizer5.Add( self.btnSync, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
@@ -124,7 +124,7 @@ class DragonFrame ( wx.Frame ):
 
         self.btnCodeSubmit.SetBitmap( wx.Bitmap( u".icon/submit.png", wx.BITMAP_TYPE_ANY ) )
         self.btnCodeSubmit.SetBitmapCurrent( wx.Bitmap( u".icon/submit_green.png", wx.BITMAP_TYPE_ANY ) )
-        self.btnCodeSubmit.SetBackgroundColour( wx.Colour( 255, 255, 255 ) )
+        self.btnCodeSubmit.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOW ) )
         self.btnCodeSubmit.SetToolTip( u"Submit" )
 
         bSizer5.Add( self.btnCodeSubmit, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
@@ -136,7 +136,7 @@ class DragonFrame ( wx.Frame ):
 
         self.btnReset.SetBitmap( wx.Bitmap( u".icon/reset.png", wx.BITMAP_TYPE_ANY ) )
         self.btnReset.SetBitmapCurrent( wx.Bitmap( u".icon/reset_red.png", wx.BITMAP_TYPE_ANY ) )
-        self.btnReset.SetBackgroundColour( wx.Colour( 255, 255, 255 ) )
+        self.btnReset.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOW ) )
         self.btnReset.SetToolTip( u"Reset Input" )
 
         bSizer5.Add( self.btnReset, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
@@ -155,7 +155,7 @@ class DragonFrame ( wx.Frame ):
         self.btnInventoryExport = wx.BitmapButton( self.pnlOneclick, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.DefaultSize, wx.BU_AUTODRAW|wx.BORDER_NONE )
 
         self.btnInventoryExport.SetBitmap( wx.Bitmap( u".icon/inventory_export.png", wx.BITMAP_TYPE_ANY ) )
-        self.btnInventoryExport.SetBackgroundColour( wx.Colour( 255, 255, 255 ) )
+        self.btnInventoryExport.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOW ) )
         self.btnInventoryExport.SetToolTip( u"Export Inventory" )
 
         bSizer8.Add( self.btnInventoryExport, 0, wx.ALL, 5 )
@@ -163,7 +163,7 @@ class DragonFrame ( wx.Frame ):
         self.btnBackorderExport = wx.BitmapButton( self.pnlOneclick, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.DefaultSize, wx.BU_AUTODRAW|wx.BORDER_NONE )
 
         self.btnBackorderExport.SetBitmap( wx.Bitmap( u".icon/backorder_export.png", wx.BITMAP_TYPE_ANY ) )
-        self.btnBackorderExport.SetBackgroundColour( wx.Colour( 255, 255, 255 ) )
+        self.btnBackorderExport.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOW ) )
         self.btnBackorderExport.SetToolTip( u"Export Backorder" )
 
         bSizer8.Add( self.btnBackorderExport, 0, wx.ALL, 5 )
@@ -186,6 +186,14 @@ class DragonFrame ( wx.Frame ):
         self.txtLog.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_INFOBK ) )
 
         bSizer8.Add( self.txtLog, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
+
+
+        bSizer8.Add( ( 200, 0), 0, wx.EXPAND, 5 )
+
+        self.btnOutputDownload = wx.BitmapButton( self.pnlOneclick, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.DefaultSize, wx.BU_AUTODRAW|wx.BORDER_NONE )
+
+        self.btnOutputDownload.SetBitmap( wx.Bitmap( u".icon/data_download.png", wx.BITMAP_TYPE_ANY ) )
+        bSizer8.Add( self.btnOutputDownload, 0, wx.ALL, 5 )
 
 
         bSizer6.Add( bSizer8, 1, wx.EXPAND, 5 )
@@ -398,6 +406,8 @@ class DragonFrame ( wx.Frame ):
 
         self.mCurrentBackorder = self.m_toolBar1.AddLabelTool( wx.ID_ANY, u"tool", wx.Bitmap( u".icon/backorder.png", wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, u"Display current backorder", wx.EmptyString, None )
 
+        self.mBackorderTrend = self.m_toolBar1.AddLabelTool( wx.ID_ANY, u"tool", wx.Bitmap( u".icon/bo_trend.png", wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, u"display trend of backorder value", wx.EmptyString, None )
+
         self.mAgingBackorder = self.m_toolBar1.AddLabelTool( wx.ID_ANY, u"tool", wx.Bitmap( u".icon/aging_backorder.ico", wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, u"display aging backorder", wx.EmptyString, None )
 
         self.m_toolBar1.AddSeparator()
@@ -438,6 +448,7 @@ class DragonFrame ( wx.Frame ):
         self.Bind( wx.EVT_MENU, self.show_about_dialog, id = self.showAbout.GetId() )
         self.Bind( wx.EVT_TOOL, self.get_current_inventory_list, id = self.mDisplayCurrentInventory.GetId() )
         self.Bind( wx.EVT_TOOL, self.get_current_bo_list, id = self.mCurrentBackorder.GetId() )
+        self.Bind( wx.EVT_TOOL, self.display_backorder_trend, id = self.mBackorderTrend.GetId() )
         self.Bind( wx.EVT_TOOL, self.display_aging_backorder, id = self.mAgingBackorder.GetId() )
         self.Bind( wx.EVT_TOOL, self.display_pending_inventory, id = self.mPendingInventory.GetId() )
         self.Bind( wx.EVT_TOOL, self.display_code_trend, id = self.mCodeTrend.GetId() )
@@ -506,6 +517,9 @@ class DragonFrame ( wx.Frame ):
         event.Skip()
 
     def get_current_bo_list( self, event ):
+        event.Skip()
+
+    def display_backorder_trend( self, event ):
         event.Skip()
 
     def display_aging_backorder( self, event ):

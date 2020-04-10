@@ -139,6 +139,15 @@ class DragonGUI(DragonFrame):
         self.StatusBar.SetStatusText("Total Backorder Qty; %s, Value: %s" %
                                      ("{:,.0f}".format(backorder_total_qty), "{:,.0f}".format(backorder_total_value)), 1)
 
+    def display_backorder_trend(self, event):
+        self.clear_frame_content()
+        CodeCalculation = CIC(self.__class__.bu_name)
+        self.txtLog.write("Generating backorder trend. Please wait~")
+        CodeCalculation.generate_backorder_trend()
+        self.txtLog.Clear()
+        self.txtLog.write("Done. The chart would be opened in your web browser.")
+
+
     def display_aging_backorder(self, event):
         self.clear_frame_content()
         CodeCalculation = CIC(self.__class__.bu_name)
