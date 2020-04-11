@@ -2,7 +2,8 @@ from gui_design import DragonFrame, dlgAbout
 import wx
 from crt_inv_calculation import CurrentInventoryCalculation as CIC
 import public_function as pb_func
-
+import pandas as pd
+import os
 
 class DragonGUI(DragonFrame):
     bu_name = ""
@@ -179,6 +180,40 @@ class DragonGUI(DragonFrame):
                 else:
                     str_output = str(inventory_result[i][j])
                 self.listCtrlOutput.SetItem(index, j + 1, str_output)
+
+    # export data in control list
+    def export_listed_data(self, event):
+        column_length = self.listCtrlOutput.GetColumnCount()
+        # get column name
+        column_data, lst_column_name = [], []
+        for i in range(column_length):
+            lst_column_name.append(self.listCtrlOutput.GetColumn(i).Text)
+        # column_data.append(lst_column_name)
+        # get data
+        # get data length
+        data_length = self.listCtrlOutput.GetItemCount()
+        for i in range(data_length):
+            data_in_line = []
+            for j in range(column_length):
+                # convert "-" to 0
+                data = self.listCtrlOutput.GetItem(i, j).Text if self.listCtrlOutput.GetItem(i, j).Text != "-" else 0
+                data_in_line.append(data)
+            column_data.append(data_in_line)
+        # convert to dataframe
+        # column_data_transpose = [[row[i] for row in column_data] for i in range(len(column_data[0]))]
+        df = pd.DataFrame(data=column_data, columns=lst_column_name)
+        df.set_index(["No"], inplace=True)
+        # open file dialogue
+        wildcard = 'Excel文件(*.xlsx)|*.xlsx|所有文件(*.*)|*.*'
+        dlg = wx.FileDialog(self, '另存为', os.getcwd(),
+                            defaultFile='output.xlsx',
+                            style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
+                            wildcard=wildcard)
+        if dlg.ShowModal() == wx.ID_OK:
+            file = dlg.GetPath()
+            df.to_excel(file, index=False)
+            dlg.Destroy()
+        # df.to_excel("../data/_INV_Export/test.xlsx", index=False)
 
     def sync_inventory(self, event):
         lst_xcpt = []

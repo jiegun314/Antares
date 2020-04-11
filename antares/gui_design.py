@@ -437,6 +437,7 @@ class DragonFrame ( wx.Frame ):
         self.btnReset.Bind( wx.EVT_BUTTON, self.clear_input )
         self.btnInventoryExport.Bind( wx.EVT_BUTTON, self.export_inventory )
         self.btnBackorderExport.Bind( wx.EVT_BUTTON, self.export_backorder )
+        self.btnOutputDownload.Bind( wx.EVT_BUTTON, self.export_listed_data )
         self.chkbxSummaryWholeBU.Bind( wx.EVT_CHECKBOX, self.summary_bu_level_selected )
         self.lstbxSummaryH5Selection.Bind( wx.EVT_LEFT_DCLICK, self.display_h5_summary )
         self.btnCodeSubmit1.Bind( wx.EVT_BUTTON, self.summary_view_submit )
@@ -484,6 +485,9 @@ class DragonFrame ( wx.Frame ):
         event.Skip()
 
     def export_backorder( self, event ):
+        event.Skip()
+
+    def export_listed_data( self, event ):
         event.Skip()
 
     def summary_bu_level_selected( self, event ):
