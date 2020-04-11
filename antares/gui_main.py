@@ -234,10 +234,20 @@ class DragonGUI(DragonFrame):
         self.clear_frame_content()
         self.txtLog.write("Start to export. Please wait~")
         CodeCalculation = CIC(self.__class__.bu_name)
-        inventory_file = CodeCalculation.export_inventory_data(self.table_to_use)
+        df = CodeCalculation.export_inventory_data(self.table_to_use)
         self.clear_frame_content()
-        if inventory_file:
-            self.txtLog.write("Done, Inventory detail exported to %s." % inventory_file)
+        if isinstance(df, pd.DataFrame):
+            # open file dialogue
+            wildcard = 'Excel文件(*.xlsx)|*.xlsx|所有文件(*.*)|*.*'
+            dlg = wx.FileDialog(self, '另存为', os.getcwd(),
+                                defaultFile='output.xlsx',
+                                style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
+                                wildcard=wildcard)
+            if dlg.ShowModal() == wx.ID_OK:
+                file = dlg.GetPath()
+                df.to_excel(file, index=False)
+                dlg.Destroy()
+            self.txtLog.write("Done, Inventory detail exported to %s." % file)
         else:
             self.txtLog.write("Error. No data in that day, please choose the correct date")
 
@@ -246,10 +256,20 @@ class DragonGUI(DragonFrame):
         self.clear_frame_content()
         self.txtLog.write("Start to export. Please wait~")
         CodeCalculation = CIC(self.__class__.bu_name)
-        inventory_file = CodeCalculation.export_backorder_data(self.table_to_use)
+        df = CodeCalculation.export_backorder_data(self.table_to_use)
         self.clear_frame_content()
-        if inventory_file:
-            self.txtLog.write("Done, Backorder detail exported to %s." % inventory_file)
+        if isinstance(df, pd.DataFrame):
+            # open file dialogue
+            wildcard = 'Excel文件(*.xlsx)|*.xlsx|所有文件(*.*)|*.*'
+            dlg = wx.FileDialog(self, '另存为', os.getcwd(),
+                                defaultFile='output.xlsx',
+                                style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
+                                wildcard=wildcard)
+            if dlg.ShowModal() == wx.ID_OK:
+                file = dlg.GetPath()
+                df.to_excel(file, index=False)
+                dlg.Destroy()
+            self.txtLog.write("Done, Backorder detail exported to %s." % file)
         else:
             self.txtLog.write("Error. No data in that day, please choose the correct date")
 

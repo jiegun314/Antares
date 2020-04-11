@@ -1,6 +1,7 @@
 from crt_inv_calculation import CurrentInventoryCalculation as CIC
 from tabulate import tabulate
 import public_function as pb_func
+import pandas as pd
 
 
 class CurrentInventoryDisplay:
@@ -134,8 +135,11 @@ class CurrentInventoryDisplay:
         # get data
         inventory_date = input("Inventory Data (YYYYMMDD, Press Enter to get newest) : ")
         table_name = CodeCalculation.get_newest_date() if inventory_date == "" else "INV" + inventory_date
-        inventory_file = CodeCalculation.export_inventory_data(table_name)
-        if inventory_file:
+        df = CodeCalculation.export_inventory_data(table_name)
+        if isinstance(df, pd.DataFrame):
+            inventory_file = self.__class__.inventory_path + self.__class__.bu_name \
+                             + "_Inventory_" + table_name[3:] + ".xlsx"
+            df.to_excel(inventory_file, index=False)
             print("Inventory detail exported to " + inventory_file)
         else:
             print("Error. No data in that day, please choose the correct date")
@@ -147,8 +151,11 @@ class CurrentInventoryDisplay:
         # get data
         inventory_date = input("Inventory Data (YYYYMMDD, Press Enter to get newest) : ")
         table_name = CodeCalculation.get_newest_date() if inventory_date == "" else "INV" + inventory_date
-        backorder_file = CodeCalculation.export_backorder_data(table_name)
-        if backorder_file:
+        df = CodeCalculation.export_backorder_data(table_name)
+        if isinstance(df, pd.DataFrame):
+            backorder_file = self.__class__.backorder_path + self.__class__.bu_name \
+                             + "_Backorder_" + table_name[3:] + ".xlsx"
+            df.to_excel(backorder_file, index=False)
             print("Backorder detail exported to " + backorder_file)
         else:
             print("Error. No data in that day, please choose the correct date")
@@ -204,5 +211,5 @@ class CurrentInventoryDisplay:
 
 if __name__ == "__main__":
     test = CurrentInventoryDisplay("TU")
-    test.display_current_inventory()
+    test.export_backorder_data()
     # test.inv_data_sync(50)
