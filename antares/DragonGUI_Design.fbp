@@ -48,7 +48,7 @@
             <property name="size">1280,800</property>
             <property name="style">wxCAPTION|wxCLOSE_BOX|wxMINIMIZE_BOX</property>
             <property name="subclass">; ; forward_declare</property>
-            <property name="title">Project Dragon GUI v0411</property>
+            <property name="title">Project Dragon GUI v0412</property>
             <property name="tooltip"></property>
             <property name="window_extra_style"></property>
             <property name="window_name"></property>

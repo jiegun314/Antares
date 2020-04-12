@@ -317,7 +317,9 @@ class CurrentInventoryCalculation:
             c.execute(sql_cmd)
             result_temp = list(c.fetchall()[0])
             # add alert trigger based on GIT and Open Order quantity
-            if result_temp[3] > (result_temp[4] + result_temp[5]):
+            if result_temp[3] > (result_temp[4] + result_temp[5]) and result_temp[2] == "IND":
+                alert_trigger = "***"
+            elif result_temp[3] > (result_temp[4] + result_temp[5]) and result_temp[2] == "ROP":
                 alert_trigger = "###"
             elif result_temp[3] > result_temp[4]:
                 alert_trigger = "---"
