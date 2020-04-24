@@ -1,7 +1,7 @@
 import sqlite3
 import time
 import public_function as pb_fnc
-
+import pandas as pd
 
 class InfoCheck:
     bu_name = ""
@@ -356,11 +356,38 @@ class InfoCheck:
         eso_result = c.fetchall()
         return eso_result
 
+    # ranking ABC by 6 month IMS sales value.
+    def generate_abc_ranking(self, sales_source="IMS", month_qty=6):
+        tbl_name = self.__class__.bu_name + "_" + sales_source
+        db_fullname = self.__class__.db_path + tbl_name + ".db"
+        conn = sqlite3.connect(db_fullname)
+        c = conn.cursor()
+        # get month list
+        str_cmd = "SELECT DISTINCT month from " + tbl_name + " ORDER BY month DESC LIMIT " + str(month_qty)
+        c.execute(str_cmd)
+        result = c.fetchall()
+        month_list = ""
+        for item in result:
+            month_list = month_list + '\"' + item[0] + '\",'
+        month_list = month_list.rstrip(",")
+        # get recent month IMS
+        str_cmd = "SELECT Material, sum(Value_SAP_Price) as TTL from " + tbl_name + " WHERE Month in (" + month_list \
+                  + ") GROUP by Material ORDER by TTL DESC"
+        df_ims_query = pd.read_sql(sql=str_cmd, con=conn)
+        # get accumulate IMS data and ranking
+        ims_total = df_ims_query['TTL'].sum()
+        df_ims_query['Ratio'] = df_ims_query['TTL'] / ims_total
+        df_ims_query['Cum_Ratio'] = df_ims_query['Ratio'].cumsum()
+        df_ims_query['Ranking'] = df_ims_query['Cum_Ratio'].apply(lambda x: 'A' if x < 0.8 else ('B' if x < 0.95 else 'C'))
+        # delete calculation column
+        df_ims_query.drop(['TTL', 'Ratio', 'Cum_Ratio'], axis=1, inplace=True)
+        print(df_ims_query.head())
+        pass
+
 
 if __name__ == "__main__":
     info_check = InfoCheck("TU")
-    result = info_check.get_code_sales("GTS", "440.834", 12)
-    print(result)
+    info_check.generate_abc_ranking()
     # info_check.get_code_phoenix_result("689.893")
 
 
