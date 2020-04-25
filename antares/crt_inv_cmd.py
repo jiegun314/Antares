@@ -22,6 +22,8 @@ class CurrentInventoryMenu:
                 crt_inv_display.display_current_inventory()
             elif cmd_code == "inv_export":
                 crt_inv_display.export_inventory_data()
+            elif cmd_code == "inv_alert":
+                crt_inv_display.display_low_inventory_alert()
             elif cmd_code == "bo":
                 crt_inv_display.display_current_backorder()
             elif cmd_code == "bo_export":

@@ -108,6 +108,16 @@ class CurrentInventoryDisplay:
         print("---Aging Backorder List within %s days---" % mapping_days)
         print(tabulate(aging_backorder_list, headers="firstrow", tablefmt="psql"))
 
+    # display inventory alert with low inventory
+    def display_low_inventory_alert(self):
+        # print title
+        print("===Display Low Inventory Alert===")
+        # get low inventory result
+        CodeCalculation = CIC(self.__class__.bu_name)
+        low_inventory_list = CodeCalculation.get_low_inventory_alert()
+        print(tabulate(low_inventory_list, headers="firstrow", tablefmt="psql",
+                       showindex=range(1, len(low_inventory_list)), floatfmt=",.0f"))
+
     def display_current_inventory(self):
         CodeCalculation = CIC(self.__class__.bu_name)
         print("===Current Inventory List by Hierarchy_5===")
@@ -211,5 +221,5 @@ class CurrentInventoryDisplay:
 
 if __name__ == "__main__":
     test = CurrentInventoryDisplay("TU")
-    test.export_backorder_data()
+    test.display_low_inventory_alert()
     # test.inv_data_sync(50)

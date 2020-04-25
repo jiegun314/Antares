@@ -360,6 +360,7 @@ class InfoCheck:
     def generate_abc_ranking(self, sales_source="IMS", month_qty=6):
         tbl_name = self.__class__.bu_name + "_" + sales_source
         db_fullname = self.__class__.db_path + tbl_name + ".db"
+        master_data_db_fullname = self.__class__.db_path + self.__class__.bu_name + '_Master_Data.db'
         conn = sqlite3.connect(db_fullname)
         c = conn.cursor()
         # get month list
@@ -371,17 +372,20 @@ class InfoCheck:
             month_list = month_list + '\"' + item[0] + '\",'
         month_list = month_list.rstrip(",")
         # get recent month IMS
-        str_cmd = "SELECT Material, sum(Value_SAP_Price) as TTL from " + tbl_name + " WHERE Month in (" + month_list \
-                  + ") GROUP by Material ORDER by TTL DESC"
+        str_cmd = "SELECT Material, sum(Quantity) as IMS_Quantity,  sum(Value_SAP_Price) as IMS_Value from " + \
+                  tbl_name + " WHERE Month in (" + month_list + ") GROUP by Material ORDER by IMS_Value DESC"
         df_ims_query = pd.read_sql(sql=str_cmd, con=conn)
         # get accumulate IMS data and ranking
-        ims_total = df_ims_query['TTL'].sum()
-        df_ims_query['Ratio'] = df_ims_query['TTL'] / ims_total
+        ims_total = df_ims_query['IMS_Value'].sum()
+        df_ims_query['Ratio'] = df_ims_query['IMS_Value'] / ims_total
         df_ims_query['Cum_Ratio'] = df_ims_query['Ratio'].cumsum()
         df_ims_query['Ranking'] = df_ims_query['Cum_Ratio'].apply(lambda x: 'A' if x < 0.8 else ('B' if x < 0.95 else 'C'))
         # delete calculation column
-        df_ims_query.drop(['TTL', 'Ratio', 'Cum_Ratio'], axis=1, inplace=True)
+        df_ims_query.drop(['Ratio', 'Cum_Ratio'], axis=1, inplace=True)
         print(df_ims_query.head())
+        conn = sqlite3.connect(master_data_db_fullname)
+        df_ims_query.to_sql(name="Ranking", con=conn, if_exists='replace', index=False)
+        conn.close()
         pass
 
 

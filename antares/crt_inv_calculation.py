@@ -461,6 +461,50 @@ class CurrentInventoryCalculation:
         # return value
         return [table_title + result, total_inv_value]
 
+    # display alert for those key codes with low stock
+    def get_low_inventory_alert(self, alert_month=1):
+        # get ranking A, B code list
+        master_data_db_fullname = self.__class__.db_path + self.__class__.bu_name + '_Master_Data.db'
+        inventory_db_fullname = self.__class__.db_path + self.__class__.bu_name + '_CRT_INV.db'
+        conn = sqlite3.connect(master_data_db_fullname)
+        c = conn.cursor()
+        c.execute('SELECT Material, IMS_Quantity FROM Ranking WHERE Ranking in (\"A\", \"B\") ')
+        ranking_ab_list = c.fetchall()
+        # get inventory and judge if low stock
+        conn = sqlite3.connect(inventory_db_fullname)
+        c = conn.cursor()
+        table_name = self.get_newest_date()
+        inventory_list_title = ['Material', 'Description', 'H5', 'Available_Stock', 'GIT_Quantity', 'Stock_Month',
+                                'Total_Stock_Month']
+        inventory_alert_list, inventory_alert_result = [], []
+        for item in ranking_ab_list:
+            material_name, ims_quantity = item[0], item[1]
+            sql_cmd = 'SELECT Material, Description, Hierarchy_5, Available_Stock, (GIT_1_Week + GIT_2_Week + ' \
+                      'GIT_3_Week + GIT_4_Week) as GIT_Quantity FROM ' + table_name + ' WHERE Material = \"' + \
+                      material_name + '\"'
+            c.execute(sql_cmd)
+            inventory_result = list(c.fetchall()[0])
+            inventory_result.append(inventory_result[3] * 6 / ims_quantity)
+            inventory_result.append(inventory_result[4] * 6 / ims_quantity)
+            if inventory_result[-2] <= alert_month:
+                inventory_alert_list.append(inventory_result)
+        if self.__class__.bu_name != "TU":
+            inventory_alert_result.insert(0, inventory_list_title)
+            return inventory_alert_list
+        else:
+            # remove phoenix codes from list
+            conn = sqlite3.connect(master_data_db_fullname)
+            c = conn.cursor()
+            for item in inventory_alert_list:
+                material_name = item[0]
+                sql_cmd = 'SELECT count(*) FROM TU_Phoenix_List WHERE [Exit SKU] = \"' + material_name + '\"'
+                c.execute(sql_cmd)
+                # if material code found in phoenix list
+                if c.fetchall()[0][0] == 0:
+                    inventory_alert_result.append(item)
+            inventory_alert_result.insert(0, inventory_list_title)
+            return inventory_alert_result
+
     # data mapping for a list of codes
     def inventory_mapping(self, code_list, table_name):
         # connect to database and get the inventory data
@@ -528,5 +572,5 @@ class CurrentInventoryCalculation:
 
 if __name__ == "__main__":
     test = CurrentInventoryCalculation("TU")
-    test.export_inventory_data("INV20200329")
+    test.get_low_inventory_alert()
     # test.inv_data_sync(50)
