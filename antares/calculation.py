@@ -3,6 +3,7 @@ import time
 import public_function as pb_fnc
 import pandas as pd
 
+
 class InfoCheck:
     bu_name = ""
     db_path = "../data/_DB/"

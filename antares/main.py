@@ -9,9 +9,14 @@ import re
 class SystemIndex:
     bu_name = None
     user_name = None
+    bu_name_lst = {
+        "Jeffrey": "TU",
+        "Cecilia": "CMFT",
+        "Yuanzhi": "PT"
+    }
     
     def __init__(self):
-        self.__login_control()
+        pass
 
     # 程序入口
     def __entrance(self):
@@ -117,29 +122,24 @@ class SystemIndex:
             cmd_code = input("cmd >> ")
         if cmd_code == "switch":
             self.__class__.bu_name, self.__class__.user_name = None, None
-            self.__login_control()
+            self.login_control()
         else:
             self.__exit_page()
 
-    def __login_control(self):
+    def login_control(self):
         name = input("Please input your name: ")
-        if name.upper() == "JEFFREY":
-            self.__class__.bu_name = "TU"
-        elif name.upper() == "CECILIA":
-            self.__class__.bu_name = "CMF"
-        elif name.upper() == "CC":
-            self.__class__.bu_name = "PT"
+        try:
+            self.__class__.bu_name = self.bu_name_lst[name.capitalize()]
+        except KeyError:
+            print("!!Error: wrong user name, please restart the program.")
         else:
-            pass
-        if self.__class__.bu_name:
             self.__class__.user_name = name.capitalize()
             self.__entrance()
-        else:
-            print("!!Error: wrong user name, please restart the program.")
 
 
 if __name__ == "__main__":
-    test = SystemIndex()
+    new_login = SystemIndex()
+    new_login.login_control()
 
     # 方法2获取所有的代码信息并导出到excel
     # result = info_check.generate_code_detail_v2()
