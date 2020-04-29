@@ -384,6 +384,8 @@ class CurrentInventoryCalculation:
         for i in range(len(result)):
             if isinstance(result[i], str):
                 code_inv_output.append([title[i], result[i]])
+            elif result[i] is None:
+                code_inv_output.append([title[i], "None"])
             else:
                 code_inv_output.append([title[i], int(result[i])])
         return code_inv_output
@@ -572,5 +574,5 @@ class CurrentInventoryCalculation:
 
 if __name__ == "__main__":
     test = CurrentInventoryCalculation("TU")
-    test.get_low_inventory_alert()
+    test.get_code_inv('04.210.116TS', 'INV20200428')
     # test.inv_data_sync(50)
