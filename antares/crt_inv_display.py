@@ -116,7 +116,7 @@ class CurrentInventoryDisplay:
         CodeCalculation = CIC(self.__class__.bu_name)
         low_inventory_list = CodeCalculation.get_low_inventory_alert()
         print(tabulate(low_inventory_list, headers="firstrow", tablefmt="psql",
-                       showindex=range(1, len(low_inventory_list)), floatfmt=",.0f"))
+                       showindex=range(1, len(low_inventory_list)), floatfmt=",.1f"))
 
     def display_current_inventory(self):
         CodeCalculation = CIC(self.__class__.bu_name)
