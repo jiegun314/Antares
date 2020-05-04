@@ -67,7 +67,7 @@ class MonthlyUpdate:
         print("===== <%s Import Successfully!> =====" % inv_type)
     
     def update_lp_inv(self):
-        print("==LP_Sales Import==")
+        print("==LP Inventory Import==")
         print("--*Warning* - Please make sure data is correctly name and put in _Update folder.")
         # 输入Y确认进行导入
         cmd_key = input("Ready to continue? (Y/N):")

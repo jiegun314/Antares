@@ -204,13 +204,43 @@ class CurrentInventoryDisplay:
     def synchronize_oneclick_data(self):
         CodeCalculation = CIC(self.__class__.bu_name)
         lst_xcpt = ['20190118', ]
-        print("===Sync Current Inventory Data from Oneclick===")
+        print("===Sync Current Inventory Data from OneClick===")
         sync_result = CodeCalculation.inv_data_sync(90, lst_xcpt)
         if sync_result == "Error":
             print("!Error, the sharefolder cannot be opened. Make sure you've connected to JNJ network and try again.")
         else:
             print(">> Synchronization succeed!")
             print(">> %s days succeed, %s days fail. Updated to %s" % (sync_result[0], sync_result[1], sync_result[2]))
+
+    def command_list(self):
+        cmd_list_dict = {"inv": self.display_current_inventory,
+                         "inv_export": self.export_inventory_data,
+                         "inv_alert": self.display_low_inventory_alert,
+                         "bo": self.display_current_backorder,
+                         "bo_export": self.export_backorder_data,
+                         "pending": (self.display_pending_trend, ""),
+                         "pending -q": (self.display_pending_trend, "quantity"),
+                         "check": self.display_code_status,
+                         "trend": self.display_code_inventory_trend,
+                         "h5_trend": self.display_h5_inventory_trend,
+                         "h5_detail": self.display_h5_inv_detail,
+                         "bo_trend": self.display_backorder_trend,
+                         "mapping": self.display_mapping_inventory,
+                         "aging": self.display_aging_backorder,
+                         "sync": self.synchronize_oneclick_data,
+                         "help": self.show_command_list
+                         }
+        cmd_code = input("cmd >> crt_inv >> ")
+        while cmd_code.upper() != "EXIT":
+            if cmd_code in cmd_list_dict:
+                if isinstance(cmd_list_dict[cmd_code], tuple):
+                    cmd_list_dict[cmd_code][0](cmd_list_dict[cmd_code][1])
+                else:
+                    cmd_list_dict[cmd_code]()
+            else:
+                print("!!ERROR: Wrong CMD code. Plz input correct cmd code, or type \"exit\" to quit.")
+            cmd_code = input("cmd >> crt_inv >> ")
+        print("==============================<Back to Main Menu>==============================")
 
     # Display command list
     @staticmethod
@@ -219,7 +249,28 @@ class CurrentInventoryDisplay:
         public_function.display_command_list("current_inventory_command")
 
 
+class TraumaCurrentInventoryDisplay(CurrentInventoryDisplay):
+    def __init__(self):
+        self.__class__.bu_name = "TU"
+
+
+class PowerToolCurrentInventoryDisplay(CurrentInventoryDisplay):
+    def __init__(self):
+        self.__class__.bu_name = "PT"
+
+    def display_low_inventory_alert(self):
+        print("!!Warning. This function is not available for PT.")
+
+
+class CMFTCurrentInventoryDisplay(CurrentInventoryDisplay):
+    def __init__(self):
+        self.__class__.bu_name = "CMFT"
+
+    def display_low_inventory_alert(self):
+        print("!!Warning. This function is not available for CMFT.")
+
+
 if __name__ == "__main__":
-    test = CurrentInventoryDisplay("TU")
-    test.display_low_inventory_alert()
+    test = TraumaCurrentInventoryDisplay()
+    test.command_list()
     # test.inv_data_sync(50)
