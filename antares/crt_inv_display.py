@@ -13,8 +13,8 @@ class CurrentInventoryDisplay:
     oneclick_path = "L:\\COMPASS\\Oneclick Inventory Report\\Output\\"
     currency_rate = 7.0842
 
-    def __init__(self, bu):
-        self.__class__.bu_name = bu
+    def __init__(self):
+        pass
 
     def display_code_status(self):
         CodeCalculation = CIC(self.__class__.bu_name)
@@ -206,7 +206,7 @@ class CurrentInventoryDisplay:
         lst_xcpt = ['20190118', ]
         print("===Sync Current Inventory Data from OneClick===")
         sync_result = CodeCalculation.inv_data_sync(90, lst_xcpt)
-        if sync_result == "Error":
+        if sync_result == "ERROR":
             print("!Error, the sharefolder cannot be opened. Make sure you've connected to JNJ network and try again.")
         else:
             print(">> Synchronization succeed!")
@@ -251,11 +251,13 @@ class CurrentInventoryDisplay:
 
 class TraumaCurrentInventoryDisplay(CurrentInventoryDisplay):
     def __init__(self):
+        super().__init__()
         self.__class__.bu_name = "TU"
 
 
 class PowerToolCurrentInventoryDisplay(CurrentInventoryDisplay):
     def __init__(self):
+        super().__init__()
         self.__class__.bu_name = "PT"
 
     def display_low_inventory_alert(self):
@@ -264,6 +266,7 @@ class PowerToolCurrentInventoryDisplay(CurrentInventoryDisplay):
 
 class CMFTCurrentInventoryDisplay(CurrentInventoryDisplay):
     def __init__(self):
+        super().__init__()
         self.__class__.bu_name = "CMFT"
 
     def display_low_inventory_alert(self):

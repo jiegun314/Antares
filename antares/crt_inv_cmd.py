@@ -21,6 +21,8 @@ class CurrentInventoryMenu:
             crt_inv_display = dpl.CMFTCurrentInventoryDisplay()
         elif self.bu_name == "PT":
             crt_inv_display = dpl.PowerToolCurrentInventoryDisplay()
+        else:
+            pass
         crt_inv_display.command_list()
 
 
