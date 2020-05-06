@@ -267,7 +267,7 @@ class PowerToolCurrentInventoryDisplay(CurrentInventoryDisplay):
 class CMFTCurrentInventoryDisplay(CurrentInventoryDisplay):
     def __init__(self):
         super().__init__()
-        self.__class__.bu_name = "CMFT"
+        self.__class__.bu_name = "CMF"
 
     def display_low_inventory_alert(self):
         print("!!Warning. This function is not available for CMFT.")

@@ -94,7 +94,7 @@ class DragonFrame ( wx.Frame ):
         bSizer9.Add( bSizer11, 0, wx.EXPAND, 5 )
 
 
-        bSizer5.Add( bSizer9, 0, wx.EXPAND|wx.ALIGN_CENTER_VERTICAL, 5 )
+        bSizer5.Add( bSizer9, 0, wx.EXPAND, 5 )
 
 
         bSizer5.Add( ( 30, 0), 0, wx.EXPAND, 5 )
@@ -112,10 +112,10 @@ class DragonFrame ( wx.Frame ):
         bSizer71.Add( ( 0, 5), 0, wx.EXPAND, 5 )
 
         self.dtpkDate = wx.adv.DatePickerCtrl( self.pnlOneclick, wx.ID_ANY, wx.DefaultDateTime, wx.Point( 0,0 ), wx.Size( 110,30 ), wx.adv.DP_DROPDOWN|wx.BORDER_SUNKEN )
-        bSizer71.Add( self.dtpkDate, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5 )
+        bSizer71.Add( self.dtpkDate, 0, wx.ALL, 5 )
 
 
-        bSizer5.Add( bSizer71, 0, wx.EXPAND|wx.ALIGN_CENTER_VERTICAL, 5 )
+        bSizer5.Add( bSizer71, 0, wx.EXPAND, 5 )
 
 
         bSizer5.Add( ( 25, 0), 0, wx.EXPAND, 5 )
@@ -266,7 +266,7 @@ class DragonFrame ( wx.Frame ):
         bSizer91.Add( bSizer111, 0, wx.EXPAND, 5 )
 
 
-        bSizer51.Add( bSizer91, 0, wx.EXPAND|wx.ALIGN_CENTER_VERTICAL, 5 )
+        bSizer51.Add( bSizer91, 0, wx.EXPAND, 5 )
 
 
         bSizer51.Add( ( 10, 0), 0, wx.EXPAND, 5 )
