@@ -306,7 +306,126 @@ class MonthlyUpdate:
             print("!!Error: wrong user name, please restart the program.")
 
 
+class MasterDataUpdate:
+    db_path = "../data/_DB/"
+
+    def __init__(self):
+        pass
+
+    @property
+    def bu_name(self):
+        return self._bu_name
+
+    @bu_name.setter
+    def bu_name(self, value):
+        self._bu_name = value
+
+    def master_data_update_entrance(self):
+        print("==Start to refresh master data for %s==" % self._bu_name)
+        # read master data
+        df_master_data = self.import_material_master()
+        # get code list
+        code_list = df_master_data["Material"].tolist()
+        # get sap price
+        df_master_data['SAP_Price'] = self.mapping_sap_price(code_list)
+        # get ranking
+        df_master_data['Ranking'] = self.mapping_abc_ranking(code_list)
+        # get ROP setting
+        [mrp_type, reorder_point] = self.mapping_rop_setting(code_list)
+        df_master_data['MRP_Type'] = mrp_type
+        df_master_data['Reorder_Point'] = reorder_point
+        # get phoenix status
+        [phoenix_status, target_sku, discontinuation_date, obsolescence_date] = self.mapping_phoenix_setting(code_list)
+        df_master_data['Phoenix_Status'] = phoenix_status
+        df_master_data['Target_SKU'] = target_sku
+        df_master_data['Discontinuation_Date'] = discontinuation_date
+        df_master_data['Obsolescence_Date'] = obsolescence_date
+        print(df_master_data.head())
+
+    def import_material_master(self):
+        database_file = self.__class__.db_path + "Master_Data.db"
+        conn = sqlite3.connect(database_file)
+        sql_cmd = 'SELECT * FROM MATERIAL_MASTER WHERE Business_Unit = \"' + self._bu_name + '\"'
+        df = pd.read_sql(sql=sql_cmd, con=conn)
+        # print(df.head())
+        return df
+
+    def mapping_sap_price(self, code_list):
+        database_file = self.__class__.db_path + self._bu_name + "_Master_Data.db"
+        data_sheet = self._bu_name + '_SAP_Price'
+        lst_sap_price = []
+        conn = sqlite3.connect(database_file)
+        c = conn.cursor()
+        for code_item in code_list:
+            sql_cmd = 'SELECT Price FROM ' + data_sheet + ' WHERE Material = \"' + code_item + '\"'
+            c.execute(sql_cmd)
+            result = c.fetchall()
+            if result:
+                lst_sap_price.append(result[0][0])
+            else:
+                lst_sap_price.append(0.0)
+        return lst_sap_price
+
+    def mapping_abc_ranking(self, code_list):
+        database_file = self.__class__.db_path + self._bu_name + "_Master_Data.db"
+        data_sheet = 'Ranking'
+        lst_ranking = []
+        conn = sqlite3.connect(database_file)
+        c = conn.cursor()
+        for code_item in code_list:
+            sql_cmd = 'SELECT Ranking FROM ' + data_sheet + ' WHERE Material = \"' + code_item + '\"'
+            c.execute(sql_cmd)
+            result = c.fetchall()
+            if result:
+                lst_ranking.append(result[0][0])
+            else:
+                lst_ranking.append("C")
+        return lst_ranking
+
+    def mapping_rop_setting(self, code_list):
+        database_file = self.__class__.db_path + self._bu_name + "_Master_Data.db"
+        data_sheet = self._bu_name + '_ROP_Setting'
+        lst_rop_setting = [[], []]
+        conn = sqlite3.connect(database_file)
+        c = conn.cursor()
+        for code_item in code_list:
+            sql_cmd = 'SELECT [MRP Type], [Reorder Point] FROM ' + data_sheet + ' WHERE Material = \"' + \
+                      code_item + '\"'
+            c.execute(sql_cmd)
+            result = c.fetchall()
+            if result:
+                lst_rop_setting[0].append(result[0][0])
+                lst_rop_setting[1].append(result[0][1])
+            else:
+                lst_rop_setting[0].append("ND")
+                lst_rop_setting[1].append(0)
+        return lst_rop_setting
+
+    def mapping_phoenix_setting(self, code_list):
+        database_file = self.__class__.db_path + self._bu_name + "_Master_Data.db"
+        data_sheet = self._bu_name + '_Phoenix_List'
+        lst_phoenix = [[], [], [], []]
+        conn = sqlite3.connect(database_file)
+        c = conn.cursor()
+        for code_item in code_list:
+            sql_cmd = 'SELECT [Target SKU], [Discontinuation Date], [Obsolescence Date] FROM ' + data_sheet \
+                      + ' WHERE [Exit SKU] = \"' + code_item + '\"'
+            c.execute(sql_cmd)
+            result = c.fetchall()
+            if result:
+                lst_phoenix[0].append("Y")
+                lst_phoenix[1].append(result[0][0])
+                lst_phoenix[2].append(result[0][1])
+                lst_phoenix[3].append(result[0][2])
+            else:
+                lst_phoenix[0].append("N")
+                lst_phoenix[1].append(None)
+                lst_phoenix[2].append(None)
+                lst_phoenix[3].append(None)
+        return lst_phoenix
+
+
 if __name__ == "__main__":
-    data_import = MonthlyUpdate("TU")
-    data_import.update_final_forecast()
-    pass
+    DataUpdate = MasterDataUpdate()
+    DataUpdate.bu_name = "TU"
+    DataUpdate.master_data_update_entrance()
