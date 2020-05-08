@@ -325,21 +325,29 @@ class MasterDataUpdate:
         # read master data
         df_master_data = self.import_material_master()
         # get code list
+        print('--1. Getting Material Master--')
         code_list = df_master_data["Material"].tolist()
         # get sap price
+        print('--2. Getting SAP Price--')
         df_master_data['SAP_Price'] = self.mapping_sap_price(code_list)
         # get ranking
+        print('--3. Getting Ranking--')
         df_master_data['Ranking'] = self.mapping_abc_ranking(code_list)
         # get ROP setting
+        print('--4. Getting MRP Type--')
         [mrp_type, reorder_point] = self.mapping_rop_setting(code_list)
         df_master_data['MRP_Type'] = mrp_type
         df_master_data['Reorder_Point'] = reorder_point
         # get phoenix status
+        print('--5. Getting Phoenix Status--')
         [phoenix_status, target_sku, discontinuation_date, obsolescence_date] = self.mapping_phoenix_setting(code_list)
         df_master_data['Phoenix_Status'] = phoenix_status
         df_master_data['Target_SKU'] = target_sku
         df_master_data['Discontinuation_Date'] = discontinuation_date
         df_master_data['Obsolescence_Date'] = obsolescence_date
+        # get GTIN
+        print('--6. Getting GTIN--')
+        df_master_data['GTIN'] = self.mapping_gtin(code_list)
         print(df_master_data.head())
 
     def import_material_master(self):
@@ -423,6 +431,21 @@ class MasterDataUpdate:
                 lst_phoenix[2].append(None)
                 lst_phoenix[3].append(None)
         return lst_phoenix
+
+    def mapping_gtin(self, code_list):
+        lst_gtin = []
+        database_file = self.__class__.db_path + "Master_Data.db"
+        conn = sqlite3.connect(database_file)
+        c = conn.cursor()
+        for code_item in code_list:
+            sql_cmd = 'SELECT Barcode FROM GTIN WHERE [Material code] = \"' + code_item + '\"'
+            c.execute(sql_cmd)
+            result = c.fetchall()
+            if result:
+                lst_gtin.append(result[0][0])
+            else:
+                lst_gtin.append(0)
+        return lst_gtin
 
 
 if __name__ == "__main__":
