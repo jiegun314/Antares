@@ -1,4 +1,5 @@
 # import os, sys
+import json
 import sqlite3
 import pandas as pd
 import calculation as cclt
@@ -342,20 +343,36 @@ class MasterDataUpdate:
         print('--5. Getting Phoenix Status--')
         [phoenix_status, target_sku, discontinuation_date, obsolescence_date] = self.mapping_phoenix_setting(code_list)
         df_master_data['Phoenix_Status'] = phoenix_status
-        df_master_data['Target_SKU'] = target_sku
-        df_master_data['Discontinuation_Date'] = discontinuation_date
-        df_master_data['Obsolescence_Date'] = obsolescence_date
+        df_master_data['Phoenix_Target_SKU'] = target_sku
+        df_master_data['Phoenix_Discontinuation_Date'] = discontinuation_date
+        df_master_data['Phoenix_Obsolescence_Date'] = obsolescence_date
         # get GTIN
         print('--6. Getting GTIN--')
         df_master_data['GTIN'] = self.mapping_gtin(code_list)
-        print(df_master_data.head())
+        # get RAG
+        print('--7. Getting RAG--')
+        df_master_data['RAG'] = self.mapping_rag(code_list)
+        # write back to database
+        # print(df_master_data.head())
+        self.finalize_master_data(df_master_data)
+
+    def finalize_master_data(self, df):
+        database_file = self.__class__.db_path + self._bu_name + "_Master_Data.db"
+        data_sheet = self._bu_name + '_Master_Data_Demo'
+        conn = sqlite3.connect(database_file)
+        df.to_sql(data_sheet, con=conn, index=False, if_exists='replace')
+        # from sqlalchemy import create_engine
+        # engine = create_engine('sqlite:///' + self._bu_name + '_Master_Data_Demo')
+        # data_sheet = self._bu_name + '_Master_Data_Demo'
+        # df.to_sql(data_sheet, con=engine, index=False, if_exists='replace')
+        print('--Done--')
 
     def import_material_master(self):
         database_file = self.__class__.db_path + "Master_Data.db"
         conn = sqlite3.connect(database_file)
         sql_cmd = 'SELECT * FROM MATERIAL_MASTER WHERE Business_Unit = \"' + self._bu_name + '\"'
+        # sql_cmd = 'SELECT * FROM MATERIAL_MASTER WHERE Business_Unit = \"' + self._bu_name + '\" LIMIT 100'
         df = pd.read_sql(sql=sql_cmd, con=conn)
-        # print(df.head())
         return df
 
     def mapping_sap_price(self, code_list):
@@ -447,8 +464,34 @@ class MasterDataUpdate:
                 lst_gtin.append(0)
         return lst_gtin
 
+    def mapping_rag(self, code_list):
+        lst_rag = []
+        conn = sqlite3.connect(self.__class__.db_path + "Master_Data.db")
+        c = conn.cursor()
+        for code_item in code_list:
+            sql_cmd = 'SELECT REGLICNO, REGAPDATE, REGEXDATE, LIFEYEAR FROM RAG_Report WHERE MATNR = \"' + \
+                      code_item + '\" ORDER BY REGAPDATE'
+            c.execute(sql_cmd)
+            result = c.fetchall()
+            if result:
+                dict_rag = {}
+                for i in range(len(result)):
+                    dict_element_rag = {}
+                    for j in range(len(result[i])):
+                        dict_element_rag["REGLICNO"] = result[i][0]
+                        dict_element_rag["REGAPDATE"] = result[i][1]
+                        dict_element_rag["REGEXDATE"] = result[i][2]
+                        dict_element_rag["LIFEYEAR"] = result[i][3]
+                    dict_rag[str(i + 1)] = dict_element_rag
+                lst_rag.append(json.dumps(dict_rag))
+                # lst_rag.append(str(result))
+            else:
+                lst_rag.append(None)
+        return lst_rag
+
 
 if __name__ == "__main__":
     DataUpdate = MasterDataUpdate()
     DataUpdate.bu_name = "TU"
     DataUpdate.master_data_update_entrance()
+    # print(DataUpdate.mapping_rag(["440.834", "440.831S"]))
