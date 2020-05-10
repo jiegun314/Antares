@@ -37,12 +37,9 @@ class MonthlyUpdate:
         for material_item in lst_material:
             # get master data
             material_code = material_item[0]
-            master_data_result = info_check.get_master_data(material_code)[1]
-            md_standard_cost = master_data_result[6]
-            md_h4_name = master_data_result[2]
-            md_h5_name = master_data_result[3]
-            # get sap price
-            md_sap_price = info_check.get_code_sap_price(material_code)
+            master_data_list = ['Standard_Cost', 'Hierarchy_4', 'Hierarchy_5', 'SAP_Price']
+            master_data_result = info_check.get_single_code_all_master_data(material_code, master_data_list)
+            [md_standard_cost, md_h4_name, md_h5_name, md_sap_price] = master_data_result
             # 插入std cost价格
             if not md_standard_cost:
                 material_item.append(0)
@@ -66,7 +63,7 @@ class MonthlyUpdate:
         conn.commit()
         conn.close()
         print("===== <%s Import Successfully!> =====" % inv_type)
-    
+
     def update_lp_inv(self):
         print("==LP Inventory Import==")
         print("--*Warning* - Please make sure data is correctly name and put in _Update folder.")
@@ -85,14 +82,10 @@ class MonthlyUpdate:
         for material_item in lst_lp_inv:
             # get master data
             material_code = material_item[0]
-            master_data_result = info_check.get_master_data(material_code)[1]
-            md_standard_cost = master_data_result[6]
-            md_h4_name = master_data_result[2]
-            md_h5_name = master_data_result[3]
-            md_phoenix_status = "Y" if info_check.get_code_phoenix_result(material_code)[0] == "Phoenix Product" else "N"
+            master_data_list = ['Standard_Cost', 'Hierarchy_4', 'Hierarchy_5', 'Phoenix_Status', 'SAP_Price']
+            master_data_result = info_check.get_single_code_all_master_data(material_code, master_data_list)
+            [md_standard_cost, md_h4_name, md_h5_name, md_phoenix_status, md_sap_price] = master_data_result
             md_suzhou_status = "Y" if material_code[-2:] == "CN" else "N"
-            # get sap price
-            md_sap_price = info_check.get_code_sap_price(material_code)
             # 插入std cost价格
             if not md_standard_cost:
                 material_item.append(0)
@@ -157,16 +150,22 @@ class MonthlyUpdate:
         for material_item in lst_jnj_inv:
             # get master data
             material_code = material_item[1]
-            master_data_result = info_check.get_master_data(material_code)[1]
-            md_standard_cost = master_data_result[6]
-            md_h4_name = master_data_result[2]
-            md_h5_name = master_data_result[3]
-            md_phoenix_status = "Y" if info_check.get_code_phoenix_result(material_code)[0] == "Phoenix Product" else "N"
+            # master_data_result = info_check.get_master_data(material_code)[1]
+            # md_standard_cost = master_data_result[6]
+            # md_h4_name = master_data_result[2]
+            # md_h5_name = master_data_result[3]
+            # md_phoenix_status = "Y" if info_check.get_code_phoenix_result(material_code)[0] == "Phoenix Product" else "N"
+            # md_suzhou_status = "Y" if material_code[-2:] == "CN" else "N"
+            # md_instrument_status = info_check.get_bu_master_data(material_code, "Instrument")
+            # md_pm_status = info_check.get_bu_master_data(material_code, "PM")
+            # # get sap price
+            # md_sap_price = info_check.get_code_sap_price(material_code)
+            master_data_list = ['Standard_Cost', 'Hierarchy_4', 'Hierarchy_5', 'Phoenix_Status', 'SAP_Price', 'PM']
+            master_data_result = info_check.get_single_code_all_master_data(material_code, master_data_list)
+            [md_standard_cost, md_h4_name, md_h5_name, md_phoenix_status, md_sap_price, md_pm] = master_data_result
             md_suzhou_status = "Y" if material_code[-2:] == "CN" else "N"
-            md_instrument_status = info_check.get_bu_master_data(material_code, "Instrument")
-            md_pm_status = info_check.get_bu_master_data(material_code, "PM")
-            # get sap price
-            md_sap_price = info_check.get_code_sap_price(material_code)
+            md_instrument_status = 'N' if material_code[0:1] in ['2', '4'] or material_code[0:2] in ['02', '04']\
+                                          or material_code[0:3] == 'CNB' else 'Y'
             # 设定价格
             item_std_cost = md_standard_cost if md_standard_cost else 0
             item_sap_price = md_sap_price if md_sap_price else 0
@@ -186,7 +185,7 @@ class MonthlyUpdate:
             total_inv_qty = material_item[3] + material_item[4] + material_item[6]
             material_item.extend([total_inv_qty, total_inv_qty * item_std_cost, total_inv_qty * item_sap_price])
             # 插入 h4, h5, pm, instrument, suzhou, phoenix六个特殊属性
-            material_item.extend([md_h4_name, md_h5_name, md_pm_status, md_instrument_status,
+            material_item.extend([md_h4_name, md_h5_name, md_pm, md_instrument_status,
                                   md_suzhou_status, md_phoenix_status])
             counter += 1
             if counter in list_show:
@@ -198,7 +197,8 @@ class MonthlyUpdate:
         tbl_name = self.__class__.bu_name + "_JNJ_INV"
         db_fullname = self.__class__.db_path + tbl_name + ".db"
         conn = sqlite3.connect(db_fullname)
-        conn.executemany("INSERT INTO " + tbl_name + " values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", lst_jnj_inv)
+        conn.executemany("INSERT INTO " + tbl_name + " values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                         lst_jnj_inv)
         conn.commit()
         conn.close()
         print("===== <JNJ Inventory Import Successfully!> =====")
@@ -328,6 +328,7 @@ class MasterDataUpdate:
         # get code list
         print('--1. Getting Material Master--')
         code_list = df_master_data["Material"].tolist()
+        hierarchy_5_list = df_master_data["Hierarchy_5"].tolist()
         # get sap price
         print('--2. Getting SAP Price--')
         df_master_data['SAP_Price'] = self.mapping_sap_price(code_list)
@@ -352,13 +353,16 @@ class MasterDataUpdate:
         # get RAG
         print('--7. Getting RAG--')
         df_master_data['RAG'] = self.mapping_rag(code_list)
+        # get PM
+        print('--8. Getting PM List--')
+        df_master_data['PM'] = self.mapping_pm(hierarchy_5_list)
         # write back to database
         # print(df_master_data.head())
         self.finalize_master_data(df_master_data)
 
     def finalize_master_data(self, df):
         database_file = self.__class__.db_path + self._bu_name + "_Master_Data.db"
-        data_sheet = self._bu_name + '_Master_Data_Demo'
+        data_sheet = self._bu_name + '_Master_Data'
         conn = sqlite3.connect(database_file)
         df.to_sql(data_sheet, con=conn, index=False, if_exists='replace')
         # from sqlalchemy import create_engine
@@ -489,9 +493,27 @@ class MasterDataUpdate:
                 lst_rag.append(None)
         return lst_rag
 
+    def mapping_pm(self, h5_list):
+        lst_pm = []
+        database_file = self.__class__.db_path + self._bu_name + "_Master_Data.db"
+        data_sheet = self._bu_name + '_PM_List'
+        conn = sqlite3.connect(database_file)
+        c = conn.cursor()
+        for h5_code in h5_list:
+            sql_cmd = 'SELECT PM FROM ' + data_sheet + ' WHERE Hierarchy_5 = \"' + h5_code + '\"'
+            c.execute(sql_cmd)
+            result = c.fetchall()
+            if result:
+                lst_pm.append(result[0][0])
+            else:
+                lst_pm.append(None)
+        return lst_pm
+
 
 if __name__ == "__main__":
     DataUpdate = MasterDataUpdate()
     DataUpdate.bu_name = "TU"
     DataUpdate.master_data_update_entrance()
     # print(DataUpdate.mapping_rag(["440.834", "440.831S"]))
+    # dataupdate = MonthlyUpdate('TU')
+    # dataupdate.update_lp_inv()

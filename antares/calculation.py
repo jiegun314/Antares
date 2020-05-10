@@ -11,6 +11,24 @@ class InfoCheck:
     def __init__(self, bu):
         self.__class__.bu_name = bu
 
+    # get all master data of single code
+    def get_single_code_all_master_data(self, code, master_data_item_list):
+        str_master_data = ""
+        for item in master_data_item_list:
+            str_master_data += item + ","
+        str_master_data = str_master_data.rstrip(",")
+        database_fullname = self.__class__.db_path + self.__class__.bu_name + "_Master_Data.db"
+        datasheet_name = self.__class__.bu_name + "_Master_Data"
+        conn = sqlite3.connect(database_fullname)
+        c = conn.cursor()
+        sql_cmd = 'SELECT ' + str_master_data + ' FROM ' + datasheet_name + ' WHERE Material = \"' + code + '\"'
+        c.execute(sql_cmd)
+        result = c.fetchall()
+        if result:
+            return result[0]
+        else:
+            return 0
+
     # 读取单个代码全部的master data
     def get_master_data(self, code):
         # 数据库完整路径加名称
@@ -392,8 +410,9 @@ class InfoCheck:
 
 if __name__ == "__main__":
     info_check = InfoCheck("TU")
-    info_check.generate_abc_ranking()
+    # info_check.generate_abc_ranking()
     # info_check.get_code_phoenix_result("689.893")
+    print(info_check.get_single_code_all_master_data('440.834', ['Description', 'Hierarchy_5', 'RAG']))
 
 
 

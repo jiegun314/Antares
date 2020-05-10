@@ -119,10 +119,10 @@ class DataInput:
     def import_master_data(self):
         # for TU. data_type = {"Master_Data", "SAP_Price", "Phoenix_List"}
         print("==Import Master Data for %s==" % self.__class__.bu_name)
-        print("Please Choose Master Data Type (1 - Master_Data, 2 - SAP_Price, 3 - Phoenix_List, 4 - ROP_Setting)")
+        print("Please Choose Master Data Type (1 - PM_List, 2 - SAP_Price, 3 - Phoenix_List, 4 - ROP_Setting)")
         cmd_code = input("cmd >> master_data >> ")
         if cmd_code == "1":
-            data_type = "Master_Data"
+            data_type = "PM_List"
         elif cmd_code == "2":
             data_type = "SAP_Price"
         elif cmd_code == "3":
@@ -137,9 +137,7 @@ class DataInput:
         db_fullname = self.__class__.db_path + self.__class__.bu_name + "_Master_Data.db"
         print("~ Start to read the data file %s" % file_name)
         start_time = datetime.now()
-        if data_type == "Master_Data":
-            df = pd.read_excel(file_fullname, na_values="0", dtype={'SAP_Price': np.float64})
-        elif data_type == "SAP_Price":
+        if data_type == "SAP_Price":
             df = pd.read_excel(file_fullname, na_values="0", dtype={'Price': np.float64})
         elif data_type == "ROP_Setting":
             df = pd.read_excel(file_fullname, na_values="0", dtype={'Reorder Point': np.int32})

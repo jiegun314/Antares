@@ -1,3 +1,4 @@
+import json
 import sqlite3
 import time
 import calculation
@@ -36,8 +37,8 @@ class InfoShow:
         else:
             # Get master data
             infocheck = calculation.InfoCheck(self.__class__.bu_name)
-            mm_result = infocheck.get_master_data(material_code)
-            print(mm_result[0][0], ": ", mm_result[1][0])
+            mm_result = infocheck.get_single_code_all_master_data(material_code, ['Description'])[0]
+            print(material_code, ": ", mm_result)
             self.format_output(self.list_code_sales_data(material_code, month_number))
 
     # display sales for single code
@@ -63,8 +64,8 @@ class InfoShow:
             print("!!ERROR, This code does NOT exist.")
             return
         else:
-            mm_result = infocheck.get_master_data(material_code)
-            print(mm_result[0][0], ": ", mm_result[1][0])
+            mm_result = infocheck.get_single_code_all_master_data(material_code, ['Description'])[0]
+            print(material_code, ": ", mm_result)
             # Generate date list
             self.format_output(self.list_code_historical_inventory(material_code, month_number))
 
@@ -87,29 +88,24 @@ class InfoShow:
     def show_code_all_info(self, month_number=12):
         # 打印标题
         print("---- Overall Information for Single Code---")
-        material_code = input("Material code: ").upper()
-        if not pb_func.check_code_availability(self.__class__.bu_name, material_code):
-            print("!!ERROR, This code does NOT exist.")
-            return
-        else:
-            infocheck = calculation.InfoCheck(self.__class__.bu_name)
-            # get master_data
+        material_code = input("Material code: ").strip().upper()
+        infocheck = calculation.InfoCheck(self.__class__.bu_name)
+        master_data_list = ['Description', 'Chinese_Description', 'Hierarchy_4', 'Hierarchy_5', 'Sales_Status',
+                            'Purchase_Status', 'Standard_Cost', 'SAP_Price', 'Ranking', 'MRP_Type', 'Reorder_Point',
+                            'Phoenix_Status', 'Phoenix_Discontinuation_Date', 'Phoenix_Obsolescence_Date', 'GTIN', 'RAG']
+        master_data_result = infocheck.get_single_code_all_master_data(material_code, master_data_list)
+        if master_data_result:
             print("======= <Detail Information> =======")
-            master_data_result = infocheck.get_master_data(material_code)
-            for i in range(len(master_data_result[0])):
-                print(master_data_result[0][i], ": ", master_data_result[1][i])
-            print("SAP_Price: ", infocheck.get_code_sap_price(material_code))
-            print("GTIN: ", infocheck.get_code_gtin(material_code))
-            # show Phoenix information
-            if self.__class__.bu_name == "TU":
-                print("======= <Phoenix Information> =======")
-                phoenix_result = infocheck.get_code_phoenix_result(material_code)
-                for i in range(0, len(phoenix_result[0])):
-                    print(phoenix_result[0][i], " - ", phoenix_result[1][i])
-            # show the RAG license information
-            print("======= <License Information> =======")
-            license_info = [["License", "Start", 'End']] + infocheck.get_code_rag(material_code)
-            self.format_output(license_info)
+            for i in range(len(master_data_list)):
+                if master_data_list[i] == 'RAG':
+                    print("---- <RAG Information> ----")
+                    rag_result = json.loads(master_data_result[i])
+                    for j in range(len(rag_result)):
+                        print(rag_result[str(j+1)]['REGLICNO'], " - ", rag_result[str(j+1)]['REGAPDATE'], " - ",
+                              rag_result[str(j+1)]['REGEXDATE'], " - ", rag_result[str(j+1)]['LIFEYEAR'])
+                else:
+                    print(master_data_list[i], " - ", master_data_result[i])
+            print("======= <Sales & Inventory Information> =======")
             # 开始输出销售量
             print("--%s Months Historical Sales Data --" % month_number)
             self.format_output(self.list_code_sales_data(material_code, month_number))
@@ -129,6 +125,9 @@ class InfoShow:
             # 显示ESO
             self.display_material_eso(material_code, "code")
             print("-----------END-----------")
+        else:
+            print("!! Error. This code does not exist.")
+            return
 
     # get hierarchy_5 name
     def get_h5_name(self):
@@ -325,4 +324,4 @@ class InfoShow:
 
 if __name__ == "__main__":
     test = InfoShow("TU", "Jeffrey")
-    test.get_h5_inventory("PFNA-II", 12)
+    test.show_code_historical_inventory()
