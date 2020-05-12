@@ -65,17 +65,18 @@ class SNOPExportV2:
         file_name = self.__class__.bu_name + "_" + inv_type
         db_fullname = self.__class__.db_path + file_name + ".db"
         conn = sqlite3.connect(db_fullname)
-        c = conn.cursor()
         if inv_type == "JNJ_INV":
-            sql_cmd = "SELECT Material, Month, sum(Available_Stock), sum(Value_Standard_Cost), sum(Value_SAP_Price)" \
-                      " from " + file_name + " WHERE Month IN (" + str_month_list + ") GROUP BY Material, Month ORDER BY Month"
-        else:
-            sql_cmd = "SELECT Material, Month, sum(Quantity), sum(Value_Standard_Cost), sum(Value_SAP_Price) from " \
+            sql_cmd = "SELECT Material, Month, sum(Available_Stock) as Quantity, " \
+                      "sum(Value_Standard_Cost) as Value_Standard_Cost, sum(Value_SAP_Price) as Value_SAP_Price FROM " \
                       + file_name + " WHERE Month IN (" + str_month_list + ") GROUP BY Material, Month ORDER BY Month"
-        result = c.execute(sql_cmd).fetchall()
+        else:
+            sql_cmd = "SELECT Material, Month, sum(Quantity) as Quantity, " \
+                      "sum(Value_Standard_Cost) as Value_Standard_Cost, sum(Value_SAP_Price) as Value_SAP_Price from " \
+                      + file_name + " WHERE Month IN (" + str_month_list + ") GROUP BY Material, Month ORDER BY Month"
+        df = pd.read_sql(sql=sql_cmd, con=conn)
         conn.commit()
         conn.close()
-        return result
+        return df
 
     def get_sales_data(self):
         # Get Month list
@@ -95,7 +96,7 @@ class SNOPExportV2:
             pivot_result = pd.pivot_table(df, index="Material",
                                           values=["Quantity", "Value_Standard_Cost", "Value_SAP_Price"],
                                           columns="Month", fill_value=0)
-            print(list(pivot_result))
+            # print(len(list(pivot_result)))
             print(sales_type_item, " is ready!")
             lst_sales_df.append(pivot_result)
         # Generate inventory type list
@@ -107,6 +108,7 @@ class SNOPExportV2:
             pivot_result = pd.pivot_table(df, index="Material",
                                           values=["Quantity", "Value_Standard_Cost", "Value_SAP_Price"],
                                           columns="Month", fill_value=0)
+            print(len(list(pivot_result)))
             print(inv_type_item, " is ready!")
             lst_inv_df.append(pivot_result)
         # Get sales result of single code
@@ -117,26 +119,21 @@ class SNOPExportV2:
             # Load sales data
             for sales_item_df in lst_sales_df:
                 try:
-                    code_result = sales_item_df.loc[code_name, ["Quantity", "Value_Standard_Cost", "Value_SAP_Price"]]
+                    code_result = sales_item_df.loc[code_name]
                 except KeyError:
-                    code_output.extend([x*0 for x in range(0, 24)])
+                    code_output.extend([x*0 for x in range(0, len(sales_item_df.columns))])
                 else:
-                    value_type = ["Quantity", "Value_Standard_Cost", "Value_SAP_Price"]
-                    for value_type_item in value_type:
-                        final_result = code_result.loc[value_type_item, month_list]
-                        code_output.extend(final_result.values.tolist())
+                    code_output.extend(code_result.values.tolist())
+            print('After Sales Data - ', code_name, '-', len(code_output))
             # Load inventory data
             for inv_item_df in lst_inv_df:
                 try:
-                    code_result = inv_item_df.loc[code_name, ["Quantity", "Value_Standard_Cost", "Value_SAP_Price"]]
+                    code_result = inv_item_df.loc[code_name]
                 except KeyError:
                     # Alert! the zero input should be same quantity as available inventory month
-                    code_output.extend([x * 0 for x in range(0, 24)])
+                    code_output.extend([x * 0 for x in range(0, len(inv_item_df.columns))])
                 else:
-                    value_type = ["Quantity", "Value_Standard_Cost", "Value_SAP_Price"]
-                    for value_type_item in value_type:
-                        final_result = code_result.loc[value_type_item, month_list]
-                        code_output.extend(final_result.values.tolist())
+                    code_output.extend(code_result.values.tolist())
             print(code_name, '-', len(code_output))
             snop_result.append(code_output)
         time_end = time.time()
