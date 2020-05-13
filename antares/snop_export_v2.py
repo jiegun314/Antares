@@ -35,10 +35,10 @@ class SNOPExportV2:
         database_fullname = self.__class__.db_path + self.__class__.bu_name + '_Master_Data.db'
         datasheet_name = self.__class__.bu_name + '_Master_Data_Demo'
         conn = sqlite3.connect(database_fullname)
-        sql_cmd = "SELECT Material FROM " + datasheet_name
+        sql_cmd = "SELECT Material, Description, Hierarchy_5 FROM " + datasheet_name
         df = pd.read_sql(sql=sql_cmd, con=conn)
-        code_list = df['Material'].values.tolist()
-        return code_list
+        # code_list = df['Material'].values.tolist()
+        return df
 
     # Return all the sales data
     def get_code_sales_list(self, sales_type, month_list):
@@ -84,9 +84,11 @@ class SNOPExportV2:
         current_month = time.strftime("%Y-%m", time.localtime())
         info_check = cclt.InfoCheck(self.__class__.bu_name)
         month_list = info_check.get_time_list(current_month, -24)
-        # print(month_list)
+        # initiate column name list
+        lst_column_name = ["Material", ]
         # Get active code list
-        active_code_list = self.get_all_code_list()
+        df_material_master = self.get_all_code_list()
+        active_code_list = df_material_master['Material'].values.tolist()
         print("Data Length:", len(active_code_list))
         # Generate sales type list
         sales_type = ["GTS", "LPSales", "IMS"]
@@ -98,6 +100,7 @@ class SNOPExportV2:
                                           columns="Month", fill_value=0)
             # print(len(list(pivot_result)))
             print(sales_type_item, " is ready!")
+            lst_column_name += [sales_type_item + "-" + item[0] + "-" + item[1] for item in list(pivot_result)]
             lst_sales_df.append(pivot_result)
         # Generate inventory type list
         inventory_type = ["JNJ_INV", "LP_INV"]
@@ -108,8 +111,8 @@ class SNOPExportV2:
             pivot_result = pd.pivot_table(df, index="Material",
                                           values=["Quantity", "Value_Standard_Cost", "Value_SAP_Price"],
                                           columns="Month", fill_value=0)
-            print(len(list(pivot_result)))
             print(inv_type_item, " is ready!")
+            lst_column_name += [inv_type_item + "-" + item[0] + "-" + item[1] for item in list(pivot_result)]
             lst_inv_df.append(pivot_result)
         # Get sales result of single code
         snop_result = []
@@ -124,7 +127,6 @@ class SNOPExportV2:
                     code_output.extend([x*0 for x in range(0, len(sales_item_df.columns))])
                 else:
                     code_output.extend(code_result.values.tolist())
-            print('After Sales Data - ', code_name, '-', len(code_output))
             # Load inventory data
             for inv_item_df in lst_inv_df:
                 try:
@@ -134,7 +136,6 @@ class SNOPExportV2:
                     code_output.extend([x * 0 for x in range(0, len(inv_item_df.columns))])
                 else:
                     code_output.extend(code_result.values.tolist())
-            print(code_name, '-', len(code_output))
             snop_result.append(code_output)
         time_end = time.time()
         print('time cost', int(time_end - time_start), 's')
@@ -145,7 +146,7 @@ class SNOPExportV2:
         current_time = time.strftime("%y%m%d-%H%M%S", time.localtime())
         file_name = self.__class__.bu_name + "_SNOP_" + current_time + "_Test.xlsx"
         file_fullname = self.__class__.export_path + file_name
-        df.to_excel(file_fullname, sheet_name="Code", index_label="Material")
+        df.to_excel(file_fullname, sheet_name="Code", index=False, header=lst_column_name, freeze_panes=(1, 1))
 
 
 if __name__ == '__main__':
