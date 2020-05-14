@@ -31,11 +31,11 @@ class SNOPExportV2:
         # 测试阶段返回N个数字
         return code_list
 
-    def get_all_code_list(self):
+    def get_all_master_data(self):
         database_fullname = self.__class__.db_path + self.__class__.bu_name + '_Master_Data.db'
         datasheet_name = self.__class__.bu_name + '_Master_Data_Demo'
         conn = sqlite3.connect(database_fullname)
-        sql_cmd = "SELECT Material, Description, Hierarchy_5 FROM " + datasheet_name
+        sql_cmd = "SELECT * FROM " + datasheet_name
         df = pd.read_sql(sql=sql_cmd, con=conn)
         # code_list = df['Material'].values.tolist()
         return df
@@ -78,6 +78,22 @@ class SNOPExportV2:
         conn.close()
         return df
 
+    # Return recent ESO result of 2 cycle.
+    def get_code_eso_list(self):
+        database_fullname = self.__class__.db_path + self.__class__.bu_name + '_ESO.db'
+        datasheet_name = self.__class__.bu_name + '_ESO'
+        # get recent 2 cycle.
+        conn = sqlite3.connect(database_fullname)
+        sql_cmd = 'SELECT DISTINCT Month FROM ' + datasheet_name + ' ORDER by Month DESC LIMIT 2'
+        c = conn.cursor()
+        c.execute(sql_cmd)
+        month_list = c.fetchall()
+        str_month_list = ''
+        for month_item in month_list:
+            str_month_list += '\"' + month_item[0] + '\",'
+        str_month_list = str_month_list.rstrip(',')
+        pass
+
     def get_sales_data(self):
         # Get Month list
         time_start = time.time()
@@ -85,9 +101,10 @@ class SNOPExportV2:
         info_check = cclt.InfoCheck(self.__class__.bu_name)
         month_list = info_check.get_time_list(current_month, -24)
         # initiate column name list
-        lst_column_name = ["Material", ]
         # Get active code list
-        df_material_master = self.get_all_code_list()
+        df_material_master = self.get_all_master_data()
+        lst_column_name = list(df_material_master)
+        list_material_master = df_material_master.values.tolist()
         active_code_list = df_material_master['Material'].values.tolist()
         print("Data Length:", len(active_code_list))
         # Generate sales type list
@@ -116,15 +133,16 @@ class SNOPExportV2:
             lst_inv_df.append(pivot_result)
         # Get sales result of single code
         snop_result = []
-        for code_name in active_code_list:
+        for code_item in list_material_master:
             # initiate blank list
-            code_output = [code_name, ]
+            code_name = code_item[0]
+            code_output = code_item
             # Load sales data
             for sales_item_df in lst_sales_df:
                 try:
                     code_result = sales_item_df.loc[code_name]
                 except KeyError:
-                    code_output.extend([x*0 for x in range(0, len(sales_item_df.columns))])
+                    code_output.extend([x * 0 for x in range(0, len(sales_item_df.columns))])
                 else:
                     code_output.extend(code_result.values.tolist())
             # Load inventory data
@@ -147,8 +165,10 @@ class SNOPExportV2:
         file_name = self.__class__.bu_name + "_SNOP_" + current_time + "_Test.xlsx"
         file_fullname = self.__class__.export_path + file_name
         df.to_excel(file_fullname, sheet_name="Code", index=False, header=lst_column_name, freeze_panes=(1, 1))
+        print('Done~')
 
 
 if __name__ == '__main__':
     TestModule = SNOPExportV2("TU")
-    TestModule.get_sales_data()
+    # TestModule.get_sales_data()
+    TestModule.get_code_eso_list()
