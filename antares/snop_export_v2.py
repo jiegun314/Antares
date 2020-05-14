@@ -93,8 +93,13 @@ class SNOPExportV2:
             str_month_list += '\"' + month_item[0] + '\",'
         str_month_list = str_month_list.rstrip(',')
         # get ESO result of most recent 2 cycles.
-        sql_cmd = 'SE'
-        pass
+        sql_cmd = 'SELECT * FROM ' + datasheet_name + ' WHERE Month IN (' + str_month_list + ")"
+        df_eso = pd.read_sql(sql=sql_cmd, con=conn)
+        df_eso_result = pd.pivot_table(df_eso, index='Material',
+                                       values=['Excess_Quantity', 'Slow_Moving_Quantity', 'Obsolete_Quantity',
+                                               'ESO_Quantity', 'ESO_Value_Standard_Cost'],
+                                       columns="Month", fill_value=0)
+        return df_eso_result
 
     def get_sales_data(self):
         # Get Month list
@@ -109,6 +114,9 @@ class SNOPExportV2:
         list_material_master = df_material_master.values.tolist()
         active_code_list = df_material_master['Material'].values.tolist()
         print("Data Length:", len(active_code_list))
+        # Get eso_result
+        df_eso_result = self.get_code_eso_list()
+        lst_column_name += [item[0] + "-" + item[1] for item in list(df_eso_result)]
         # Generate sales type list
         sales_type = ["GTS", "LPSales", "IMS"]
         lst_sales_df = []
@@ -138,7 +146,15 @@ class SNOPExportV2:
         for code_item in list_material_master:
             # initiate blank list
             code_name = code_item[0]
+            # load master data
             code_output = code_item
+            # load eso
+            try:
+                code_eso_result = df_eso_result.loc[code_name]
+            except KeyError:
+                code_output.extend([x * 0 for x in range(0, len(df_eso_result.columns))])
+            else:
+                code_output.extend(code_eso_result.values.tolist())
             # Load sales data
             for sales_item_df in lst_sales_df:
                 try:
@@ -172,5 +188,5 @@ class SNOPExportV2:
 
 if __name__ == '__main__':
     TestModule = SNOPExportV2("TU")
-    # TestModule.get_sales_data()
-    TestModule.get_code_eso_list()
+    TestModule.get_sales_data()
+    # TestModule.get_code_eso_list()

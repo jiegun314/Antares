@@ -103,17 +103,25 @@ class DataInput:
         print("ESO File is imported")
     
     def get_active_codes(self):
-        file_name = self.__class__.bu_name + "_Active_Codes"
-        file_fullname = self.__class__.file_path + file_name + ".xlsx"
-        print("开始读取Code清单")
-        df = pd.read_excel(file_fullname, dtype=object)
-        # 读取所有元素
-        data = df.values
-        code_list = []
-        for item in data:
-            code_list.append(str(item[0]))
-        # 测试阶段返回N个数字
-        return code_list
+        if self.__class__.bu_name != "TU":
+            file_name = self.__class__.bu_name + "_Active_Codes"
+            file_fullname = self.__class__.file_path + file_name + ".xlsx"
+            print("开始读取Code清单")
+            df = pd.read_excel(file_fullname, dtype=object)
+            # 读取所有元素
+            data = df.values
+            code_list = []
+            for item in data:
+                code_list.append(str(item[0]))
+            # 测试阶段返回N个数字
+            return code_list
+        else:
+            database_full_name = self.__class__.db_path + "TU_Master_Data.db"
+            conn = sqlite3.connect(database_full_name)
+            sql_cmd = 'SELECT DISTINCT Material FROM TU_Master_Data ORDER BY Material'
+            df_material_list = pd.read_sql(sql=sql_cmd, con=conn)
+            material_list = [item[0] for item in df_material_list.values.tolist()]
+            return material_list
 
     # import BU base master data
     def import_master_data(self):
@@ -194,8 +202,8 @@ class DataInput:
 
 
 if __name__ == "__main__":
-    data_input = DataInput("JT")
-    data_input.sales_input("IMS")
+    data_input = DataInput("TU")
+    data_input.get_active_codes()
     # data_input.get_active_codes()
     # cmd = int(input("选择需要导入的数据，1 - GTS，2 - LP Sales， 3 - IMS, 4 - LP_INV: "))
     # if cmd == 1:
