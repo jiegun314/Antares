@@ -194,9 +194,9 @@ class DataInput:
 
 
 if __name__ == "__main__":
-    data_input = DataInput("CMFTPT")
-    # data_input.sales_input("LPSales")
-    data_input.get_active_codes()
+    data_input = DataInput("JT")
+    data_input.sales_input("IMS")
+    # data_input.get_active_codes()
     # cmd = int(input("选择需要导入的数据，1 - GTS，2 - LP Sales， 3 - IMS, 4 - LP_INV: "))
     # if cmd == 1:
     #     data_input.sales_input ("GTS")

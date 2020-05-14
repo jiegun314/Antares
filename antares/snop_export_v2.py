@@ -92,6 +92,8 @@ class SNOPExportV2:
         for month_item in month_list:
             str_month_list += '\"' + month_item[0] + '\",'
         str_month_list = str_month_list.rstrip(',')
+        # get ESO result of most recent 2 cycles.
+        sql_cmd = 'SE'
         pass
 
     def get_sales_data(self):
