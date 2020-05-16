@@ -102,7 +102,7 @@ class DataInput:
         conn.close()
         print("ESO File is imported")
     
-    def get_active_codes(self):
+    def get_active_codes(self, model="Normal"):
         if self.__class__.bu_name != "TU":
             file_name = self.__class__.bu_name + "_Active_Codes"
             file_fullname = self.__class__.file_path + file_name + ".xlsx"
@@ -118,7 +118,8 @@ class DataInput:
         else:
             database_full_name = self.__class__.db_path + "TU_Master_Data.db"
             conn = sqlite3.connect(database_full_name)
-            sql_cmd = 'SELECT DISTINCT Material FROM TU_Master_Data ORDER BY Material'
+            sql_cmd = 'SELECT DISTINCT Material FROM TU_Master_Data ORDER BY Material' if model == 'Normal' \
+                else 'SELECT DISTINCT Material FROM TU_Master_Data ORDER BY Material LIMIT 100'
             df_material_list = pd.read_sql(sql=sql_cmd, con=conn)
             material_list = [item[0] for item in df_material_list.values.tolist()]
             return material_list

@@ -68,7 +68,7 @@ class GetStatisticalForecast:
         # 转换成月份列表
         i = 1
         while i <= months:
-            t = (tmp_year, tmp_month, 6, 3, 1, 4, 3, 1, 4)
+            t = (tmp_year, tmp_month, 1, 0, 0, 0, 0, 0, 0)
             secs = time.mktime(t)
             result_month.append(time.strftime("%Y-%m", time.localtime(secs)))
             tmp_month = tmp_month + 1
@@ -424,13 +424,13 @@ class GetStatisticalForecast:
             index = 0
             for qty in code_fcst:
                 sap_price = 0 if sap_price is None else sap_price
-                lst_code.append([code_name, h5, month_list[index], int(round(qty)), int(round(qty)) * sap_price])
+                lst_code.append([code_name, h5, month_list[index], int(round(qty)), int(round(qty) * sap_price)])
                 index += 1
             tbl_result.extend(lst_code)
         # 写入数组
         np_data = np.array(tbl_result)
         # get data frame
-        df = pd.DataFrame(data=np_data[1:, 1:], index=np_data[1:, 0], columns=np_data[0, 1:])
+        df = pd.DataFrame(data=np_data[1:, 0:], columns=np_data[0, 0:])
         df = df.astype(dtype={"Quantity": "int64", "Value_SAP_Price": "int64"})
         # write to statistical forecast
         tbl_statis_fcst = self.__class__.bu_name + "_Statistical_Forecast"
@@ -461,7 +461,7 @@ class GetStatisticalForecast:
             return lst_sales_data
 
     # fcst程序入口
-    def get_forecast_entrance(self):
+    def get_forecast_entrance(self, model="Normal"):
         # 打印标题
         print("====== < Dragon - Statistical Forecast Generator > ======")
         print("===== !Warning! Make sure you've updated sales data and release your PC capacity! =====")
@@ -487,7 +487,7 @@ class GetStatisticalForecast:
             return
         # 获取活跃代码列表
         get_code_list = data_import.DataInput(self.__class__.bu_name)
-        active_code_list = get_code_list.get_active_codes()
+        active_code_list = get_code_list.get_active_codes(model)
         # 获取历史销量数据
         historical_sales_qty = self.get_sale_list(active_code_list, data_type)
         # 对于IMS的最后一个月进行判断补足
@@ -548,5 +548,5 @@ class GetStatisticalForecast:
 
 
 if __name__ == '__main__':
-    new_fcst = GetStatisticalForecast("JT")
-    new_fcst.get_forecast_entrance()
+    new_fcst = GetStatisticalForecast('TU')
+    new_fcst.get_forecast_entrance('Normal')
