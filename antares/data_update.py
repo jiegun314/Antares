@@ -347,6 +347,8 @@ class MasterDataUpdate:
         df_master_data['Phoenix_Target_SKU'] = target_sku
         df_master_data['Phoenix_Discontinuation_Date'] = discontinuation_date
         df_master_data['Phoenix_Obsolescence_Date'] = obsolescence_date
+        # update all phoenix products to ranking C
+        df_master_data.loc[df_master_data['Phoenix_Status'] == 'Y', 'Ranking'] = 'C'
         # get GTIN
         print('--6. Getting GTIN--')
         df_master_data['GTIN'] = self.mapping_gtin(code_list)
@@ -365,10 +367,6 @@ class MasterDataUpdate:
         data_sheet = self._bu_name + '_Master_Data'
         conn = sqlite3.connect(database_file)
         df.to_sql(data_sheet, con=conn, index=False, if_exists='replace')
-        # from sqlalchemy import create_engine
-        # engine = create_engine('sqlite:///' + self._bu_name + '_Master_Data_Demo')
-        # data_sheet = self._bu_name + '_Master_Data_Demo'
-        # df.to_sql(data_sheet, con=engine, index=False, if_exists='replace')
         print('--Done--')
 
     def import_material_master(self):
