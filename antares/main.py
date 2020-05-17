@@ -3,7 +3,7 @@
 # import crt_inv_cmd as crt
 # import statis_fcst as fcst
 # import mi
-import re
+# import re
 
 
 class SystemIndex:
@@ -52,54 +52,48 @@ class SystemIndex:
 
     def __command_center(self):
         print("===Please wait a few seconds for module loading===")
-        import info_show
-        # 实例化显示信息的类
-        cmd_info_index = info_show.InfoShow(self.__class__.bu_name, self.__class__.user_name)
-        cmd_code = input("cmd >> ")
-        while cmd_code != "exit" and cmd_code != "switch":
+        import data_display
+        # Get cmd_code and cmd_extension with split character "-"
+        cmd_info_index = data_display.DataDisplay(self.__class__.bu_name, self.__class__.user_name)
+        cmd_input = input("cmd >> ").replace(' ', '').upper().split('-')
+        [cmd_code, cmd_extension] = [cmd_input[0], '0'] if len(cmd_input) == 1 else [cmd_input[0], cmd_input[1]]
+        # define different cmd code by cmd_code
+        while cmd_code != "EXIT" and cmd_code != "SWITCH":
             if cmd_code == "410":
                 cmd_info_index.show_code_sales_data()
-            elif cmd_code in ["400g", "400G"]:
+            elif cmd_code == "400G":
                 cmd_info_index.show_code_chart()
-            elif cmd_code[0:3] == "400":
-                if re.match(r'^(400)\s*\-\s*(\d{1,2})$', cmd_code):
-                    month_number = int(re.match(r'^(400)\s*\-\s*(\d{1,2})$', cmd_code).group(2))
-                    if month_number <= 24:
-                        cmd_info_index.show_code_all_info(month_number)
-                    else:
-                        print("!!ERROR: Too many months, the upper limit is 24")
-                elif cmd_code == "400":
-                    cmd_info_index.show_code_all_info()
+            elif cmd_code == "400":
+                if cmd_extension.isdecimal() and int(cmd_extension) <= 24:
+                    month_number = int(cmd_extension) if int(cmd_extension) else 12
+                    cmd_info_index.show_code_all_info(month_number)
                 else:
-                    print("!!ERROR: Wrong CMD code. Plz input right cmd code, or input exit to quit.")
+                    print("!!ERROR: Please input correct month number below 24")
             elif cmd_code == "420":
                 cmd_info_index.show_code_historical_inventory()
             elif cmd_code == "310":
                 cmd_info_index.show_h5_sales_data()
             elif cmd_code == "320":
                 cmd_info_index.show_h5_inventory()
-            elif cmd_code in ["300g", "300G"]:
+            elif cmd_code == "300G":
                 cmd_info_index.show_h5_chart()
             elif cmd_code[0:3] == "300":
-                if re.match(r'^(300)\s*\-\s*(\d{1,2})$', cmd_code):
-                    month_number = int(re.match(r'^(300)\s*\-\s*(\d{1,2})$', cmd_code).group(2))
-                    if month_number <= 24:
-                        cmd_info_index.show_h5_all_info(month_number)
-                elif cmd_code.lstrip("300").lstrip().lstrip("-").lstrip().rstrip() == "":
-                    cmd_info_index.show_h5_all_info()
+                if cmd_extension.isdecimal() and int(cmd_extension) <= 24:
+                    month_number = int(cmd_extension) if int(cmd_extension) else 12
+                    cmd_info_index.show_h5_all_info(month_number)
                 else:
-                    print("!!ERROR: Wrong CMD code. Plz input right cmd code, or input exit to quit.")
+                    print("!!ERROR: Please input correct month number below 24")
             elif cmd_code in ["901", "902", "903", "905", "906", "908", "909"]:
                 import data_update as update
                 data_input = update.MonthlyUpdate(self.__class__.bu_name)
                 data_input.data_update_entrance(cmd_code)
             elif cmd_code == "919":
-                import data_import
-                data_input = data_import.DataInput(self.__class__.bu_name)
+                from data_update import MasterDataUpdate
+                data_input = MasterDataUpdate(self.__class__.bu_name)
                 data_input.import_public_master_data()
             elif cmd_code == "911":
-                import data_import
-                data_input = data_import.DataInput(self.__class__.bu_name)
+                from data_update import MasterDataUpdate
+                data_input = MasterDataUpdate(self.__class__.bu_name)
                 data_input.import_master_data()
             elif cmd_code == "450":
                 cmd_info_index.show_code_eso()
@@ -119,8 +113,9 @@ class SystemIndex:
                 cmd_info_index.show_command_list()
             else:
                 print("!!ERROR: Wrong CMD code. Plz input right cmd code, or input exit to quit.")
-            cmd_code = input("cmd >> ")
-        if cmd_code == "switch":
+            cmd_input = input("cmd >> ").replace(' ', '').upper().split('-')
+            [cmd_code, cmd_extension] = [cmd_input[0], '0'] if len(cmd_input) == 1 else [cmd_input[0], cmd_input[1]]
+        if cmd_code == "SWITCH":
             self.__class__.bu_name, self.__class__.user_name = None, None
             self.login_control()
         else:

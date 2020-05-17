@@ -307,7 +307,7 @@ class MonthlyUpdate:
             print("!!Error: wrong user name, please restart the program.")
 
 
-class MasterDataUpdate:
+class MasterDataConsolidation:
     db_path = "../data/_DB/"
 
     def __init__(self):
@@ -508,8 +508,119 @@ class MasterDataUpdate:
         return lst_pm
 
 
+class MasterDataUpdate:
+    bu_name = ''
+    file_path = "../data/_Source_Data/"
+    update_path = "../data/_Update/"
+    db_path = "../data/_DB/"
+
+    def __init__(self, bu_name_input):
+        self.bu_name = bu_name_input
+
+    # import BU base master data
+    def import_master_data(self):
+        # for TU. data_type = {"Master_Data", "SAP_Price", "Phoenix_List"}
+        print("==Import Master Data for %s==" % self.__class__.bu_name)
+        print("Please Choose Master Data Type (1 - PM_List, 2 - SAP_Price, "
+              "3 - Phoenix_List, 4 - ROP_Setting, 5 - ABC Ranking)")
+        cmd_code = input("cmd >> master_data >> ")
+        if cmd_code == "1":
+            data_type = "PM_List"
+        elif cmd_code == "2":
+            data_type = "SAP_Price"
+        elif cmd_code == "3":
+            data_type = "Phoenix_List"
+        elif cmd_code == "4":
+            data_type = "ROP_Setting"
+        elif cmd_code == '5':
+            self.generate_abc_ranking()
+            print('ABC Ranking Template Done.~')
+            return
+        else:
+            print("!!Wrong code, please try again!")
+            return
+        file_name = self.__class__.bu_name + "_" + data_type
+        file_fullname = self.__class__.file_path + file_name + ".xlsx"
+        db_fullname = self.__class__.db_path + self.__class__.bu_name + "_Master_Data.db"
+        print("~ Start to read the data file %s" % file_name)
+        start_time = datetime.now()
+        if data_type == "SAP_Price":
+            df = pd.read_excel(file_fullname, na_values="0", dtype={'Price': np.float64})
+        elif data_type == "ROP_Setting":
+            df = pd.read_excel(file_fullname, na_values="0", dtype={'Reorder Point': np.int32})
+        else:
+            df = pd.read_excel(file_fullname, na_values="0")
+        # data = df.values
+        stop_time = datetime.now()
+        print("~ File reading complete with time of %s seconds" % (stop_time-start_time).seconds)
+        # 写入数据库
+        conn = sqlite3.connect(db_fullname)
+        df.to_sql(name=file_name, con=conn, if_exists='replace', index=False)
+        print("%s is imported" % data_type)
+
+    def import_public_master_data(self):
+        # print title
+        print("==Import General Master Data==")
+        print("Please Choose Master Data Type (1 - Material Master, 2 - RAG Report, 3 - GTIN)")
+        # define source data route
+        master_data_path = self.__class__.update_path + "Public/"
+        # define file name list
+        master_data_filename_list = ["", "MATERIAL_MASTER", "RAG_Report", "GTIN"]
+        cmd_code = input("cmd >> master_data >> ")
+        if cmd_code == "exit":
+            return
+        if cmd_code not in ["1", "2", "3"]:
+            print("Wrong Code. Please Try Again.")
+            return
+        master_data_filename = master_data_filename_list[int(cmd_code)]
+        master_data_file = master_data_path + master_data_filename + ".xlsx"
+        print("!Make sure you have put file %s in %s" % (master_data_filename, master_data_path))
+        # start to read file
+        print("Start to read data file.")
+        if cmd_code == "2":
+            df = pd.read_excel(master_data_file, sheet_name="REPORT")
+        else:
+            df = pd.read_excel(master_data_file)
+        print("Start to import into database.")
+        database_name = self.__class__.db_path + "Master_Data.db"
+        conn = sqlite3.connect(database_name)
+        df.to_sql(name=master_data_filename, con=conn, if_exists='replace', index=False)
+        print("%s imported" % master_data_filename)
+
+    # ranking ABC by 6 month IMS sales value.
+    def generate_abc_ranking(self, sales_source="IMS", month_qty=6):
+        tbl_name = self.__class__.bu_name + "_" + sales_source
+        db_fullname = self.__class__.db_path + tbl_name + ".db"
+        master_data_db_fullname = self.__class__.db_path + self.__class__.bu_name + '_Master_Data.db'
+        conn = sqlite3.connect(db_fullname)
+        c = conn.cursor()
+        # get month list
+        str_cmd = "SELECT DISTINCT month from " + tbl_name + " ORDER BY month DESC LIMIT " + str(month_qty)
+        c.execute(str_cmd)
+        result = c.fetchall()
+        month_list = ""
+        for item in result:
+            month_list = month_list + '\"' + item[0] + '\",'
+        month_list = month_list.rstrip(",")
+        # get recent month IMS
+        str_cmd = "SELECT Material, sum(Quantity) as IMS_Quantity,  sum(Value_SAP_Price) as IMS_Value from " + \
+                  tbl_name + " WHERE Month in (" + month_list + ") GROUP by Material ORDER by IMS_Value DESC"
+        df_ims_query = pd.read_sql(sql=str_cmd, con=conn)
+        # get accumulate IMS data and ranking
+        ims_total = df_ims_query['IMS_Value'].sum()
+        df_ims_query['Ratio'] = df_ims_query['IMS_Value'] / ims_total
+        df_ims_query['Cum_Ratio'] = df_ims_query['Ratio'].cumsum()
+        df_ims_query['Ranking'] = df_ims_query['Cum_Ratio'].apply(lambda x: 'A' if x < 0.8 else ('B' if x < 0.95 else 'C'))
+        # delete calculation column
+        df_ims_query.drop(['Ratio', 'Cum_Ratio'], axis=1, inplace=True)
+        print(df_ims_query.head())
+        conn = sqlite3.connect(master_data_db_fullname)
+        df_ims_query.to_sql(name="Ranking", con=conn, if_exists='replace', index=False)
+        conn.close()
+
+
 if __name__ == "__main__":
-    DataUpdate = MasterDataUpdate()
+    DataUpdate = MasterDataConsolidation()
     DataUpdate.bu_name = "TU"
     DataUpdate.master_data_update_entrance()
     # print(DataUpdate.mapping_rag(["440.834", "440.831S"]))
