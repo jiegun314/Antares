@@ -128,7 +128,7 @@ class SNOPExportV2:
                                        columns="Month", fill_value=0)
         return df_eso_result
 
-    def get_sales_data(self):
+    def generate_code_onesheet(self):
         # Get Month list
         time_start = time.time()
         current_month = time.strftime("%Y-%m", time.localtime())
@@ -143,7 +143,7 @@ class SNOPExportV2:
         print("Data Length:", len(active_code_list))
         # Get eso_result
         df_eso_result = self.get_code_eso_list()
-        lst_column_name += [item[0] + "-" + item[1] for item in list(df_eso_result)]
+        lst_column_name += [item[0] + "_" + item[1] for item in list(df_eso_result)]
         # Generate sales type list
         sales_type = ["GTS", "LPSales", "IMS"]
         lst_sales_df = []
@@ -154,7 +154,7 @@ class SNOPExportV2:
                                           columns="Month", fill_value=0)
             # print(len(list(pivot_result)))
             print(sales_type_item, " is ready!")
-            lst_column_name += [sales_type_item + "-" + item[0] + "-" + item[1] for item in list(pivot_result)]
+            lst_column_name += [sales_type_item + "_" + item[0] + "_" + item[1] for item in list(pivot_result)]
             lst_sales_df.append(pivot_result)
         # Generate inventory type list
         inventory_type = ["JNJ_INV", "LP_INV"]
@@ -166,7 +166,7 @@ class SNOPExportV2:
                                           values=["Quantity", "Value_Standard_Cost", "Value_SAP_Price"],
                                           columns="Month", fill_value=0)
             print(inv_type_item, " is ready!")
-            lst_column_name += [inv_type_item + "-" + item[0] + "-" + item[1] for item in list(pivot_result)]
+            lst_column_name += [inv_type_item + "_" + item[0] + "_" + item[1] for item in list(pivot_result)]
             lst_inv_df.append(pivot_result)
         # Generate forecast pivot list
         forecast_type = ['Statistical', 'Final']
@@ -178,7 +178,7 @@ class SNOPExportV2:
             pivot_result = pd.pivot_table(df, index='Material', values=['Quantity', 'Value_SAP_Price'],
                                           columns='Month', fill_value=0)
             print(forecast_type_item, " Forecast is ready!")
-            lst_column_name += [forecast_type_item + "_Forecast-" + item[0] + "-" + item[1] for item in list(pivot_result)]
+            lst_column_name += [forecast_type_item + "_Forecast_" + item[0] + "_" + item[1] for item in list(pivot_result)]
             lst_forecast_df.append(pivot_result)
         # Get sales result of single code
         snop_result = []
@@ -236,4 +236,4 @@ class SNOPExportV2:
 if __name__ == '__main__':
     TestModule = SNOPExportV2("TU")
     # TestModule.get_statistical_forecast_list(['2020-06', '2020-07'], 'Final')
-    TestModule.get_sales_data()
+    TestModule.generate_code_onesheet()
