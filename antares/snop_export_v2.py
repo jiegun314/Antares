@@ -7,6 +7,15 @@ import numpy as np
 import time
 
 
+def generate_str_month_list(month_list):
+    str_month_list = ''
+    for month_item in month_list:
+        str_month_list += '\"' + month_item + '\",'
+    str_month_list = str_month_list.rstrip(',')
+    return str_month_list
+    pass
+
+
 class SNOPExportV2:
 
     bu_name = ""
@@ -39,6 +48,8 @@ class SNOPExportV2:
         df = pd.read_sql(sql=sql_cmd, con=conn)
         # code_list = df['Material'].values.tolist()
         return df
+
+    # generate str_month_list for sql cmd with month list for calculation
 
     # Return all the sales data
     def get_code_sales_list(self, sales_type, month_list):
@@ -73,6 +84,22 @@ class SNOPExportV2:
             sql_cmd = "SELECT Material, Month, sum(Quantity) as Quantity, " \
                       "sum(Value_Standard_Cost) as Value_Standard_Cost, sum(Value_SAP_Price) as Value_SAP_Price from " \
                       + file_name + " WHERE Month IN (" + str_month_list + ") GROUP BY Material, Month ORDER BY Month"
+        df = pd.read_sql(sql=sql_cmd, con=conn)
+        conn.commit()
+        conn.close()
+        return df
+
+    # Return Forecast
+    def get_forecast_list(self, month_list, forecast_type):
+        str_month_list = generate_str_month_list(month_list)
+        database_name = self.__class__.db_path + self.__class__.bu_name + '_' + forecast_type + '_Forecast.db'
+        conn = sqlite3.connect(database_name)
+        # get the newest version of statistical forecast
+        c = conn.cursor()
+        c.execute('SELECT name FROM sqlite_master WHERE type = "table" ORDER by name')
+        table_name = c.fetchall()[-1][0]
+        sql_cmd = 'SELECT Material, Month, Quantity, Value_SAP_Price FROM ' + table_name + ' WHERE Month IN (' \
+                  + str_month_list + ') ORDER by Month'
         df = pd.read_sql(sql=sql_cmd, con=conn)
         conn.commit()
         conn.close()
@@ -141,6 +168,18 @@ class SNOPExportV2:
             print(inv_type_item, " is ready!")
             lst_column_name += [inv_type_item + "-" + item[0] + "-" + item[1] for item in list(pivot_result)]
             lst_inv_df.append(pivot_result)
+        # Generate forecast pivot list
+        forecast_type = ['Statistical', 'Final']
+        forecast_month_list = info_check.get_time_list(current_month, 24)
+        lst_forecast_df = []
+        for forecast_type_item in forecast_type:
+            df = self.get_forecast_list(forecast_month_list, forecast_type_item)
+            # Generate pivot_table
+            pivot_result = pd.pivot_table(df, index='Material', values=['Quantity', 'Value_SAP_Price'],
+                                          columns='Month', fill_value=0)
+            print(forecast_type_item, " Forecast is ready!")
+            lst_column_name += [forecast_type_item + "_Forecast-" + item[0] + "-" + item[1] for item in list(pivot_result)]
+            lst_forecast_df.append(pivot_result)
         # Get sales result of single code
         snop_result = []
         for code_item in list_material_master:
@@ -172,6 +211,14 @@ class SNOPExportV2:
                     code_output.extend([x * 0 for x in range(0, len(inv_item_df.columns))])
                 else:
                     code_output.extend(code_result.values.tolist())
+            # Load Forecast data
+            for forecast_item_df in lst_forecast_df:
+                try:
+                    code_result = forecast_item_df.loc[code_name]
+                except KeyError:
+                    code_output.extend([x * 0 for x in range(0, len(forecast_item_df.columns))])
+                else:
+                    code_output.extend(code_result.values.tolist())
             snop_result.append(code_output)
         time_end = time.time()
         print('time cost', int(time_end - time_start), 's')
@@ -188,5 +235,5 @@ class SNOPExportV2:
 
 if __name__ == '__main__':
     TestModule = SNOPExportV2("TU")
+    # TestModule.get_statistical_forecast_list(['2020-06', '2020-07'], 'Final')
     TestModule.get_sales_data()
-    # TestModule.get_code_eso_list()
