@@ -42,7 +42,8 @@ class SNOPExportV2:
 
     def get_all_master_data(self):
         database_fullname = self.__class__.db_path + self.__class__.bu_name + '_Master_Data.db'
-        datasheet_name = self.__class__.bu_name + '_Master_Data_Demo'
+        # datasheet_name = self.__class__.bu_name + '_Master_Data_Demo'
+        datasheet_name = self.__class__.bu_name + '_Master_Data'
         conn = sqlite3.connect(database_fullname)
         sql_cmd = "SELECT * FROM " + datasheet_name
         df = pd.read_sql(sql=sql_cmd, con=conn)
@@ -182,6 +183,12 @@ class SNOPExportV2:
             lst_forecast_df.append(pivot_result)
         # Get sales result of single code
         snop_result = []
+        # start count
+        print('Start to generate code list')
+        counter, num = 0, 5
+        list_show = list(range(int(len(list_material_master) / 20), len(list_material_master) + 1,
+                               int(len(list_material_master) / 20)))
+        # start mapping
         for code_item in list_material_master:
             # initiate blank list
             code_name = code_item[0]
@@ -220,14 +227,21 @@ class SNOPExportV2:
                 else:
                     code_output.extend(code_result.values.tolist())
             snop_result.append(code_output)
+            # count
+            counter += 1
+            if counter in list_show:
+                print(" -->", num, "%", end="", flush=True)
+                num += 5
+        # get end time
         time_end = time.time()
-        print('time cost', int(time_end - time_start), 's')
+        print('Time cost: ', int(time_end - time_start), 's')
+        print('List done, start to export to excel file')
         # Transfer to array
         array_output = np.array(snop_result)
         df = pd.DataFrame(array_output)
         # Export to Excel
         current_time = time.strftime("%y%m%d-%H%M%S", time.localtime())
-        file_name = self.__class__.bu_name + "_SNOP_" + current_time + "_Test.xlsx"
+        file_name = self.__class__.bu_name + "_SNOP_" + current_time + ".xlsx"
         file_fullname = self.__class__.export_path + file_name
         df.to_excel(file_fullname, sheet_name="Code", index=False, header=lst_column_name, freeze_panes=(1, 1))
         print('Done~')
