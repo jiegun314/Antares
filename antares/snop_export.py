@@ -482,7 +482,6 @@ class SNOPExport:
         df_top_implant_eso.to_excel(writer, sheet_name="SNOP_Summary", index=False, startrow=1, startcol=28)
 
         writer.close()
-        pass
 
 
 if __name__ == '__main__':
