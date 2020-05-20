@@ -22,6 +22,7 @@ class SNOPExportV2:
     db_path = "../data/_DB/"
     export_path = "../data/_Output/"
     file_path = "../data/_Source_Data/"
+    file_fullname = ""
 
     def __init__(self, bu):
         self.__class__.bu_name = bu
@@ -242,18 +243,26 @@ class SNOPExportV2:
         # Export to Excel
         current_time = time.strftime("%y%m%d-%H%M%S", time.localtime())
         file_name = self.__class__.bu_name + "_SNOP_" + current_time + ".xlsx"
-        file_fullname = self.__class__.export_path + file_name
-        df.to_excel(file_fullname, sheet_name="Code", index=False, header=lst_column_name, freeze_panes=(1, 1))
+        self.__class__.file_fullname = self.__class__.export_path + file_name
+        df.to_excel(self.__class__.file_fullname, sheet_name="Code", index=False,
+                    header=lst_column_name, freeze_panes=(1, 1))
         print('Done~')
+
+    def read_file_fullname(self):
+        return self.__class__.file_fullname
 
 
 class SNOPSummaryExport:
     bu_name = ""
     db_path = "../data/_DB/"
     export_path = "../data/_Output/"
+    file_fullname = ""
 
     def __init__(self, bu):
         self.__class__.bu_name = bu
+
+    def set_file_fullname(self, file_name_input):
+        self.__class__.file_fullname = file_name_input
 
     def get_top_sales(self, sales_type, num=20):
         # get this cycle month and last cycle month
@@ -373,7 +382,7 @@ class SNOPSummaryExport:
                       "\' AND Suzhou =\'N\' AND Phoenix = \'Y\'"
             c.execute(sql_cmd)
             result = c.fetchall()[0]
-            inv_phoenix = 0 if result is None else result
+            inv_phoenix = (0,) if result is None else result
             monthly_inv_phoenix.extend(inv_phoenix)
         monthly_inv_result.append(monthly_inv_phoenix)
         # Add inventory Sum
@@ -430,9 +439,7 @@ class SNOPSummaryExport:
         # open file
         print('Open Blank Excel File.')
         current_time = time.strftime("%y%m%d", time.localtime())
-        file_name = self.__class__.bu_name + "_SNOP_TEST_" + current_time + ".xlsx"
-        file_fullname = self.__class__.export_path + file_name
-        writer = pd.ExcelWriter(file_fullname)
+        writer = pd.ExcelWriter(self.__class__.file_fullname, mode='a')
 
         # export 6 months JNJ inventory
         print('Export 6 months JNJ Inventory')
@@ -484,8 +491,10 @@ class SNOPSummaryExport:
 
 
 if __name__ == '__main__':
-    # TestModule = SNOPExportV2("TU")
+    TestModule = SNOPExportV2("TU")
     # TestModule.get_statistical_forecast_list(['2020-06', '2020-07'], 'Final')
-    # TestModule.generate_code_onesheet()
-    TestSummaryModule = SNOPSummaryExport('TU')
-    TestSummaryModule.snop_summary_generation()
+    TestModule.generate_code_onesheet()
+    file_fullname = TestModule.read_file_fullname()
+    TestSummary = SNOPSummaryExport('TU')
+    TestSummary.set_file_fullname(file_fullname)
+    TestSummary.snop_summary_generation()
