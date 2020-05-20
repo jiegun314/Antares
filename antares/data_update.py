@@ -163,6 +163,8 @@ class MonthlyUpdate:
             master_data_list = ['Standard_Cost', 'Hierarchy_4', 'Hierarchy_5', 'Phoenix_Status', 'SAP_Price', 'PM']
             master_data_result = info_check.get_single_code_all_master_data(material_code, master_data_list)
             [md_standard_cost, md_h4_name, md_h5_name, md_phoenix_status, md_sap_price, md_pm] = master_data_result
+            # change blank PM to "N/A"
+            md_pm = "N/A" if md_pm is None else md_pm
             md_suzhou_status = "Y" if material_code[-2:] == "CN" else "N"
             md_instrument_status = 'N' if material_code[0:1] in ['2', '4'] or material_code[0:2] in ['02', '04']\
                                           or material_code[0:3] == 'CNB' else 'Y'
