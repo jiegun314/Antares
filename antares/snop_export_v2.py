@@ -371,10 +371,8 @@ class SNOPSummaryExport:
         for month_name in month_list:
             sql_cmd = "SELECT sum(Value_Standard_Cost) FROM " + filename + " WHERE Month = \'" + month_name + \
                       "\' AND Suzhou =\'N\' AND Phoenix = \'Y\'"
-            df = pd.read_sql(sql=sql_cmd, con=conn)
-            print(df.head())
             c.execute(sql_cmd)
-            result = c.fetchall()[0][0]
+            result = c.fetchall()[0]
             inv_phoenix = 0 if result is None else result
             monthly_inv_phoenix.extend(inv_phoenix)
         monthly_inv_result.append(monthly_inv_phoenix)
