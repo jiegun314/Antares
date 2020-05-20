@@ -504,7 +504,7 @@ class MasterDataConsolidation:
             if result:
                 lst_pm.append(result[0][0])
             else:
-                lst_pm.append(None)
+                lst_pm.append('NA')
         return lst_pm
 
 
