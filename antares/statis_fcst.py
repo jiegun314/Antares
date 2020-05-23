@@ -461,7 +461,7 @@ class GetStatisticalForecast:
             return lst_sales_data
 
     # fcst程序入口
-    def get_forecast_entrance(self, model="Normal"):
+    def get_forecast_entrance(self):
         # 打印标题
         print("====== < Dragon - Statistical Forecast Generator > ======")
         print("===== !Warning! Make sure you've updated sales data and release your PC capacity! =====")
@@ -487,7 +487,7 @@ class GetStatisticalForecast:
             return
         # 获取活跃代码列表
         get_code_list = data_import.DataInput(self.__class__.bu_name)
-        active_code_list = get_code_list.get_active_codes(model)
+        active_code_list = get_code_list.get_active_codes('Normal', 'Forecast')
         # 获取历史销量数据
         historical_sales_qty = self.get_sale_list(active_code_list, data_type)
         # 对于IMS的最后一个月进行判断补足
@@ -549,4 +549,4 @@ class GetStatisticalForecast:
 
 if __name__ == '__main__':
     new_fcst = GetStatisticalForecast('TU')
-    new_fcst.get_forecast_entrance('Normal')
+    new_fcst.get_forecast_entrance()
