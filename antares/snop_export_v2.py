@@ -490,11 +490,71 @@ class SNOPSummaryExport:
         writer.close()
 
 
+class SNOPHierarchy5Export:
+
+    bu_name = ""
+    db_path = "../data/_DB/"
+    export_path = "../data/_Output/"
+    file_path = "../data/_Source_Data/"
+    file_fullname = ""
+
+    def __init__(self, bu):
+        self.__class__.bu_name = bu
+
+    def get_hierarchy5_list(self):
+        database_fullname = self.__class__.db_path + self.__class__.bu_name + '_Master_Data.db'
+        datasheet_name = self.__class__.bu_name + '_Master_Data'
+        conn = sqlite3.connect(database_fullname)
+        sql_cmd = 'SELECT Material, Hierarchy_5 FROM ' + datasheet_name
+        df_h5_all = pd.read_sql(sql=sql_cmd, con=conn)
+        df_h5_summary = df_h5_all.pivot_table(index='Hierarchy_5', values='Material', aggfunc='count')
+        return df_h5_summary
+        pass
+
+    def get_pm_list(self):
+        database_fullname = self.__class__.db_path + self.__class__.bu_name + '_Master_Data.db'
+        datasheet_name = self.__class__.bu_name + '_PM_List'
+        conn = sqlite3.connect(database_fullname)
+        sql_cmd = 'SELECT * FROM ' + datasheet_name
+        df_pm_list = pd.read_sql(sql=sql_cmd, con=conn, index_col='Hierarchy_5')
+        return df_pm_list
+
+    def get_h5_gts_result(self):
+        datasheet_name = self.__class__.bu_name + '_GTS'
+        database_fullname = self.__class__.db_path + datasheet_name + '.db'
+        conn = sqlite3.connect(database_fullname)
+        c = conn.cursor()
+        sql_cmd = 'SELECT DISTINCT Month FROM ' + datasheet_name + ' ORDER by Month DESC LIMIT 1'
+        c.execute(sql_cmd)
+        month_result = c.fetchall()[0][0]
+        sql_cmd = 'SELECT Hierarchy_5, sum(Value_SAP_Price) as GTS_Value FROM ' + datasheet_name + ' WHERE Month = \"' \
+                  + month_result + '\" GROUP BY Hierarchy_5 ORDER BY Hierarchy_5'
+        df_gts_result = pd.read_sql(sql=sql_cmd, con=conn, index_col='Hierarchy_5')
+        return df_gts_result
+
+    def get_h5_jnj_inv(self):
+        pass
+
+    def generate_h5_summary_entrance(self):
+        # get h5 list
+        df_h5_list = self.get_hierarchy5_list()
+        # get pm list
+        df_pm_list = self.get_pm_list()
+        # get gts result
+        df_gts_result = self.get_h5_gts_result()
+        df_result = df_h5_list.join(df_pm_list)
+        df_result = df_result.join(df_gts_result)
+        print(df_result.head())
+        pass
+
+
 if __name__ == '__main__':
-    TestModule = SNOPExportV2("TU")
-    # TestModule.get_statistical_forecast_list(['2020-06', '2020-07'], 'Final')
-    TestModule.generate_code_onesheet()
-    file_fullname = TestModule.read_file_fullname()
-    TestSummary = SNOPSummaryExport('TU')
-    TestSummary.set_file_fullname(file_fullname)
-    TestSummary.snop_summary_generation()
+    # TestModule = SNOPExportV2("TU")
+    # TestModule.generate_code_onesheet()
+    # file_fullname = TestModule.read_file_fullname()
+    # TestSummary = SNOPSummaryExport('TU')
+    # TestSummary.set_file_fullname(file_fullname)
+    # TestSummary.snop_summary_generation()
+    TestModule = SNOPHierarchy5Export('TU')
+    TestModule.generate_h5_summary_entrance()
+
