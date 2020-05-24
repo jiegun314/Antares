@@ -505,10 +505,9 @@ class SNOPHierarchy5Export:
         database_fullname = self.__class__.db_path + self.__class__.bu_name + '_Master_Data.db'
         datasheet_name = self.__class__.bu_name + '_Master_Data'
         conn = sqlite3.connect(database_fullname)
-        sql_cmd = 'SELECT Material, Hierarchy_5 FROM ' + datasheet_name
-        df_h5_all = pd.read_sql(sql=sql_cmd, con=conn)
-        df_h5_summary = df_h5_all.pivot_table(index='Hierarchy_5', values='Material', aggfunc='count')
-        return df_h5_summary
+        sql_cmd = 'SELECT Hierarchy_5, count(Material) as Code_Qty FROM ' + datasheet_name + ' GROUP by Hierarchy_5'
+        df_h5_all = pd.read_sql(sql=sql_cmd, con=conn, index_col='Hierarchy_5')
+        return df_h5_all
         pass
 
     def get_pm_list(self):
@@ -519,33 +518,103 @@ class SNOPHierarchy5Export:
         df_pm_list = pd.read_sql(sql=sql_cmd, con=conn, index_col='Hierarchy_5')
         return df_pm_list
 
-    def get_h5_gts_result(self):
-        datasheet_name = self.__class__.bu_name + '_GTS'
+    def get_h5_sales_result(self, sale_type):
+        datasheet_name = self.__class__.bu_name + '_' + sale_type
         database_fullname = self.__class__.db_path + datasheet_name + '.db'
         conn = sqlite3.connect(database_fullname)
         c = conn.cursor()
+        # get latest month
         sql_cmd = 'SELECT DISTINCT Month FROM ' + datasheet_name + ' ORDER by Month DESC LIMIT 1'
         c.execute(sql_cmd)
         month_result = c.fetchall()[0][0]
-        sql_cmd = 'SELECT Hierarchy_5, sum(Value_SAP_Price) as GTS_Value FROM ' + datasheet_name + ' WHERE Month = \"' \
-                  + month_result + '\" GROUP BY Hierarchy_5 ORDER BY Hierarchy_5'
-        df_gts_result = pd.read_sql(sql=sql_cmd, con=conn, index_col='Hierarchy_5')
-        return df_gts_result
+        sql_cmd = 'SELECT Hierarchy_5, sum(Value_SAP_Price) as ' + sale_type + '_Value FROM ' + datasheet_name + \
+                  ' WHERE Month = \"' + month_result + '\" GROUP BY Hierarchy_5 COLLATE NOCASE ORDER BY Hierarchy_5 COLLATE NOCASE'
+        df_sales_result = pd.read_sql(sql=sql_cmd, con=conn, index_col='Hierarchy_5')
+        return df_sales_result
 
-    def get_h5_jnj_inv(self):
-        pass
+    # get 6 month sales data with Standard Cost
+    def get_h5_6m_sales(self, sales_type):
+        datasheet_name = self.__class__.bu_name + '_' + sales_type
+        database_fullname = self.__class__.db_path + datasheet_name + '.db'
+        conn = sqlite3.connect(database_fullname)
+        c = conn.cursor()
+        # get latest month
+        sql_cmd = 'SELECT DISTINCT Month FROM ' + datasheet_name + ' ORDER by Month DESC LIMIT 6'
+        c.execute(sql_cmd)
+        result = c.fetchall()
+        month_result = [item[0] for item in result]
+        str_month_list = generate_str_month_list(month_result)
+        sql_cmd = 'SELECT Hierarchy_5, sum(Value_Standard_Cost)/6 as SixMth_AVG_' + sales_type + ' FROM ' + datasheet_name \
+                  + ' WHERE Month in (' + str_month_list + ') GROUP by Hierarchy_5 COLLATE NOCASE'
+        df_avg_sales = pd.read_sql(sql=sql_cmd, con=conn)
+        df_avg_sales['Hierarchy_5'] = df_avg_sales['Hierarchy_5'].str.upper()
+        df_avg_sales_result = df_avg_sales.set_index('Hierarchy_5')
+        return df_avg_sales_result
+
+    def get_h5_inv(self, inv_type, year_type='current_year'):
+        datasheet_name = self.__class__.bu_name + '_' + inv_type
+        database_fullname = self.__class__.db_path + datasheet_name + '.db'
+        conn = sqlite3.connect(database_fullname)
+        c = conn.cursor()
+        # get latest month
+        sql_cmd = 'SELECT DISTINCT Month FROM ' + datasheet_name + ' ORDER by Month DESC LIMIT 1'
+        c.execute(sql_cmd)
+        month_result = c.fetchall()[0][0]
+        title_in_list = inv_type
+        # get the value of last year
+        if year_type == 'last_year':
+            month_result = str(int(month_result[0:4]) - 1) + month_result[-3:]
+            title_in_list = inv_type + '_Last_Year'
+        sql_cmd = 'SELECT Hierarchy_5, sum(Value_Standard_Cost) as ' + title_in_list + ' FROM ' + datasheet_name + \
+                  ' WHERE Month = \"' + month_result + '\" GROUP BY Hierarchy_5 COLLATE NOCASE'
+        df_inv = pd.read_sql(sql=sql_cmd, con=conn)
+        df_inv['Hierarchy_5'] = df_inv['Hierarchy_5'].str.upper()
+        df_inv_result = df_inv.set_index('Hierarchy_5')
+        return df_inv_result
 
     def generate_h5_summary_entrance(self):
         # get h5 list
         df_h5_list = self.get_hierarchy5_list()
         # get pm list
         df_pm_list = self.get_pm_list()
-        # get gts result
-        df_gts_result = self.get_h5_gts_result()
         df_result = df_h5_list.join(df_pm_list)
+        # get gts result
+        df_gts_result = self.get_h5_sales_result('GTS')
         df_result = df_result.join(df_gts_result)
+        # get LPsales result
+        df_lpsales_result = self.get_h5_sales_result('LPSales')
+        df_result = df_result.join(df_lpsales_result)
+        # get IMS result
+        df_ims_result = self.get_h5_sales_result('IMS')
+        df_result = df_result.join(df_ims_result)
+        # get JNJ Inventory
+        df_jnj_inv = self.get_h5_inv('JNJ_INV')
+        df_result = df_result.join(df_jnj_inv)
+        # get 6M AVG gts
+        df_avg_gts = self.get_h5_6m_sales('GTS')
+        df_result = df_result.join(df_avg_gts)
+        df_result['JNJ_INV_Mth'] = df_result['JNJ_INV'] / df_result['SixMth_AVG_GTS']
+        # get JNJ INV of last year
+        df_jnj_inv_last_year = self.get_h5_inv('JNJ_INV', 'last_year')
+        df_result = df_result.join(df_jnj_inv_last_year)
+        # get LP Inventory
+        df_lp_inv = self.get_h5_inv('LP_INV')
+        df_result = df_result.join(df_lp_inv)
+        # get 6M AVG LPsales
+        df_avg_lpsales = self.get_h5_6m_sales('LPSales')
+        df_result = df_result.join(df_avg_lpsales)
+        df_result['LP_INV_Mth'] = df_result['LP_INV'] / df_result['SixMth_AVG_LPSales']
+        # delete avg sales
+        df_result.drop(['SixMth_AVG_GTS', 'SixMth_AVG_LPSales'], axis=1, inplace=True)
+        # get LP Inventory
+        df_lp_inv_last_year = self.get_h5_inv('LP_INV', 'last_year')
+        df_result = df_result.join(df_lp_inv_last_year)
         print(df_result.head())
-        pass
+        # Export to Excel
+        current_time = time.strftime("%y%m%d-%H%M%S", time.localtime())
+        file_name = self.__class__.bu_name + "_SNOP_" + current_time + ".xlsx"
+        self.__class__.file_fullname = self.__class__.export_path + file_name
+        df_result.to_excel(self.__class__.file_fullname, sheet_name="H5", index=True, freeze_panes=(1, 1))
 
 
 if __name__ == '__main__':
@@ -557,4 +626,5 @@ if __name__ == '__main__':
     # TestSummary.snop_summary_generation()
     TestModule = SNOPHierarchy5Export('TU')
     TestModule.generate_h5_summary_entrance()
+
 
