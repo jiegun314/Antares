@@ -437,8 +437,7 @@ class SNOPSummaryExport:
 
     def snop_summary_generation(self):
         # open file
-        print('Open Blank Excel File.')
-        current_time = time.strftime("%y%m%d", time.localtime())
+        print('Open Excel File.')
         writer = pd.ExcelWriter(self.__class__.file_fullname, mode='a')
 
         # export 6 months JNJ inventory
@@ -486,7 +485,6 @@ class SNOPSummaryExport:
         df_top_implant_eso = pd.DataFrame(data=np_top_implant_eso[1:, 0:], columns=np_top_implant_eso[0, 0:])
         # export instrument eso to excel
         df_top_implant_eso.to_excel(writer, sheet_name="SNOP_Summary", index=False, startrow=1, startcol=28)
-
         writer.close()
 
 
@@ -500,6 +498,9 @@ class SNOPHierarchy5Export:
 
     def __init__(self, bu):
         self.__class__.bu_name = bu
+
+    def set_file_fullname(self, file_name_input):
+        self.__class__.file_fullname = file_name_input
 
     def get_hierarchy5_list(self):
         database_fullname = self.__class__.db_path + self.__class__.bu_name + '_Master_Data.db'
@@ -518,7 +519,7 @@ class SNOPHierarchy5Export:
         df_pm_list = pd.read_sql(sql=sql_cmd, con=conn, index_col='Hierarchy_5')
         return df_pm_list
 
-    def get_h5_sales_result(self, sale_type):
+    def get_h5_sales_result(self, sale_type, year_type='current_year'):
         datasheet_name = self.__class__.bu_name + '_' + sale_type
         database_fullname = self.__class__.db_path + datasheet_name + '.db'
         conn = sqlite3.connect(database_fullname)
@@ -527,9 +528,16 @@ class SNOPHierarchy5Export:
         sql_cmd = 'SELECT DISTINCT Month FROM ' + datasheet_name + ' ORDER by Month DESC LIMIT 1'
         c.execute(sql_cmd)
         month_result = c.fetchall()[0][0]
-        sql_cmd = 'SELECT Hierarchy_5, sum(Value_SAP_Price) as ' + sale_type + '_Value FROM ' + datasheet_name + \
-                  ' WHERE Month = \"' + month_result + '\" GROUP BY Hierarchy_5 COLLATE NOCASE ORDER BY Hierarchy_5 COLLATE NOCASE'
-        df_sales_result = pd.read_sql(sql=sql_cmd, con=conn, index_col='Hierarchy_5')
+        title_in_list = sale_type
+        if year_type == 'last_year':
+            month_result = str(int(month_result[0:4]) - 1) + month_result[-3:]
+            title_in_list = sale_type + '_Last_Year'
+        sql_cmd = 'SELECT Hierarchy_5, sum(Value_SAP_Price) as ' + title_in_list + '_Value FROM ' + datasheet_name + \
+                  ' WHERE Month = \"' + month_result + \
+                  '\" GROUP BY Hierarchy_5 COLLATE NOCASE ORDER BY Hierarchy_5 COLLATE NOCASE'
+        df_sales = pd.read_sql(sql=sql_cmd, con=conn)
+        df_sales['Hierarchy_5'] = df_sales['Hierarchy_5'].str.upper()
+        df_sales_result = df_sales.set_index('Hierarchy_5')
         return df_sales_result
 
     # get 6 month sales data with Standard Cost
@@ -572,21 +580,64 @@ class SNOPHierarchy5Export:
         df_inv_result = df_inv.set_index('Hierarchy_5')
         return df_inv_result
 
+    def get_h5_backorder(self):
+        datasheet_name = self.__class__.bu_name + '_JNJ_INV'
+        database_fullname = self.__class__.db_path + datasheet_name + '.db'
+        conn = sqlite3.connect(database_fullname)
+        c = conn.cursor()
+        # get latest month
+        sql_cmd = 'SELECT DISTINCT Month FROM ' + datasheet_name + ' ORDER by Month DESC LIMIT 1'
+        c.execute(sql_cmd)
+        month_result = c.fetchall()[0][0]
+        # get backorder code qty, qty, and value in sap price by h5
+        sql_cmd = 'SELECT Hierarchy_5, count(Material) as BO_Codes, 0-sum(Available_Stock) as BO_Qty, ' \
+                  '0-sum(Value_SAP_Price) as BO_Value FROM TU_JNJ_INV WHERE Month=\"' + month_result + \
+                  '\" AND Available_Stock<0 GROUP by Hierarchy_5'
+        df_backorder = pd.read_sql(sql=sql_cmd, con=conn, index_col='Hierarchy_5')
+        return df_backorder
+
+    def get_h5_eso(self):
+        datasheet_name = self.__class__.bu_name + '_ESO'
+        database_fullname = self.__class__.db_path + datasheet_name + '.db'
+        conn = sqlite3.connect(database_fullname)
+        c = conn.cursor()
+        # get latest month
+        sql_cmd = 'SELECT DISTINCT Month FROM ' + datasheet_name + ' ORDER by Month DESC LIMIT 1'
+        c.execute(sql_cmd)
+        month_result = c.fetchall()[0][0]
+        sql_cmd = 'SELECT Hierarchy_5, sum(Excess_Quantity) as E_Qty, sum(Slow_Moving_Quantity) as SM_Qty, ' \
+                  'sum(Obsolete_Quantity) as Q_Qty, sum(ESO_Value_Standard_Cost) as ESO_Value FROM TU_ESO ' \
+                  'WHERE Month=\"' + month_result + '\" GROUP by Hierarchy_5'
+        df_eso = pd.read_sql(sql=sql_cmd, con=conn)
+        df_eso['Hierarchy_5'] = df_eso['Hierarchy_5'].str.upper()
+        df_eso_result = df_eso.set_index('Hierarchy_5')
+        return df_eso_result
+
     def generate_h5_summary_entrance(self):
+        print('Start to generate Hierarchy_5 level page')
         # get h5 list
         df_h5_list = self.get_hierarchy5_list()
         # get pm list
         df_pm_list = self.get_pm_list()
         df_result = df_h5_list.join(df_pm_list)
-        # get gts result
+        # get gts result (including last year)
         df_gts_result = self.get_h5_sales_result('GTS')
         df_result = df_result.join(df_gts_result)
-        # get LPsales result
+        df_gts_result_last_year = self.get_h5_sales_result('GTS', 'last_year')
+        df_result = df_result.join(df_gts_result_last_year)
+        # get LPsales result (including last year)
         df_lpsales_result = self.get_h5_sales_result('LPSales')
         df_result = df_result.join(df_lpsales_result)
-        # get IMS result
+        df_lpsales_result_last_year = self.get_h5_sales_result('LPSales', 'last_year')
+        df_result = df_result.join(df_lpsales_result_last_year)
+        # get IMS result (including last year)
         df_ims_result = self.get_h5_sales_result('IMS')
         df_result = df_result.join(df_ims_result)
+        df_ims_result_last_year = self.get_h5_sales_result('IMS', 'last_year')
+        df_result = df_result.join(df_ims_result_last_year)
+        # get backorder
+        df_backorder = self.get_h5_backorder()
+        df_result = df_result.join(df_backorder)
         # get JNJ Inventory
         df_jnj_inv = self.get_h5_inv('JNJ_INV')
         df_result = df_result.join(df_jnj_inv)
@@ -606,25 +657,26 @@ class SNOPHierarchy5Export:
         df_result['LP_INV_Mth'] = df_result['LP_INV'] / df_result['SixMth_AVG_LPSales']
         # delete avg sales
         df_result.drop(['SixMth_AVG_GTS', 'SixMth_AVG_LPSales'], axis=1, inplace=True)
-        # get LP Inventory
+        # get LP Inventory of last year
         df_lp_inv_last_year = self.get_h5_inv('LP_INV', 'last_year')
         df_result = df_result.join(df_lp_inv_last_year)
-        print(df_result.head())
+        # get ESO
+        df_eso = self.get_h5_eso()
+        df_result = df_result.join(df_eso)
         # Export to Excel
-        current_time = time.strftime("%y%m%d-%H%M%S", time.localtime())
-        file_name = self.__class__.bu_name + "_SNOP_" + current_time + ".xlsx"
-        self.__class__.file_fullname = self.__class__.export_path + file_name
-        df_result.to_excel(self.__class__.file_fullname, sheet_name="H5", index=True, freeze_panes=(1, 1))
+        writer = pd.ExcelWriter(self.__class__.file_fullname, mode='a')
+        df_result.to_excel(writer, sheet_name="H5", index=True, freeze_panes=(1, 1))
+        writer.close()
+        print("Done~")
 
 
 if __name__ == '__main__':
-    # TestModule = SNOPExportV2("TU")
-    # TestModule.generate_code_onesheet()
-    # file_fullname = TestModule.read_file_fullname()
-    # TestSummary = SNOPSummaryExport('TU')
-    # TestSummary.set_file_fullname(file_fullname)
-    # TestSummary.snop_summary_generation()
-    TestModule = SNOPHierarchy5Export('TU')
-    TestModule.generate_h5_summary_entrance()
-
-
+    TestModule = SNOPExportV2("TU")
+    TestModule.generate_code_onesheet()
+    file_fullname = TestModule.read_file_fullname()
+    TestSummary = SNOPSummaryExport('TU')
+    TestSummary.set_file_fullname(file_fullname)
+    TestSummary.snop_summary_generation()
+    TestH5Module = SNOPHierarchy5Export('TU')
+    TestH5Module.set_file_fullname(file_fullname)
+    TestH5Module.generate_h5_summary_entrance()
