@@ -46,7 +46,9 @@ class SNOPCodeExport:
         # datasheet_name = self.__class__.bu_name + '_Master_Data_Demo'
         datasheet_name = self.__class__.bu_name + '_Master_Data'
         conn = sqlite3.connect(database_fullname)
-        sql_cmd = "SELECT * FROM " + datasheet_name
+        sql_cmd = "SELECT Material, Description, Chinese_Description, Hierarchy_4, Hierarchy_5, PM, Sales_Status, " \
+                  "Purchase_Status, Standard_Cost, SAP_Price, Ranking, MRP_Type, Reorder_Point, Phoenix_Status, " \
+                  "Phoenix_Target_SKU, Phoenix_Discontinuation_Date, Phoenix_Obsolescence_Date, GTIN FROM " + datasheet_name
         df = pd.read_sql(sql=sql_cmd, con=conn)
         # code_list = df['Material'].values.tolist()
         return df
@@ -662,6 +664,16 @@ class SNOPHierarchy5Export:
         # get ESO
         df_eso = self.get_h5_eso()
         df_result = df_result.join(df_eso)
+        # add gts and jnj_inv ranking
+        df_result['GTS_Rank'] = df_result['GTS_Value'].rank(method='min', ascending=False)
+        df_result['JNJ_INV_Rank'] = df_result['JNJ_INV'].rank(method='min', ascending=False)
+        # Move tow ranking to head
+        df_item_gts_rank = df_result['GTS_Rank']
+        df_item_jnj_inv_rank = df_result['JNJ_INV_Rank']
+        df_result.drop(labels=['GTS_Rank'], axis=1, inplace=True)
+        df_result.drop(labels=['JNJ_INV_Rank'], axis=1, inplace=True)
+        df_result.insert(0, 'JNJ_INV_Rank', df_item_jnj_inv_rank)
+        df_result.insert(0, 'GTS_Rank', df_item_gts_rank)
         # Export
         return df_result
         # writer = pd.ExcelWriter(self.__class__.file_fullname, mode='a')
