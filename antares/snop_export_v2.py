@@ -16,7 +16,7 @@ def generate_str_month_list(month_list):
     pass
 
 
-class SNOPExportV2:
+class SNOPCodeExport:
 
     bu_name = ""
     db_path = "../data/_DB/"
@@ -155,7 +155,7 @@ class SNOPExportV2:
                                           values=["Quantity", "Value_Standard_Cost", "Value_SAP_Price"],
                                           columns="Month", fill_value=0)
             # print(len(list(pivot_result)))
-            print(sales_type_item, " is ready!")
+            # print(sales_type_item, " is ready!")
             lst_column_name += [sales_type_item + "_" + item[0] + "_" + item[1] for item in list(pivot_result)]
             lst_sales_df.append(pivot_result)
         # Generate inventory type list
@@ -167,7 +167,7 @@ class SNOPExportV2:
             pivot_result = pd.pivot_table(df, index="Material",
                                           values=["Quantity", "Value_Standard_Cost", "Value_SAP_Price"],
                                           columns="Month", fill_value=0)
-            print(inv_type_item, " is ready!")
+            # print(inv_type_item, " is ready!")
             lst_column_name += [inv_type_item + "_" + item[0] + "_" + item[1] for item in list(pivot_result)]
             lst_inv_df.append(pivot_result)
         # Generate forecast pivot list
@@ -179,7 +179,7 @@ class SNOPExportV2:
             # Generate pivot_table
             pivot_result = pd.pivot_table(df, index='Material', values=['Quantity', 'Value_SAP_Price'],
                                           columns='Month', fill_value=0)
-            print(forecast_type_item, " Forecast is ready!")
+            # print(forecast_type_item, " Forecast is ready!")
             lst_column_name += [forecast_type_item + "_Forecast_" + item[0] + "_" + item[1] for item in list(pivot_result)]
             lst_forecast_df.append(pivot_result)
         # Get sales result of single code
@@ -235,18 +235,19 @@ class SNOPExportV2:
                 num += 5
         # get end time
         time_end = time.time()
+        print('')
         print('Time cost: ', int(time_end - time_start), 's')
-        print('List done, start to export to excel file')
         # Transfer to array
         array_output = np.array(snop_result)
-        df = pd.DataFrame(array_output)
+        df_code = pd.DataFrame(array_output)
+        return [df_code, lst_column_name]
         # Export to Excel
-        current_time = time.strftime("%y%m%d-%H%M%S", time.localtime())
-        file_name = self.__class__.bu_name + "_SNOP_" + current_time + ".xlsx"
-        self.__class__.file_fullname = self.__class__.export_path + file_name
-        df.to_excel(self.__class__.file_fullname, sheet_name="Code", index=False,
-                    header=lst_column_name, freeze_panes=(1, 1))
-        print('Done~')
+        # current_time = time.strftime("%y%m%d-%H%M%S", time.localtime())
+        # file_name = self.__class__.bu_name + "_SNOP_" + current_time + ".xlsx"
+        # self.__class__.file_fullname = self.__class__.export_path + file_name
+        # df.to_excel(self.__class__.file_fullname, sheet_name="Code", index=False,
+        #             header=lst_column_name, freeze_panes=(1, 1))
+        # print('Done~')
 
     def read_file_fullname(self):
         return self.__class__.file_fullname
@@ -509,7 +510,6 @@ class SNOPHierarchy5Export:
         sql_cmd = 'SELECT Hierarchy_5, count(Material) as Code_Qty FROM ' + datasheet_name + ' GROUP by Hierarchy_5'
         df_h5_all = pd.read_sql(sql=sql_cmd, con=conn, index_col='Hierarchy_5')
         return df_h5_all
-        pass
 
     def get_pm_list(self):
         database_fullname = self.__class__.db_path + self.__class__.bu_name + '_Master_Data.db'
@@ -614,7 +614,6 @@ class SNOPHierarchy5Export:
         return df_eso_result
 
     def generate_h5_summary_entrance(self):
-        print('Start to generate Hierarchy_5 level page')
         # get h5 list
         df_h5_list = self.get_hierarchy5_list()
         # get pm list
@@ -663,20 +662,49 @@ class SNOPHierarchy5Export:
         # get ESO
         df_eso = self.get_h5_eso()
         df_result = df_result.join(df_eso)
-        # Export to Excel
-        writer = pd.ExcelWriter(self.__class__.file_fullname, mode='a')
-        df_result.to_excel(writer, sheet_name="H5", index=True, freeze_panes=(1, 1))
-        writer.close()
-        print("Done~")
+        # Export
+        return df_result
+        # writer = pd.ExcelWriter(self.__class__.file_fullname, mode='a')
+        # df_result.to_excel(writer, sheet_name="H5", index=True, freeze_panes=(1, 1))
+        # writer.close()
+        # print("Done~")
+
+
+class SNOPExportEntrance:
+    bu_name = ""
+    export_path = "../data/_Output/"
+    file_fullname = ""
+
+    def __init__(self, bu):
+        self.__class__.bu_name = bu
+        self.set_file_fullname()
+
+    def set_file_fullname(self):
+        current_time = time.strftime("%y%m%d-%H%M%S", time.localtime())
+        file_name = self.__class__.bu_name + "_SNOP_" + current_time + ".xlsx"
+        self.__class__.file_fullname = self.__class__.export_path + file_name
+
+    def start_snop_export(self):
+        # get dataframe of code detail
+        print('Start to generate Code level page')
+        snop_code_generation = SNOPCodeExport(self.__class__.bu_name)
+        [df_code, lst_column_name] = snop_code_generation.generate_code_onesheet()
+        # get dataframe of Hierarchy_4 level
+        print('Start to generate Hierarchy_5 level page')
+        snop_h5_generation = SNOPHierarchy5Export(self.__class__.bu_name)
+        df_h5 = snop_h5_generation.generate_h5_summary_entrance()
+        # get dataframe of SNOP summary sheet
+        # export to excel
+        print('Start to export to excel file')
+        with pd.ExcelWriter(self.__class__.file_fullname) as writer:
+            df_code.to_excel(writer, sheet_name="Code", index=False, header=lst_column_name, freeze_panes=(1, 1))
+            df_h5.to_excel(writer, sheet_name="H5", index=True, freeze_panes=(1, 1))
+        print('Done~')
+
+    def save_excel_file(self):
+        pass
 
 
 if __name__ == '__main__':
-    TestModule = SNOPExportV2("TU")
-    TestModule.generate_code_onesheet()
-    file_fullname = TestModule.read_file_fullname()
-    TestSummary = SNOPSummaryExport('TU')
-    TestSummary.set_file_fullname(file_fullname)
-    TestSummary.snop_summary_generation()
-    TestH5Module = SNOPHierarchy5Export('TU')
-    TestH5Module.set_file_fullname(file_fullname)
-    TestH5Module.generate_h5_summary_entrance()
+    test_module = SNOPExportEntrance('TU')
+    test_module.start_snop_export()
