@@ -396,6 +396,24 @@ class SNOPSummaryExport:
         monthly_inv_result.append(monthly_inv_sum)
         return monthly_inv_result
 
+    # get monthly sales of recent 6 months
+    def get_monthly_sales_summary(self, month_number=6):
+        sales_type = ['GTS', 'LPSales', 'IMS']
+        sales_result = []
+        # read data
+        for sales_item in sales_type:
+            datasheet_name = self.__class__.bu_name + '_' + sales_item
+            database_fullname = self.__class__.db_path + datasheet_name + '.db'
+            conn = sqlite3.connect(database_fullname)
+            sql_cmd = 'SELECT Month, sum(Value_SAP_Price) as ' + sales_item + ' FROM ' + datasheet_name + \
+                      ' GROUP by Month ORDER by Month DESC Limit ' + str(month_number)
+            sales_result.append(pd.read_sql(con=conn, sql=sql_cmd, index_col='Month'))
+        # join the data
+        df_sales_result = sales_result[0]
+        df_sales_result = df_sales_result.join(sales_result[1])
+        df_sales_result = df_sales_result.join(sales_result[2])
+        return df_sales_result.stack().unstack(0)
+
     def get_top_eso(self, material_type, num=20):
         # check material type:
         if material_type == "Instrument":
@@ -718,5 +736,7 @@ class SNOPExportEntrance:
 
 
 if __name__ == '__main__':
-    test_module = SNOPExportEntrance('TU')
-    test_module.start_snop_export()
+    # test_module = SNOPExportEntrance('TU')
+    # test_module.start_snop_export()
+    test_module = SNOPSummaryExport('TU')
+    test_module.get_monthly_sales_summary()
