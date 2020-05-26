@@ -267,134 +267,93 @@ class SNOPSummaryExport:
     def set_file_fullname(self, file_name_input):
         self.__class__.file_fullname = file_name_input
 
-    def get_top_sales(self, sales_type, num=20):
-        # get this cycle month and last cycle month
-        current_month = time.strftime("%Y-%m", time.localtime())
-        info_check = cclt.InfoCheck(self.__class__.bu_name)
-        month_list = info_check.get_time_list(current_month, -2)
-        last_cycle_month, current_cycle_month = month_list[0], month_list[1]
+    def get_top_sales_v2(self, sales_type, num=20):
         # link to db
-        filename = self.__class__.bu_name + "_" + sales_type
-        db_fullname = self.__class__.db_path + filename + ".db"
-        conn = sqlite3.connect(db_fullname)
+        datasheet_name = self.__class__.bu_name + "_" + sales_type
+        database_fullname = self.__class__.db_path + datasheet_name + ".db"
+        # get current month and pre-year month
+        conn = sqlite3.connect(database_fullname)
         c = conn.cursor()
-        # Get this cycle top
-        sql_cmd = "SELECT Hierarchy_5, sum(Value_SAP_Price) as TT_Value from " + filename + " WHERE Month = \'" + \
-                  current_cycle_month + "\' GROUP by Hierarchy_5 ORDER by TT_Value DESC LIMIT " + str(num)
-        c.execute(sql_cmd)
-        result_this_cycle = c.fetchall()
-        # Get sales value sum, ready for ratio calculation
-        sql_cmd = "SELECT sum(Value_SAP_Price) from " + filename + " WHERE Month = \'" + current_cycle_month + "\'"
-        c.execute(sql_cmd)
-        sales_value_sum = c.fetchall()[0][0]
-        for index in range(0, len(result_this_cycle)):
-            h5_code = result_this_cycle[index][0]
-            sql_cmd = "SELECT sum(Value_SAP_Price) as TT_Value from " + filename + " WHERE Month = \'" + \
-                      last_cycle_month + "\' AND Hierarchy_5 = \'" + h5_code + "\'"
-            c.execute(sql_cmd)
-            # insert ratio
-            result_this_cycle[index] += (result_this_cycle[index][1] / sales_value_sum,)
-            # insert last cycle
-            result_this_cycle[index] += (c.fetchall()[0][0],)
-            # insert sequence
-            result_this_cycle[index] = (str(index+1), ) + result_this_cycle[index]
-        top_sales_title = [("No", "Hierarchy_5", sales_type + "_" + current_cycle_month, "Ratio",
-                            sales_type + "_" + last_cycle_month), ]
-        return top_sales_title + result_this_cycle
+        c.execute('SELECT DISTINCT Month FROM ' + datasheet_name + ' ORDER BY Month DESC')
+        month_result = c.fetchall()
+        month_list = [item[0] for item in month_result]
+        current_month, pre_year_month = month_list[0], month_list[12]
+        # get sales of current month
+        title = sales_type + '_' + current_month.replace('-', '')
+        sql_cmd = 'SELECT Hierarchy_5, sum(Value_SAP_Price) AS ' + title + ' FROM ' + datasheet_name + \
+                  ' WHERE Month = \"' + current_month + '\" GROUP by Hierarchy_5 ORDER BY ' + title + ' DESC'
+        df_sales = pd.read_sql(sql=sql_cmd, con=conn, index_col='Hierarchy_5')
+        df_sales['Ratio'] = df_sales[title]/df_sales[title].sum()
+        # get sales of last month
+        title = sales_type + '_' + pre_year_month.replace('-', '')
+        sql_cmd = 'SELECT Hierarchy_5, sum(Value_SAP_Price) AS ' + title + ' FROM ' + datasheet_name + \
+                  ' WHERE Month = \"' + pre_year_month + '\" GROUP by Hierarchy_5 ORDER BY ' + title + ' DESC'
+        df_sales_last_year = pd.read_sql(sql=sql_cmd, con=conn)
+        df_sales_last_year['Hierarchy_5'] = df_sales_last_year['Hierarchy_5'].str.upper()
+        df_sales_last_year = df_sales_last_year.set_index('Hierarchy_5')
+        df_sales = df_sales.join(df_sales_last_year)
+        # return top 20
+        return df_sales.head(20)
 
-    def get_top_inv(self, inv_type, num=20):
-        # get this cycle month and last cycle month
-        current_month = time.strftime("%Y-%m", time.localtime())
-        info_check = cclt.InfoCheck(self.__class__.bu_name)
-        month_list = info_check.get_time_list(current_month, -2)
-        last_cycle_month, current_cycle_month = month_list[0], month_list[1]
+    def get_top_inv_v2(self, inv_type, num=20):
         # link to db
-        filename = self.__class__.bu_name + "_" + inv_type
-        db_fullname = self.__class__.db_path + filename + ".db"
-        conn = sqlite3.connect(db_fullname)
+        datasheet_name = self.__class__.bu_name + "_" + inv_type
+        database_fullname = self.__class__.db_path + datasheet_name + ".db"
+        conn = sqlite3.connect(database_fullname)
+        # get current month and pre-year month
         c = conn.cursor()
-        # get value of this cycle
-        sql_cmd = "SELECT Hierarchy_5, sum(Value_Standard_Cost) as tt_value FROM " + filename + " WHERE Month = \'" + \
-                  current_cycle_month + "\' AND Suzhou =\'N\' AND Phoenix = \'N\' " \
-                                        "GROUP by Hierarchy_5 ORDER BY tt_value DESC LIMIT " + str(num)
-        c.execute(sql_cmd)
-        result_this_cycle = c.fetchall()
-        # get sum of inventory to calculate the ratio
-        sql_cmd = "SELECT sum(Value_Standard_Cost) FROM " + filename + " WHERE Month = \'" + current_cycle_month + \
-                  "\' AND Suzhou =\'N\' AND Phoenix = \'N\'"
-        c.execute(sql_cmd)
-        inv_value_sum = c.fetchall()[0][0]
-        # get ratio and last cycle data
-        for index in range(0, len(result_this_cycle)):
-            h5_code = result_this_cycle[index][0]
-            sql_cmd = "SELECT sum(Value_Standard_Cost) FROM " + filename + " WHERE Month = \'" + last_cycle_month + \
-                      "\' AND Hierarchy_5 = \'" + h5_code + "\'"
-            c.execute(sql_cmd)
-            # insert ratio
-            result_this_cycle[index] += (result_this_cycle[index][1] / inv_value_sum, )
-            # insert last cycle
-            result_this_cycle[index] += (c.fetchall()[0][0], )
-            # insert sequence
-            result_this_cycle[index] = (str(index + 1),) + result_this_cycle[index]
-        top_inv_title = [("No", "Hierarchy_5", inv_type + "_" + current_cycle_month, "Ratio",
-                            inv_type + "_" + last_cycle_month), ]
-        return top_inv_title + result_this_cycle
+        c.execute('SELECT DISTINCT Month FROM ' + datasheet_name + ' ORDER BY Month DESC')
+        month_result = c.fetchall()
+        month_list = [item[0] for item in month_result]
+        current_month, pre_year_month = month_list[0], month_list[12]
+        # get current inv
+        crt_title = inv_type + '_' + current_month.replace('-', '')
+        sql_cmd = 'SELECT Hierarchy_5, sum(Value_Standard_Cost) as ' + crt_title + ' FROM ' + datasheet_name + \
+                  ' WHERE Month = \"' + current_month + \
+                  '\" AND Suzhou =\"N\" AND Phoenix = \"N\" GROUP by Hierarchy_5'
+        df_inv = pd.read_sql(sql=sql_cmd, con=conn, index_col='Hierarchy_5')
+        df_inv['Ratio'] = df_inv[crt_title] / df_inv[crt_title].sum()
+        # get last year inv
+        pre_title = inv_type + '_' + pre_year_month.replace('-', '')
+        sql_cmd = 'SELECT Hierarchy_5, sum(Value_Standard_Cost) as ' + pre_title + ' FROM ' + datasheet_name + \
+                  ' WHERE Month = \"' + pre_year_month + \
+                  '\" AND Suzhou =\"N\" AND Phoenix = \"N\" GROUP by Hierarchy_5'
+        df_inv_last_year = pd.read_sql(sql=sql_cmd, con=conn)
+        df_inv_last_year['Hierarchy_5'] = df_inv_last_year['Hierarchy_5'].str.upper()
+        df_inv_last_year = df_inv_last_year.set_index('Hierarchy_5')
+        # sort and return top 20
+        df_inv = df_inv.join(df_inv_last_year).sort_values([crt_title], ascending=False)
+        return df_inv.head(20)
 
-    # Get monthly inventory
-    def get_monthly_inventory_list(self, inv_type, month_qty):
-        # Get inventory list
-        current_month = time.strftime("%Y-%m", time.localtime())
-        info_check = cclt.InfoCheck(self.__class__.bu_name)
-        month_list = info_check.get_time_list(current_month, 0 - month_qty)
-        # Initiate result list
-        monthly_inv_result = []
-        # Add title line
-        list_title = ["Month", ]
-        list_title.extend(month_list)
-        monthly_inv_result.append(list_title)
-        # Link JNJ DB
-        filename = self.__class__.bu_name + "_" + inv_type
-        db_fullname = self.__class__.db_path + filename + ".db"
-        conn = sqlite3.connect(db_fullname)
-        c = conn.cursor()
+    # get monthly inventory of recent 6 months
+    def get_monthly_inventory_list_v2(self, inv_type, month_qty=6):
+        # link to database
+        datasheet_name = self.__class__.bu_name + "_" + inv_type
+        database_fullname = self.__class__.db_path + datasheet_name + ".db"
+        conn = sqlite3.connect(database_fullname)
         # get normal inventory
-        monthly_inv_normal = ["Normal", ]
-        for month_name in month_list:
-            sql_cmd = "SELECT sum(Value_Standard_Cost) FROM " + filename + " WHERE Month = \'" + month_name + \
-                      "\' AND Suzhou =\'N\' AND Phoenix = \'N\'"
-            c.execute(sql_cmd)
-            inv_normal = c.fetchall()[0]
-            monthly_inv_normal.extend(inv_normal)
-        monthly_inv_result.append(monthly_inv_normal)
-        # Get suzhou inventory
-        monthly_inv_suzhou = ["Suzhou", ]
-        for month_name in month_list:
-            sql_cmd = "SELECT sum(Value_Standard_Cost) FROM " + filename + " WHERE Month = \'" + month_name + \
-                      "\' AND Suzhou =\'Y\'"
-            c.execute(sql_cmd)
-            inv_suzhou = c.fetchall()[0]
-            if inv_suzhou[0] is None:
-                monthly_inv_suzhou.append(0)
-            else:
-                monthly_inv_suzhou.extend(inv_suzhou)
-        monthly_inv_result.append(monthly_inv_suzhou)
-        # Get phoenix inventory
-        monthly_inv_phoenix = ["Phoenix", ]
-        for month_name in month_list:
-            sql_cmd = "SELECT sum(Value_Standard_Cost) FROM " + filename + " WHERE Month = \'" + month_name + \
-                      "\' AND Suzhou =\'N\' AND Phoenix = \'Y\'"
-            c.execute(sql_cmd)
-            result = c.fetchall()[0]
-            inv_phoenix = (0,) if result is None else result
-            monthly_inv_phoenix.extend(inv_phoenix)
-        monthly_inv_result.append(monthly_inv_phoenix)
-        # Add inventory Sum
-        monthly_inv_sum = ["Total", ]
-        for index in range(0, len(month_list)):
-            monthly_inv_sum.append(monthly_inv_normal[index + 1] + monthly_inv_suzhou[index + 1] +
-                                   monthly_inv_phoenix[index + 1])
-        monthly_inv_result.append(monthly_inv_sum)
-        return monthly_inv_result
+        sql_cmd_normal = "SELECT Month, sum(Value_Standard_Cost) AS Normal FROM " + datasheet_name + \
+                         " WHERE Suzhou =\'N\' AND Phoenix = \'N\' GROUP BY Month ORDER BY Month"
+        df_inv_normal = pd.read_sql(sql=sql_cmd_normal, con=conn, index_col='Month')
+        # print(df_inv_normal.head(10))
+        # get suzhou inventory
+        sql_cmd_suzhou = "SELECT Month, sum(Value_Standard_Cost) AS Suzhou FROM " + datasheet_name + \
+                         " WHERE Suzhou =\'Y\' GROUP BY Month ORDER BY Month"
+        df_inv_suzhou = pd.read_sql(sql=sql_cmd_suzhou, con=conn, index_col='Month')
+        # print(df_inv_suzhou.head(10))
+        # get phoenix inventory
+        sql_cmd_phoenix = "SELECT Month, sum(Value_Standard_Cost) AS Phoenix FROM " + datasheet_name + \
+                          " WHERE Suzhou =\'N\' AND Phoenix = \'Y\' GROUP BY Month ORDER BY Month"
+        df_inv_phoenix = pd.read_sql(sql=sql_cmd_phoenix, con=conn, index_col='Month')
+        # get total inventory
+        sql_cmd_total = "SELECT Month, sum(Value_Standard_Cost) AS Total FROM " + datasheet_name + \
+                        " GROUP BY Month ORDER BY Month"
+        df_inv_total = pd.read_sql(sql=sql_cmd_total, con=conn, index_col='Month')
+        # print(df_inv_phoenix.head(10))
+        df_inv = df_inv_normal.join(df_inv_phoenix)
+        df_inv = df_inv.join(df_inv_suzhou)
+        df_inv = df_inv.join(df_inv_total).tail(month_qty)
+        return df_inv.stack().unstack(0)
 
     # get monthly sales of recent 6 months
     def get_monthly_sales_summary(self, month_number=6):
@@ -406,106 +365,91 @@ class SNOPSummaryExport:
             database_fullname = self.__class__.db_path + datasheet_name + '.db'
             conn = sqlite3.connect(database_fullname)
             sql_cmd = 'SELECT Month, sum(Value_SAP_Price) as ' + sales_item + ' FROM ' + datasheet_name + \
-                      ' GROUP by Month ORDER by Month DESC Limit ' + str(month_number)
+                      ' GROUP by Month ORDER by Month'
             sales_result.append(pd.read_sql(con=conn, sql=sql_cmd, index_col='Month'))
         # join the data
-        df_sales_result = sales_result[0]
-        df_sales_result = df_sales_result.join(sales_result[1])
-        df_sales_result = df_sales_result.join(sales_result[2])
+        df_sales = sales_result[0]
+        df_sales = df_sales.join(sales_result[1])
+        df_sales = df_sales.join(sales_result[2])
+        # get last six rows
+        df_sales_result = df_sales.tail(month_number)
         return df_sales_result.stack().unstack(0)
 
-    def get_top_eso(self, material_type, num=20):
+    def get_top_eso_v2(self, material_type, num=20):
         # check material type:
-        if material_type == "Instrument":
-            type_trigger = "Y"
-        else:
-            type_trigger = "N"
+        type_trigger = 'N' if material_type == 'Instrument' else 'N'
         # link to ESO db
-        filename = self.__class__.bu_name + "_" + "ESO"
-        db_fullname = self.__class__.db_path + filename + ".db"
-        conn = sqlite3.connect(db_fullname)
+        datasheet_name = self.__class__.bu_name + "_" + "ESO"
+        database_fullname = self.__class__.db_path + datasheet_name + ".db"
+        conn = sqlite3.connect(database_fullname)
+        # get last two cycle
         c = conn.cursor()
-        # get cycle list
-        sql_cmd = "SELECT DISTINCT Month FROM " + filename
-        c.execute(sql_cmd)
-        cycle_list = c.fetchall()
-        last_cycle_time, current_cycle_time = cycle_list[-2][0], cycle_list[-1][0]
-        sql_cmd = "SELECT Hierarchy_5, sum(ESO_Value_Standard_Cost) as tt FROM " + filename + \
-                  " WHERE Instrument = \'" + type_trigger + "\' AND Suzhou = \'N\' AND Month = \'" \
-                  + current_cycle_time + "\' GROUP by Hierarchy_5 ORDER by tt DESC LIMIT " + str(num)
-        c.execute(sql_cmd)
-        eso_value_list = c.fetchall()
-        # get eso total
-        sql_cmd = "SELECT sum(ESO_Value_Standard_Cost) as tt FROM " + filename + " WHERE Instrument = \'" + \
-                  type_trigger + "\' AND Suzhou = \'N\' AND Month = \'" + current_cycle_time + "\'"
-        c.execute(sql_cmd)
-        eso_value_total = c.fetchall()[0][0]
-        for index in range(0, len(eso_value_list)):
-            h5_code = eso_value_list[index][0]
-            sql_cmd = "SELECT sum(ESO_Value_Standard_Cost) as tt FROM " + filename + " WHERE Instrument = \'" + \
-                      type_trigger + "\' AND Suzhou = \'N\' AND Month = \'" + last_cycle_time + \
-                      "\' AND Hierarchy_5 = \'" + h5_code + "\'"
-            c.execute(sql_cmd)
-            # insert ratio
-            eso_value_list[index] += (eso_value_list[index][1] / eso_value_total, )
-            # insert last cycle
-            eso_value_list[index] += (c.fetchall()[0][0], )
-            # insert sequence
-            eso_value_list[index] = (str(index + 1),) + eso_value_list[index]
-        top_eso_title = [("No", "Hierarchy_5", "ESO_" + material_type + "_" + current_cycle_time, "Ratio",
-                          "ESO_" + material_type + "_" + last_cycle_time), ]
-        return top_eso_title + eso_value_list
+        c.execute('SELECT DISTINCT Month FROM ' + datasheet_name + ' ORDER by Month DESC LIMIT 2')
+        month_list = c.fetchall()
+        [current_cycle_month, last_cycle_month] = [item[0] for item in month_list]
+        # get eso of current cycle
+        crt_title = 'ESO_' + material_type + current_cycle_month.replace('-', '')
+        sql_cmd = 'SELECT Hierarchy_5, sum(ESO_Value_Standard_Cost) as ' + crt_title + ' FROM ' + datasheet_name + \
+                  ' WHERE Instrument = \'' + type_trigger + '\' AND Suzhou = \'N\' AND Month = \'' \
+                  + current_cycle_month + '\' GROUP by Hierarchy_5'
+        df_eso = pd.read_sql(sql=sql_cmd, con=conn)
+        # change to capitalized h5 name
+        df_eso['Hierarchy_5'] = df_eso['Hierarchy_5'].str.upper()
+        df_eso = df_eso.set_index('Hierarchy_5')
+        # add ratio
+        df_eso['Ratio'] = df_eso[crt_title] / df_eso[crt_title].sum()
+        # get last cycle
+        pre_title = 'ESO_' + material_type + last_cycle_month.replace('-', '')
+        sql_cmd = 'SELECT Hierarchy_5, sum(ESO_Value_Standard_Cost) as ' + pre_title + ' FROM ' + datasheet_name + \
+                  ' WHERE Instrument = \'' + type_trigger + '\' AND Suzhou = \'N\' AND Month = \'' \
+                  + last_cycle_month + '\' GROUP by Hierarchy_5 COLLATE NOCASE'
+        df_eso_pre = pd.read_sql(sql=sql_cmd, con=conn)
+        # change to capitalized h5 name
+        df_eso_pre['Hierarchy_5'] = df_eso_pre['Hierarchy_5'].str.upper()
+        df_eso_pre = df_eso_pre.set_index('Hierarchy_5')
+        # combine and sort
+        df_eso = df_eso.join(df_eso_pre).sort_values([crt_title], ascending=False)
+        return df_eso.head(20)
 
     def snop_summary_generation(self):
         # open file
-        print('Open Excel File.')
-        writer = pd.ExcelWriter(self.__class__.file_fullname, mode='a')
+        print('Start to generate summary page.')
+        writer = pd.ExcelWriter(self.__class__.file_fullname)
 
         # export 6 months JNJ inventory
         print('Export 6 months JNJ Inventory')
-        six_month_jnj_inv = self.get_monthly_inventory_list("JNJ_INV", 6)
-        np_jnj_monthly_inv = np.array(six_month_jnj_inv)
-        df_jnj_monthly_inv = pd.DataFrame(data=np_jnj_monthly_inv[1:, 0:], columns=np_jnj_monthly_inv[0, 0:])
-        df_jnj_monthly_inv.to_excel(writer, sheet_name="SNOP_Summary", index=False, startrow=1, startcol=1)
+        df_jnj_monthly_inv = self.get_monthly_inventory_list_v2('JNJ_INV')
+        df_jnj_monthly_inv.to_excel(writer, sheet_name="SNOP_Summary", index=True, startrow=1, startcol=1)
 
         # export 6 months LP inventory
         print('Export 6 months NED Inventory')
-        six_month_lp_inv = self.get_monthly_inventory_list("LP_INV", 6)
-        np_lp_monthly_inv = np.array(six_month_lp_inv)
-        df_lp_monthly_inv = pd.DataFrame(data=np_lp_monthly_inv[1:, 0:], columns=np_lp_monthly_inv[0, 0:])
-        df_lp_monthly_inv.to_excel(writer, sheet_name="SNOP_Summary", index=False, startrow=6, startcol=1)
+        df_lp_monthly_inv = self.get_monthly_inventory_list_v2('LP_INV')
+        df_lp_monthly_inv.to_excel(writer, sheet_name="SNOP_Summary", index=True, startrow=6, startcol=1)
+
+        # export 6 months sales data
+        print('Export 6 months sales data')
+        df_six_month_sales = self.get_monthly_sales_summary(6)
+        df_six_month_sales.to_excel(writer, sheet_name="SNOP_Summary", index=True, startrow=12, startcol=1)
 
         # export top 20 gts products
         print('Export TOP GTS')
-        top_gts_list = self.get_top_sales("GTS")
-        np_top_gts = np.array(top_gts_list)
-        df_top_gts = pd.DataFrame(data=np_top_gts[1:, 0:], columns=np_top_gts[0, 0:])
-        # export gts, start from
-        df_top_gts.to_excel(writer, sheet_name="SNOP_Summary", index=False, startrow=1, startcol=10)
+        df_top_gts = self.get_top_sales_v2("GTS")
+        df_top_gts.to_excel(writer, sheet_name="SNOP_Summary", index=True, startrow=1, startcol=10)
 
         # export top 20 inv products
         print('Export TOP Inventory')
-        top_jnj_inv_list = self.get_top_inv("JNJ_INV")
-        np_top_jnj_inv = np.array(top_jnj_inv_list)
-        df_top_jnj_inv = pd.DataFrame(data=np_top_jnj_inv[1:, 0:], columns=np_top_jnj_inv[0, 0:])
-        # export inv to excel
-        df_top_jnj_inv.to_excel(writer, sheet_name="SNOP_Summary", index=False, startrow=1, startcol=16)
+        df_top_jnj_inv = self.get_top_inv_v2('JNJ_INV')
+        df_top_jnj_inv.to_excel(writer, sheet_name="SNOP_Summary", index=True, startrow=1, startcol=16)
 
         # export top 20 eso - Instrument
         print('Export TOP ESO - Instrument')
-        top_instrument_eso_list = self.get_top_eso("Instrument")
-        np_top_instrument_eso = np.array(top_instrument_eso_list)
-        df_top_instrument_eso = pd.DataFrame(data=np_top_instrument_eso[1:, 0:], columns=np_top_instrument_eso[0, 0:])
-        # export instrument eso to excel
-        df_top_instrument_eso.to_excel(writer, sheet_name="SNOP_Summary", index=False, startrow=1, startcol=22)
+        df_top_instrument_eso = self.get_top_eso_v2('Instrument')
+        df_top_instrument_eso.to_excel(writer, sheet_name="SNOP_Summary", index=True, startrow=1, startcol=22)
 
         # export top 20 eso - Implant
         print('Export TOP ESO - Implant')
-        top_implant_eso_list = self.get_top_eso("Implant")
-        np_top_implant_eso = np.array(top_implant_eso_list)
-        df_top_implant_eso = pd.DataFrame(data=np_top_implant_eso[1:, 0:], columns=np_top_implant_eso[0, 0:])
-        # export instrument eso to excel
-        df_top_implant_eso.to_excel(writer, sheet_name="SNOP_Summary", index=False, startrow=1, startcol=28)
+        df_top_implant_eso = self.get_top_eso_v2('Implant')
+        df_top_implant_eso.to_excel(writer, sheet_name="SNOP_Summary", index=True, startrow=1, startcol=28)
         writer.close()
 
 
@@ -739,4 +683,5 @@ if __name__ == '__main__':
     # test_module = SNOPExportEntrance('TU')
     # test_module.start_snop_export()
     test_module = SNOPSummaryExport('TU')
-    test_module.get_monthly_sales_summary()
+    test_module.set_file_fullname('../data/_Output/summary_test.xlsx')
+    test_module.snop_summary_generation()
