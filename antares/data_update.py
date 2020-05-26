@@ -517,7 +517,7 @@ class MasterDataUpdate:
     db_path = "../data/_DB/"
 
     def __init__(self, bu_name_input):
-        self.bu_name = bu_name_input
+        self.__class__.bu_name = bu_name_input
 
     # import BU base master data
     def import_master_data(self):

@@ -95,6 +95,11 @@ class SystemIndex:
                 from data_update import MasterDataUpdate
                 data_input = MasterDataUpdate(self.__class__.bu_name)
                 data_input.import_master_data()
+            elif cmd_code == "915":
+                from data_update import MasterDataConsolidation
+                data_input = MasterDataConsolidation()
+                data_input.bu_name = "TU"
+                data_input.master_data_update_entrance()
             elif cmd_code == "450":
                 cmd_info_index.show_code_eso()
             elif cmd_code == "000":
