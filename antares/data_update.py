@@ -615,9 +615,9 @@ class MasterDataUpdate:
         df_ims_query['Ranking'] = df_ims_query['Cum_Ratio'].apply(lambda x: 'A' if x < 0.8 else ('B' if x < 0.95 else 'C'))
         # delete calculation column
         df_ims_query.drop(['Ratio', 'Cum_Ratio'], axis=1, inplace=True)
-        print(df_ims_query.head())
         conn = sqlite3.connect(master_data_db_fullname)
         df_ims_query.to_sql(name="Ranking", con=conn, if_exists='replace', index=False)
+        print('Ranking updated')
         conn.close()
 
 
