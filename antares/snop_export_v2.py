@@ -259,13 +259,9 @@ class SNOPSummaryExport:
     bu_name = ""
     db_path = "../data/_DB/"
     export_path = "../data/_Output/"
-    file_fullname = ""
 
     def __init__(self, bu):
         self.__class__.bu_name = bu
-
-    def set_file_fullname(self, file_name_input):
-        self.__class__.file_fullname = file_name_input
 
     def get_top_sales_v2(self, sales_type, num=20):
         # link to db
@@ -412,45 +408,53 @@ class SNOPSummaryExport:
         return df_eso.head(20)
 
     def snop_summary_generation(self):
-        # open file
-        print('Start to generate summary page.')
-        writer = pd.ExcelWriter(self.__class__.file_fullname)
+        # writer = pd.ExcelWriter(self.__class__.file_fullname)
+        # initiate list to export
+        list_snop_summary = []
 
         # export 6 months JNJ inventory
         print('Export 6 months JNJ Inventory')
         df_jnj_monthly_inv = self.get_monthly_inventory_list_v2('JNJ_INV')
-        df_jnj_monthly_inv.to_excel(writer, sheet_name="SNOP_Summary", index=True, startrow=1, startcol=1)
+        # df_jnj_monthly_inv.to_excel(writer, sheet_name="SNOP_Summary", index=True, startrow=1, startcol=1)
+        list_snop_summary.append([df_jnj_monthly_inv, (1, 1)])
 
         # export 6 months LP inventory
         print('Export 6 months NED Inventory')
         df_lp_monthly_inv = self.get_monthly_inventory_list_v2('LP_INV')
-        df_lp_monthly_inv.to_excel(writer, sheet_name="SNOP_Summary", index=True, startrow=6, startcol=1)
+        # df_lp_monthly_inv.to_excel(writer, sheet_name="SNOP_Summary", index=True, startrow=6, startcol=1)
+        list_snop_summary.append([df_lp_monthly_inv, (6, 1)])
 
         # export 6 months sales data
         print('Export 6 months sales data')
         df_six_month_sales = self.get_monthly_sales_summary(6)
-        df_six_month_sales.to_excel(writer, sheet_name="SNOP_Summary", index=True, startrow=12, startcol=1)
+        # df_six_month_sales.to_excel(writer, sheet_name="SNOP_Summary", index=True, startrow=12, startcol=1)
+        list_snop_summary.append([df_six_month_sales, (12, 1)])
 
         # export top 20 gts products
         print('Export TOP GTS')
         df_top_gts = self.get_top_sales_v2("GTS")
-        df_top_gts.to_excel(writer, sheet_name="SNOP_Summary", index=True, startrow=1, startcol=10)
+        # df_top_gts.to_excel(writer, sheet_name="SNOP_Summary", index=True, startrow=1, startcol=10)
+        list_snop_summary.append([df_top_gts, (1, 10)])
 
         # export top 20 inv products
         print('Export TOP Inventory')
         df_top_jnj_inv = self.get_top_inv_v2('JNJ_INV')
-        df_top_jnj_inv.to_excel(writer, sheet_name="SNOP_Summary", index=True, startrow=1, startcol=16)
+        # df_top_jnj_inv.to_excel(writer, sheet_name="SNOP_Summary", index=True, startrow=1, startcol=16)
+        list_snop_summary.append([df_top_jnj_inv, (1, 16)])
 
         # export top 20 eso - Instrument
         print('Export TOP ESO - Instrument')
         df_top_instrument_eso = self.get_top_eso_v2('Instrument')
-        df_top_instrument_eso.to_excel(writer, sheet_name="SNOP_Summary", index=True, startrow=1, startcol=22)
+        # df_top_instrument_eso.to_excel(writer, sheet_name="SNOP_Summary", index=True, startrow=1, startcol=22)
+        list_snop_summary.append([df_top_instrument_eso, (1, 22)])
 
         # export top 20 eso - Implant
         print('Export TOP ESO - Implant')
         df_top_implant_eso = self.get_top_eso_v2('Implant')
-        df_top_implant_eso.to_excel(writer, sheet_name="SNOP_Summary", index=True, startrow=1, startcol=28)
-        writer.close()
+        # df_top_implant_eso.to_excel(writer, sheet_name="SNOP_Summary", index=True, startrow=1, startcol=28)
+        list_snop_summary.append([df_top_implant_eso, (1, 28)])
+        return list_snop_summary
+        # writer.close()
 
 
 class SNOPHierarchy5Export:
@@ -663,16 +667,23 @@ class SNOPExportEntrance:
         print('Start to generate Code level page')
         snop_code_generation = SNOPCodeExport(self.__class__.bu_name)
         [df_code, lst_column_name] = snop_code_generation.generate_code_onesheet()
-        # get dataframe of Hierarchy_4 level
+        # get dataframe of Hierarchy_5 level
         print('Start to generate Hierarchy_5 level page')
         snop_h5_generation = SNOPHierarchy5Export(self.__class__.bu_name)
         df_h5 = snop_h5_generation.generate_h5_summary_entrance()
+        # get summary of report wise
+        print('Start to generate summary page.')
+        snop_summary_generation = SNOPSummaryExport(self.__class__.bu_name)
+        df_summary_page = snop_summary_generation.snop_summary_generation()
         # get dataframe of SNOP summary sheet
         # export to excel
         print('Start to export to excel file')
         with pd.ExcelWriter(self.__class__.file_fullname) as writer:
-            df_code.to_excel(writer, sheet_name="Code", index=False, header=lst_column_name, freeze_panes=(1, 1))
             df_h5.to_excel(writer, sheet_name="H5", index=True, freeze_panes=(1, 1))
+            for item in df_summary_page:
+                [df_summary, (row_num, col_num)] = item
+                df_summary.to_excel(writer, sheet_name="SNOP_Summary", index=True, startrow=row_num, startcol=col_num)
+            df_code.to_excel(writer, sheet_name="Code", index=False, header=lst_column_name, freeze_panes=(1, 1))
         print('Done~')
 
     def save_excel_file(self):
@@ -680,8 +691,6 @@ class SNOPExportEntrance:
 
 
 if __name__ == '__main__':
-    # test_module = SNOPExportEntrance('TU')
-    # test_module.start_snop_export()
-    test_module = SNOPSummaryExport('TU')
-    test_module.set_file_fullname('../data/_Output/summary_test.xlsx')
-    test_module.snop_summary_generation()
+    test_module = SNOPExportEntrance('TU')
+    test_module.start_snop_export()
+
