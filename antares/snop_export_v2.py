@@ -663,6 +663,12 @@ class SNOPExportEntrance:
         self.__class__.file_fullname = self.__class__.export_path + file_name
 
     def start_snop_export(self):
+        # confirm if to start
+        print('== SNOP Excel File Export ==')
+        cmd_confirm = input('Warning! Press Y to start: ')
+        if cmd_confirm.upper() != 'Y':
+            print("Return to main menu.")
+            return
         # get dataframe of code detail
         print('Start to generate Code level page')
         snop_code_generation = SNOPCodeExport(self.__class__.bu_name)
@@ -685,9 +691,6 @@ class SNOPExportEntrance:
                 df_summary.to_excel(writer, sheet_name="SNOP_Summary", index=True, startrow=row_num, startcol=col_num)
             df_code.to_excel(writer, sheet_name="Code", index=False, header=lst_column_name, freeze_panes=(1, 1))
         print('Done~')
-
-    def save_excel_file(self):
-        pass
 
 
 if __name__ == '__main__':

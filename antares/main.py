@@ -106,6 +106,10 @@ class SystemIndex:
                 import crt_inv_cmd as crt
                 cmd_crt_inv = crt.CurrentInventoryMenu(self.__class__.bu_name)
                 cmd_crt_inv.crt_inv_entrance()
+            elif cmd_code == '777':
+                import snop_export_v2 as snop
+                data_export = snop.SNOPExportEntrance(self.__class__.bu_name)
+                data_export.start_snop_export()
             elif cmd_code == "888":
                 import statis_fcst as fcst
                 forecast_view = fcst.GetStatisticalForecast(self.__class__.bu_name)
