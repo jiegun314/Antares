@@ -218,7 +218,7 @@ class CurrentInventoryDisplay:
                          "inv_alert": self.display_low_inventory_alert,
                          "bo": self.display_current_backorder,
                          "bo_export": self.export_backorder_data,
-                         "pending": (self.display_pending_trend, ""),
+                         "pending": self.display_pending_trend,
                          "pending -q": (self.display_pending_trend, "quantity"),
                          "check": self.display_code_status,
                          "trend": self.display_code_inventory_trend,
