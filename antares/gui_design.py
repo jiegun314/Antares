@@ -10,7 +10,6 @@
 import wx
 import wx.xrc
 import wx.adv
-import wx.dataview
 
 ###########################################################################
 ## Class DragonFrame
@@ -216,169 +215,7 @@ class DragonFrame ( wx.Frame ):
         self.pnlOneclick.SetSizer( bSizer4 )
         self.pnlOneclick.Layout()
         bSizer4.Fit( self.pnlOneclick )
-        self.ntbkOneclick.AddPage( self.pnlOneclick, u"Oneclick", True )
-        self.pnlSummary = wx.Panel( self.ntbkOneclick, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
-        self.pnlSummary.SetToolTip( u"Show historical data summary" )
-
-        bSizer15 = wx.BoxSizer( wx.VERTICAL )
-
-        bSizer51 = wx.BoxSizer( wx.HORIZONTAL )
-
-        bSizer51.SetMinSize( wx.Size( -1,80 ) )
-        rdbxSumaryCalculationTypeChoices = [ u"by Code", u"by Hierarchy" ]
-        self.rdbxSumaryCalculationType = wx.RadioBox( self.pnlSummary, wx.ID_ANY, u"Calculation Type", wx.DefaultPosition, wx.Size( -1,88 ), rdbxSumaryCalculationTypeChoices, 1, wx.RA_SPECIFY_COLS )
-        self.rdbxSumaryCalculationType.SetSelection( 0 )
-        bSizer51.Add( self.rdbxSumaryCalculationType, 0, wx.ALL|wx.ALIGN_BOTTOM, 5 )
-
-
-        bSizer51.Add( ( 10, 20), 0, wx.EXPAND, 5 )
-
-        bSizer91 = wx.BoxSizer( wx.VERTICAL )
-
-        bSizer1011 = wx.BoxSizer( wx.HORIZONTAL )
-
-        self.m_staticText21 = wx.StaticText( self.pnlSummary, wx.ID_ANY, u"Material / H5 Name: ", wx.DefaultPosition, wx.Size( -1,15 ), wx.ALIGN_CENTER_HORIZONTAL )
-        self.m_staticText21.Wrap( -1 )
-
-        self.m_staticText21.SetMaxSize( wx.Size( -1,30 ) )
-
-        bSizer1011.Add( self.m_staticText21, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
-
-
-        bSizer1011.Add( ( 150, 0), 0, wx.EXPAND, 5 )
-
-        self.chkbxSummaryWholeBU = wx.CheckBox( self.pnlSummary, wx.ID_ANY, u"BU Level", wx.DefaultPosition, wx.DefaultSize, 0 )
-        bSizer1011.Add( self.chkbxSummaryWholeBU, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
-
-
-        bSizer91.Add( bSizer1011, 1, wx.EXPAND, 5 )
-
-        bSizer111 = wx.BoxSizer( wx.HORIZONTAL )
-
-        self.txtSummaryMaterialCode = wx.TextCtrl( self.pnlSummary, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 120,80 ), wx.TE_MULTILINE )
-        bSizer111.Add( self.txtSummaryMaterialCode, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
-
-        lstbxSummaryListSelectionChoices = []
-        self.lstbxSummaryListSelection = wx.ListBox( self.pnlSummary, wx.ID_ANY, wx.DefaultPosition, wx.Size( 250,80 ), lstbxSummaryListSelectionChoices, wx.LB_NEEDED_SB|wx.LB_SINGLE )
-        bSizer111.Add( self.lstbxSummaryListSelection, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
-
-
-        bSizer91.Add( bSizer111, 0, wx.EXPAND, 5 )
-
-
-        bSizer51.Add( bSizer91, 0, wx.EXPAND, 5 )
-
-
-        bSizer51.Add( ( 10, 0), 0, wx.EXPAND, 5 )
-
-        self.btnSummarySubmit = wx.BitmapButton( self.pnlSummary, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.DefaultSize, wx.BU_AUTODRAW|wx.BORDER_NONE )
-
-        self.btnSummarySubmit.SetBitmap( wx.Bitmap( u".icon/submit.png", wx.BITMAP_TYPE_ANY ) )
-        self.btnSummarySubmit.SetBitmapCurrent( wx.Bitmap( u".icon/submit_green.png", wx.BITMAP_TYPE_ANY ) )
-        self.btnSummarySubmit.SetBackgroundColour( wx.Colour( 255, 255, 255 ) )
-        self.btnSummarySubmit.SetToolTip( u"Submit" )
-
-        bSizer51.Add( self.btnSummarySubmit, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
-
-
-        bSizer51.Add( ( 10, 0), 0, wx.EXPAND, 5 )
-
-        self.btnSummaryReset = wx.BitmapButton( self.pnlSummary, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.DefaultSize, wx.BU_AUTODRAW|wx.BORDER_NONE )
-
-        self.btnSummaryReset.SetBitmap( wx.Bitmap( u".icon/reset.png", wx.BITMAP_TYPE_ANY ) )
-        self.btnSummaryReset.SetBitmapCurrent( wx.Bitmap( u".icon/reset_red.png", wx.BITMAP_TYPE_ANY ) )
-        self.btnSummaryReset.SetBackgroundColour( wx.Colour( 255, 255, 255 ) )
-        self.btnSummaryReset.SetToolTip( u"Reset Input" )
-
-        bSizer51.Add( self.btnSummaryReset, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
-
-
-        bSizer51.Add( ( 15, 0), 0, wx.EXPAND, 5 )
-
-        self.m_staticline9 = wx.StaticLine( self.pnlSummary, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LI_VERTICAL )
-        bSizer51.Add( self.m_staticline9, 0, wx.EXPAND |wx.ALL, 5 )
-
-        bSizer36 = wx.BoxSizer( wx.HORIZONTAL )
-
-        self.m_staticText9 = wx.StaticText( self.pnlSummary, wx.ID_ANY, u"Basic\nInfo.", wx.DefaultPosition, wx.DefaultSize, 0 )
-        self.m_staticText9.Wrap( -1 )
-
-        bSizer36.Add( self.m_staticText9, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
-
-        self.dtViewCtrlBasicInfo = wx.dataview.DataViewCtrl( self.pnlSummary, wx.ID_ANY, wx.DefaultPosition, wx.Size( 530,100 ), 0 )
-        bSizer36.Add( self.dtViewCtrlBasicInfo, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
-
-
-        bSizer51.Add( bSizer36, 1, wx.EXPAND, 5 )
-
-
-        bSizer15.Add( bSizer51, 1, wx.EXPAND, 5 )
-
-        self.m_staticline8 = wx.StaticLine( self.pnlSummary, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LI_HORIZONTAL )
-        bSizer15.Add( self.m_staticline8, 0, wx.EXPAND |wx.ALL, 5 )
-
-        bSizer16 = wx.BoxSizer( wx.HORIZONTAL )
-
-        bSizer34 = wx.BoxSizer( wx.VERTICAL )
-
-        bSizer29 = wx.BoxSizer( wx.HORIZONTAL )
-
-        rdbxSummaryUnitChoices = [ u"by Quantity", u"by Std. Cost", u"by SAP Price" ]
-        self.rdbxSummaryUnit = wx.RadioBox( self.pnlSummary, wx.ID_ANY, u"Unit", wx.DefaultPosition, wx.DefaultSize, rdbxSummaryUnitChoices, 1, wx.RA_SPECIFY_ROWS )
-        self.rdbxSummaryUnit.SetSelection( 0 )
-        bSizer29.Add( self.rdbxSummaryUnit, 0, wx.ALL, 5 )
-
-
-        bSizer29.Add( ( 0, 0), 1, wx.EXPAND, 5 )
-
-        rdbxSummaryCategoryChoices = [ u"Historical", u"Forecast", u"ESO" ]
-        self.rdbxSummaryCategory = wx.RadioBox( self.pnlSummary, wx.ID_ANY, u"Category", wx.DefaultPosition, wx.DefaultSize, rdbxSummaryCategoryChoices, 1, wx.RA_SPECIFY_ROWS )
-        self.rdbxSummaryCategory.SetSelection( 0 )
-        bSizer29.Add( self.rdbxSummaryCategory, 0, wx.ALL, 5 )
-
-
-        bSizer34.Add( bSizer29, 1, wx.EXPAND, 5 )
-
-        self.dtvwlstctrlSummaryOutput = wx.dataview.DataViewListCtrl( self.pnlSummary, wx.ID_ANY, wx.DefaultPosition, wx.Size( 1300,380 ), 0 )
-        bSizer34.Add( self.dtvwlstctrlSummaryOutput, 0, wx.ALL, 5 )
-
-
-        bSizer16.Add( bSizer34, 0, wx.EXPAND, 5 )
-
-
-        bSizer15.Add( bSizer16, 1, wx.EXPAND, 5 )
-
-        bSizer24 = wx.BoxSizer( wx.VERTICAL )
-
-        bSizer361 = wx.BoxSizer( wx.VERTICAL )
-
-        self.m_staticline71 = wx.StaticLine( self.pnlSummary, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LI_HORIZONTAL )
-        bSizer361.Add( self.m_staticline71, 0, wx.EXPAND |wx.ALL, 5 )
-
-        bSizer28 = wx.BoxSizer( wx.HORIZONTAL )
-
-        self.m_staticText91 = wx.StaticText( self.pnlSummary, wx.ID_ANY, u"Log", wx.DefaultPosition, wx.DefaultSize, 0 )
-        self.m_staticText91.Wrap( -1 )
-
-        bSizer28.Add( self.m_staticText91, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
-
-        self.txtSummaryLog = wx.TextCtrl( self.pnlSummary, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 700,-1 ), wx.TE_MULTILINE|wx.TE_NO_VSCROLL|wx.TE_READONLY )
-        bSizer28.Add( self.txtSummaryLog, 0, wx.ALL, 5 )
-
-
-        bSizer361.Add( bSizer28, 1, wx.EXPAND, 5 )
-
-
-        bSizer24.Add( bSizer361, 1, wx.EXPAND, 5 )
-
-
-        bSizer15.Add( bSizer24, 1, wx.EXPAND, 5 )
-
-
-        self.pnlSummary.SetSizer( bSizer15 )
-        self.pnlSummary.Layout()
-        bSizer15.Fit( self.pnlSummary )
-        self.ntbkOneclick.AddPage( self.pnlSummary, u"Summary", False )
+        self.ntbkOneclick.AddPage( self.pnlOneclick, u"Oneclick", False )
 
         bSizer1.Add( self.ntbkOneclick, 1, wx.EXPAND |wx.ALL, 5 )
 
@@ -456,10 +293,6 @@ class DragonFrame ( wx.Frame ):
         self.btnInventoryExport.Bind( wx.EVT_BUTTON, self.export_inventory )
         self.btnBackorderExport.Bind( wx.EVT_BUTTON, self.export_backorder )
         self.btnOutputDownload.Bind( wx.EVT_BUTTON, self.export_listed_data )
-        self.chkbxSummaryWholeBU.Bind( wx.EVT_CHECKBOX, self.summary_bu_level_selected )
-        self.lstbxSummaryListSelection.Bind( wx.EVT_LEFT_DCLICK, self.display_h5_summary )
-        self.btnSummarySubmit.Bind( wx.EVT_BUTTON, self.summary_view_submit )
-        self.btnSummaryReset.Bind( wx.EVT_BUTTON, self.summary_view_reset )
         self.Bind( wx.EVT_MENU, self.exit_dragon, id = self.mExit.GetId() )
         self.Bind( wx.EVT_MENU, self.select_bu_TU, id = self.mTrauma.GetId() )
         self.Bind( wx.EVT_MENU, self.select_bu_CMFT, id = self.mCMFT.GetId() )
@@ -506,18 +339,6 @@ class DragonFrame ( wx.Frame ):
         event.Skip()
 
     def export_listed_data( self, event ):
-        event.Skip()
-
-    def summary_bu_level_selected( self, event ):
-        event.Skip()
-
-    def display_h5_summary( self, event ):
-        event.Skip()
-
-    def summary_view_submit( self, event ):
-        event.Skip()
-
-    def summary_view_reset( self, event ):
         event.Skip()
 
     def exit_dragon( self, event ):
