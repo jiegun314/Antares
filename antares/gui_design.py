@@ -18,7 +18,7 @@ import wx.adv
 class DragonFrame ( wx.Frame ):
 
     def __init__( self, parent ):
-        wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = u"Project Dragon GUI v0412", pos = wx.DefaultPosition, size = wx.Size( 1280,800 ), style = wx.CAPTION|wx.CLOSE_BOX|wx.MINIMIZE_BOX|wx.TAB_TRAVERSAL )
+        wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = u"Project Dragon GUI v0601", pos = wx.DefaultPosition, size = wx.Size( 1280,800 ), style = wx.CAPTION|wx.CLOSE_BOX|wx.MINIMIZE_BOX|wx.TAB_TRAVERSAL )
 
         self.SetSizeHints( wx.DefaultSize, wx.DefaultSize )
 
@@ -240,6 +240,15 @@ class DragonFrame ( wx.Frame ):
         self.mPT = wx.MenuItem( self.menuDefineBU, wx.ID_ANY, u"PT", wx.EmptyString, wx.ITEM_RADIO )
         self.menuDefineBU.Append( self.mPT )
 
+        self.mJT = wx.MenuItem( self.menuDefineBU, wx.ID_ANY, u"Joint", wx.EmptyString, wx.ITEM_NORMAL )
+        self.menuDefineBU.Append( self.mJT )
+
+        self.mMT = wx.MenuItem( self.menuDefineBU, wx.ID_ANY, u"Mitek", wx.EmptyString, wx.ITEM_NORMAL )
+        self.menuDefineBU.Append( self.mMT )
+
+        self.mSP = wx.MenuItem( self.menuDefineBU, wx.ID_ANY, u"Spine", wx.EmptyString, wx.ITEM_NORMAL )
+        self.menuDefineBU.Append( self.mSP )
+
         self.m_menubar1.Append( self.menuDefineBU, u"Business Unit" )
 
         self.menuAbout = wx.Menu()
@@ -297,6 +306,9 @@ class DragonFrame ( wx.Frame ):
         self.Bind( wx.EVT_MENU, self.select_bu_TU, id = self.mTrauma.GetId() )
         self.Bind( wx.EVT_MENU, self.select_bu_CMFT, id = self.mCMFT.GetId() )
         self.Bind( wx.EVT_MENU, self.select_bu_PT, id = self.mPT.GetId() )
+        self.Bind( wx.EVT_MENU, self.select_bu_JT, id = self.mJT.GetId() )
+        self.Bind( wx.EVT_MENU, self.select_bu_MT, id = self.mMT.GetId() )
+        self.Bind( wx.EVT_MENU, self.select_bu_SP, id = self.mSP.GetId() )
         self.Bind( wx.EVT_MENU, self.show_about_dialog, id = self.showAbout.GetId() )
         self.Bind( wx.EVT_TOOL, self.get_current_inventory_list, id = self.mDisplayCurrentInventory.GetId() )
         self.Bind( wx.EVT_TOOL, self.get_current_bo_list, id = self.mCurrentBackorder.GetId() )
@@ -351,6 +363,15 @@ class DragonFrame ( wx.Frame ):
         event.Skip()
 
     def select_bu_PT( self, event ):
+        event.Skip()
+
+    def select_bu_JT( self, event ):
+        event.Skip()
+
+    def select_bu_MT( self, event ):
+        event.Skip()
+
+    def select_bu_SP( self, event ):
         event.Skip()
 
     def show_about_dialog( self, event ):
