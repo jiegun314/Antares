@@ -31,24 +31,24 @@ class DragonGUI(DragonFrame):
         self.display_bu_update()
         # update current date to CMF
         self.set_db_table("newest")
-        self.pnlSummary.Hide()
-        self.Layout()
+        # self.pnlSummary.Hide()
+        # self.Layout()
 
     def select_bu_TU(self, event):
         self.__class__.bu_name = "TU"
         self.display_bu_update()
         # update current date to TU
         self.set_db_table("newest")
-        self.pnlSummary.Show()
-        self.Layout()
+        # self.pnlSummary.Show()
+        # self.Layout()
 
     def select_bu_PT(self, event):
         self.__class__.bu_name = "PT"
         self.display_bu_update()
         # update current date to PT
         self.set_db_table("newest")
-        self.pnlSummary.Hide()
-        self.Layout()
+        # self.pnlSummary.Hide()
+        # self.Layout()
 
     def display_bu_update(self):
         self.txtLog.Clear()
