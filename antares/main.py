@@ -12,7 +12,11 @@ class SystemIndex:
     bu_name_lst = {
         "Jeffrey": "TU",
         "Cecilia": "CMFT",
-        "Yuanzhi": "PT"
+        "Yuanzhi": "PT",
+        "Raymond": "JT",
+        "Doris": "SP",
+        "Wenbei": "SPINE",
+        "Tina": "MT"
     }
     
     def __init__(self):

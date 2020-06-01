@@ -21,6 +21,14 @@ class CurrentInventoryMenu:
             crt_inv_display = dpl.CMFTCurrentInventoryDisplay()
         elif self.bu_name == "PT":
             crt_inv_display = dpl.PowerToolCurrentInventoryDisplay()
+        elif self.bu_name == "JT":
+            crt_inv_display = dpl.JointCurrentInventoryDisplay()
+        elif self.bu_name == "MT":
+            crt_inv_display = dpl.MitekCurrentInventoryDisplay()
+        elif self.bu_name == "SP":
+            crt_inv_display = dpl.DepuySpineCurrentInventoryDisplay()
+        elif self.bu_name == "SPINE":
+            crt_inv_display = dpl.SyntheSpineCurrentInventoryDisplay()
         else:
             pass
         crt_inv_display.command_list()

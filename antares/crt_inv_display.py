@@ -273,6 +273,42 @@ class CMFTCurrentInventoryDisplay(CurrentInventoryDisplay):
         print("!!Warning. This function is not available for CMFT.")
 
 
+class JointCurrentInventoryDisplay(CurrentInventoryDisplay):
+    def __init__(self):
+        super().__init__()
+        self.__class__.bu_name = "JT"
+
+    def display_low_inventory_alert(self):
+        print("!!Warning. This function is not available for Joint.")
+
+
+class MitekCurrentInventoryDisplay(CurrentInventoryDisplay):
+    def __init__(self):
+        super().__init__()
+        self.__class__.bu_name = "MT"
+
+    def display_low_inventory_alert(self):
+        print("!!Warning. This function is not available for Mitek.")
+
+
+class DepuySpineCurrentInventoryDisplay(CurrentInventoryDisplay):
+    def __init__(self):
+        super().__init__()
+        self.__class__.bu_name = "SP"
+
+    def display_low_inventory_alert(self):
+        print("!!Warning. This function is not available for Depuy Spine.")
+
+
+class SyntheSpineCurrentInventoryDisplay(CurrentInventoryDisplay):
+    def __init__(self):
+        super().__init__()
+        self.__class__.bu_name = "SP"
+
+    def display_low_inventory_alert(self):
+        print("!!Warning. This function is not available for Synthes Spine.")
+
+
 if __name__ == "__main__":
     test = TraumaCurrentInventoryDisplay()
     test.command_list()
