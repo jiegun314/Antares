@@ -14,8 +14,7 @@ class SystemIndex:
         "Cecilia": "CMFT",
         "Yuanzhi": "PT",
         "Raymond": "JT",
-        "Doris": "SP",
-        "Wenbei": "SPINE",
+        "Doris": "Spine",
         "Tina": "MT"
     }
     

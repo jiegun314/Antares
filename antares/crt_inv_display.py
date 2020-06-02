@@ -291,22 +291,13 @@ class MitekCurrentInventoryDisplay(CurrentInventoryDisplay):
         print("!!Warning. This function is not available for Mitek.")
 
 
-class DepuySpineCurrentInventoryDisplay(CurrentInventoryDisplay):
+class SpineCurrentInventoryDisplay(CurrentInventoryDisplay):
     def __init__(self):
         super().__init__()
-        self.__class__.bu_name = "SP"
+        self.__class__.bu_name = "Spine"
 
     def display_low_inventory_alert(self):
-        print("!!Warning. This function is not available for Depuy Spine.")
-
-
-class SyntheSpineCurrentInventoryDisplay(CurrentInventoryDisplay):
-    def __init__(self):
-        super().__init__()
-        self.__class__.bu_name = "SP"
-
-    def display_low_inventory_alert(self):
-        print("!!Warning. This function is not available for Synthes Spine.")
+        print("!!Warning. This function is not available for Spine.")
 
 
 if __name__ == "__main__":

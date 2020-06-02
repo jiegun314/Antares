@@ -88,6 +88,7 @@ def get_available_h5_name(h5_name, bu_name):
 
 
 def get_available_h5_list(h5_name, bu_name):
+    bu_name = 'Spine' if bu_name == 'SP' else bu_name
     db_fullname = db_path + "Master_Data.db"
     conn = sqlite3.connect(db_fullname)
     c = conn.cursor()

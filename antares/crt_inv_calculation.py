@@ -84,6 +84,9 @@ class CurrentInventoryCalculation:
             df = pd.read_csv(data_file_fullname, sep='|', encoding='gb18030')
         except FileNotFoundError:
             return -1
+        # combine dps spine and synthes spine
+        df.loc[df['Business_Unit'] == 'SP', 'Business_Unit'] = 'Spine'
+        df.loc[df['Business_Unit'] == 'SPINE', 'Business_Unit'] = 'Spine'
         df_single_bu = df.loc[(df['Business_Unit'] == self.__class__.bu_name) & (df['Loc'] == "Total")]
         database_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
         conn = sqlite3.connect(database_name)
