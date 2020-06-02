@@ -575,7 +575,7 @@ class SNOPHierarchy5Export:
         month_result = c.fetchall()[0][0]
         sql_cmd = 'SELECT Hierarchy_5, sum(Excess_Quantity) as E_Qty, sum(Slow_Moving_Quantity) as SM_Qty, ' \
                   'sum(Obsolete_Quantity) as Q_Qty, sum(ESO_Value_Standard_Cost) as ESO_Value FROM TU_ESO ' \
-                  'WHERE Month=\"' + month_result + '\" GROUP by Hierarchy_5'
+                  'WHERE Month=\"' + month_result + '\" GROUP by Hierarchy_5 COLLATE NOCASE'
         df_eso = pd.read_sql(sql=sql_cmd, con=conn)
         df_eso['Hierarchy_5'] = df_eso['Hierarchy_5'].str.upper()
         df_eso_result = df_eso.set_index('Hierarchy_5')
