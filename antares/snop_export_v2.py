@@ -651,16 +651,15 @@ class SNOPHierarchy5Export:
 class SNOPExportEntrance:
     bu_name = ""
     export_path = "../data/_Output/"
-    file_fullname = ""
 
     def __init__(self, bu):
         self.__class__.bu_name = bu
-        self.set_file_fullname()
 
-    def set_file_fullname(self):
-        current_time = time.strftime("%y%m%d-%H%M%S", time.localtime())
-        file_name = self.__class__.bu_name + "_SNOP_" + current_time + ".xlsx"
-        self.__class__.file_fullname = self.__class__.export_path + file_name
+    def set_file_fullname(self, type):
+        # current_time = time.strftime("%y%m%d-%H%M%S", time.localtime())
+        current_time = time.strftime("%Y%m", time.localtime())
+        file_name = self.__class__.bu_name + "_SNOP_" + type + "_" + current_time + ".xlsx"
+        return self.__class__.export_path + file_name
 
     def start_snop_export(self):
         # confirm if to start
@@ -684,11 +683,12 @@ class SNOPExportEntrance:
         # get dataframe of SNOP summary sheet
         # export to excel
         print('Start to export to excel file')
-        with pd.ExcelWriter(self.__class__.file_fullname) as writer:
+        with pd.ExcelWriter(self.set_file_fullname('Summary')) as writer:
             df_h5.to_excel(writer, sheet_name="H5", index=True, freeze_panes=(1, 1))
             for item in df_summary_page:
                 [df_summary, (row_num, col_num)] = item
                 df_summary.to_excel(writer, sheet_name="SNOP_Summary", index=True, startrow=row_num, startcol=col_num)
+        with pd.ExcelWriter(self.set_file_fullname('Code')) as writer:
             df_code.to_excel(writer, sheet_name="Code", index=False, header=lst_column_name, freeze_panes=(1, 1))
         print('Done~')
 
