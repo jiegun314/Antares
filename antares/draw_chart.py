@@ -55,9 +55,10 @@ def backorder_trend_chart(date_list, backorder_value):
 
 
 # draw stack bar chart for backorder daily trend
-def backorder_trend_line_chart(date_list, backorder_value):
+def backorder_trend_line_chart(date_list, backorder_value, bu_name):
     sys_path = os.path.abspath('..')
-    file_name = sys_path + "/data/_Charter/Backorder_trend.html"
+    file_name = sys_path + "/data/_Charter/" + bu_name + "_Backorder_trend.html"
+    chart_title = "Backorder Trend of " + bu_name + " (Value in RMB)"
     c = (
         Line(init_opts=opts.InitOpts(theme=ThemeType.VINTAGE, width="1500px"))
         .add_xaxis(date_list)
@@ -84,7 +85,7 @@ def backorder_trend_line_chart(date_list, backorder_value):
         )
         .set_series_opts(label_opts=opts.LabelOpts(is_show=False))
         .set_global_opts(
-            title_opts=opts.TitleOpts(title="Backorder trend (Value in RMB)"),
+            title_opts=opts.TitleOpts(title=chart_title),
             tooltip_opts=opts.TooltipOpts(trigger="axis", axis_pointer_type="cross"),
             yaxis_opts=opts.AxisOpts(
                 type_="value",

@@ -276,7 +276,7 @@ class CurrentInventoryCalculation:
             backorder_value_summary[1].append(daily_backorder_total_value['ROP'])
             backorder_value_summary[2].append(daily_backorder_total_value['ND'])
         # chart.backorder_trend_chart(date_list, backorder_value_summary)
-        chart.backorder_trend_line_chart(date_list, backorder_value_summary)
+        chart.backorder_trend_line_chart(date_list, backorder_value_summary, self.__class__.bu_name)
 
     # calculate long aging backorders
     def calculate_aging_backorder(self, exception_list):
@@ -368,13 +368,15 @@ class CurrentInventoryCalculation:
         pending_summary_nonbonded_value = [int(item[3]) for item in pending_result]
         # call chart
         if data_type == "value":
+            chart_title = "Pending Inventory Trend of " + self.__class__.bu_name + " (Value in RMB)"
             chart.pending_inventory_trend_chart(date_list,
                                                 [pending_summary_bonded_value, pending_summary_nonbonded_value],
-                                                "Pending Inventory Trend (Value in RMB)")
+                                                chart_title)
         else:
+            chart_title = "Pending Inventory Trend of " + self.__class__.bu_name + " (by Quantity)"
             chart.pending_inventory_trend_chart(date_list,
                                                 [pending_summary_bonded_qty, pending_summary_nonbonded_qty],
-                                                "Pending Inventory Trend (by Quantity)")
+                                                chart_title)
 
     # 查询单个代码
     def get_code_inv(self, code_name, table_name):
