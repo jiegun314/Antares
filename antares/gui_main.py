@@ -57,13 +57,7 @@ class DragonGUI(DragonFrame):
         self.set_db_table("newest")
 
     def select_bu_SP(self, event):
-        self.__class__.bu_name = "SP"
-        self.display_bu_update()
-        # update current date to MT
-        self.set_db_table("newest")
-
-    def select_bu_SPINE(self, event):
-        self.__class__.bu_name = "SPINE"
+        self.__class__.bu_name = "Spine"
         self.display_bu_update()
         # update current date to MT
         self.set_db_table("newest")
