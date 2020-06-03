@@ -188,20 +188,25 @@ class CurrentInventoryCalculation:
     def export_backorder_data(self, table_name):
         db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
         conn = sqlite3.connect(db_name)
-        sql_cmd = '''SELECT Material, Description, Hierarchy_5, Current_Backorder_Qty,
-                    (Current_Backorder_Qty * Standard_Cost) AS bo_value, GIT_1_Week, GIT_2_Week, GIT_3_Week, 
-                    (GIT_4_Week + Open_PO) AS not_delivered_qty FROM ''' + table_name + ''' 
-                    WHERE Current_Backorder_Qty > 0 ORDER by bo_value DESC'''
+        if self.__class__.bu_name == 'TU':
+            sql_cmd = '''SELECT Material, Description, Hierarchy_5, Current_Backorder_Qty,
+                        (Current_Backorder_Qty * Standard_Cost) AS bo_value, GIT_1_Week, GIT_2_Week, GIT_3_Week, 
+                        (GIT_4_Week + Open_PO) AS not_delivered_qty FROM ''' + table_name + ''' 
+                        WHERE Current_Backorder_Qty > 0 ORDER by bo_value DESC'''
+        else:
+            sql_cmd = '''SELECT Material, Description, Hierarchy_5, Current_Backorder_Qty, 
+            (Current_Backorder_Qty * Standard_Cost) AS bo_value, GIT_1_Week, GIT_2_Week, GIT_3_Week, GIT_4_Week, 
+            Open_PO FROM ''' + table_name + ''' WHERE Current_Backorder_Qty > 0 ORDER by bo_value DESC'''
         try:
             df = pd.read_sql(sql=sql_cmd, con=conn)
         except pd.io.sql.DatabaseError:
             return 0
         else:
             df = df.drop(columns=["bo_value", ])
-            df = df.rename(columns={"Material": "代码", "Description": "英文描述", "Hierarchy_5": "产品分类",
-                                    "Current_Backorder_Qty": "缺货数量", "GIT_1_Week": "2周左右", "GIT_2_Week": "3-4周",
-                                    "GIT_3_Week": "6-8周", "not_delivered_qty": "已下订单"})
-
+            if self.__class__.bu_name == 'TU':
+                df = df.rename(columns={"Material": "代码", "Description": "英文描述", "Hierarchy_5": "产品分类",
+                                        "Current_Backorder_Qty": "缺货数量", "GIT_1_Week": "2周左右", "GIT_2_Week": "3-4周",
+                                        "GIT_3_Week": "6-8周", "not_delivered_qty": "已下订单"})
             return df
 
     # export inventory file
@@ -438,7 +443,9 @@ class CurrentInventoryCalculation:
                 h5_inv_result.append(int(result[0]))
         # print charter
         x_value = [item[-4:] for item in tbl_list]
-        chart.line_chart(h5_result, x_value, h5_inv_result, "Date", "Value", "Value by Std. Cost of " + h5_result)
+        chart_title = "Value by Std. Cost of All " + self.__class__.bu_name if h5_result == "ALL" \
+            else "Value by Std. Cost of " + h5_result
+        chart.line_chart(h5_result, x_value, h5_inv_result, "Date", "Value", chart_title)
 
     # 显示某个H5的库存明细
     def get_h5_inv_detail(self, h5_name, table_name):

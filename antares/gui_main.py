@@ -253,11 +253,12 @@ class DragonGUI(DragonFrame):
         CodeCalculation = CIC(self.__class__.bu_name)
         df = CodeCalculation.export_inventory_data(self.table_to_use)
         self.clear_frame_content()
+        default_file_name = self.__class__.bu_name + '_Inventory_' + self.table_to_use[3:] + '.xlsx'
         if isinstance(df, pd.DataFrame):
             # open file dialogue
             wildcard = 'Excel文件(*.xlsx)|*.xlsx|所有文件(*.*)|*.*'
             dlg = wx.FileDialog(self, '另存为', os.getcwd(),
-                                defaultFile='output.xlsx',
+                                defaultFile=default_file_name,
                                 style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
                                 wildcard=wildcard)
             if dlg.ShowModal() == wx.ID_OK:
@@ -275,11 +276,12 @@ class DragonGUI(DragonFrame):
         CodeCalculation = CIC(self.__class__.bu_name)
         df = CodeCalculation.export_backorder_data(self.table_to_use)
         self.clear_frame_content()
+        default_file_name = self.__class__.bu_name + '_Backorder_' + self.table_to_use[3:] + '.xlsx'
         if isinstance(df, pd.DataFrame):
             # open file dialogue
             wildcard = 'Excel文件(*.xlsx)|*.xlsx|所有文件(*.*)|*.*'
             dlg = wx.FileDialog(self, '另存为', os.getcwd(),
-                                defaultFile='output.xlsx',
+                                defaultFile=default_file_name,
                                 style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
                                 wildcard=wildcard)
             if dlg.ShowModal() == wx.ID_OK:
