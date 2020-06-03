@@ -88,12 +88,11 @@ def get_available_h5_name(h5_name, bu_name):
 
 
 def get_available_h5_list(h5_name, bu_name):
-    bu_name = 'Spine' if bu_name == 'SP' else bu_name
     db_fullname = db_path + "Master_Data.db"
     conn = sqlite3.connect(db_fullname)
     c = conn.cursor()
     str_cmd = "SELECT distinct Hierarchy_5 COLLATE NOCASE from MATERIAL_MASTER WHERE Hierarchy_5 LIKE \'%" + \
-              h5_name + "%\' AND Business_Unit = \'" + bu_name + "\' ORDER BY Hierarchy_5"
+              h5_name + "%\' AND Business_Unit = \'" + bu_name + "\' COLLATE NOCASE ORDER BY Hierarchy_5"
     c.execute(str_cmd)
     result = c.fetchall()
     h5_output = [item[0] for item in result]
