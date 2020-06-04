@@ -245,6 +245,9 @@ class DragonGUI(DragonFrame):
             self.txtLog.Clear()
             self.txtLog.write("Done. %s days succeed, %s days fail. Update to %s" %
                               (sync_result[0], sync_result[1], sync_result[2]))
+        # refresh the current date value
+        if self.chkbxToday.GetValue():
+            self.table_to_use = CodeCalculation.get_newest_date()
 
     # export one-day JNJ inventory detail list
     def export_inventory(self, event):
