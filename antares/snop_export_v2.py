@@ -287,9 +287,9 @@ class SNOPSummaryExport:
         df_sales_last_year = pd.read_sql(sql=sql_cmd, con=conn)
         df_sales_last_year['Hierarchy_5'] = df_sales_last_year['Hierarchy_5'].str.upper()
         df_sales_last_year = df_sales_last_year.set_index('Hierarchy_5')
-        df_sales = df_sales.join(df_sales_last_year)
-        # return top 20
-        return df_sales.head(20)
+        df_sales = df_sales.join(df_sales_last_year).join(self.get_pm())
+        # return top
+        return df_sales.head(num)
 
     def get_top_inv_v2(self, inv_type, num=20):
         # link to db
@@ -317,9 +317,18 @@ class SNOPSummaryExport:
         df_inv_last_year = pd.read_sql(sql=sql_cmd, con=conn)
         df_inv_last_year['Hierarchy_5'] = df_inv_last_year['Hierarchy_5'].str.upper()
         df_inv_last_year = df_inv_last_year.set_index('Hierarchy_5')
-        # sort and return top 20
-        df_inv = df_inv.join(df_inv_last_year).sort_values([crt_title], ascending=False)
-        return df_inv.head(20)
+        # sort and return top
+        df_inv = df_inv.join(df_inv_last_year).join(self.get_pm()).sort_values([crt_title], ascending=False)
+        return df_inv.head(num)
+
+    # get dataframe for PM list
+    def get_pm(self):
+        database_fullname = self.__class__.db_path + self.__class__.bu_name + '_Master_Data.db'
+        datasheet_name = self.__class__.bu_name + '_PM_List'
+        conn = sqlite3.connect(database_fullname)
+        sql_cmd = 'SELECT * FROM ' + datasheet_name
+        df = pd.read_sql(con=conn, sql=sql_cmd, index_col='Hierarchy_5')
+        return df
 
     # get monthly inventory of recent 6 months
     def get_monthly_inventory_list_v2(self, inv_type, month_qty=6):
@@ -373,7 +382,7 @@ class SNOPSummaryExport:
 
     def get_top_eso_v2(self, material_type, num=20):
         # check material type:
-        type_trigger = 'N' if material_type == 'Instrument' else 'N'
+        type_trigger = 'Y' if material_type == 'Instrument' else 'N'
         # link to ESO db
         datasheet_name = self.__class__.bu_name + "_" + "ESO"
         database_fullname = self.__class__.db_path + datasheet_name + ".db"
@@ -404,8 +413,11 @@ class SNOPSummaryExport:
         df_eso_pre['Hierarchy_5'] = df_eso_pre['Hierarchy_5'].str.upper()
         df_eso_pre = df_eso_pre.set_index('Hierarchy_5')
         # combine and sort
-        df_eso = df_eso.join(df_eso_pre).sort_values([crt_title], ascending=False)
-        return df_eso.head(20)
+        if type_trigger == 'N':
+            df_eso = df_eso.join(df_eso_pre).join(self.get_pm()).sort_values([crt_title], ascending=False)
+        else:
+            df_eso = df_eso.join(df_eso_pre).sort_values([crt_title], ascending=False)
+        return df_eso.head(num)
 
     def snop_summary_generation(self):
         # writer = pd.ExcelWriter(self.__class__.file_fullname)
@@ -661,17 +673,17 @@ class SNOPExportEntrance:
         file_name = self.__class__.bu_name + "_SNOP_" + type + "_" + current_time + ".xlsx"
         return self.__class__.export_path + file_name
 
-    def start_snop_export(self):
-        # confirm if to start
-        print('== SNOP Excel File Export ==')
-        cmd_confirm = input('Warning! Press Y to start: ')
-        if cmd_confirm.upper() != 'Y':
-            print("Return to main menu.")
-            return
+    def export_code_detail_file(self):
         # get dataframe of code detail
         print('Start to generate Code level page')
         snop_code_generation = SNOPCodeExport(self.__class__.bu_name)
         [df_code, lst_column_name] = snop_code_generation.generate_code_onesheet()
+        print('Start to export code detail excel file')
+        with pd.ExcelWriter(self.set_file_fullname('Code')) as writer:
+            df_code.to_excel(writer, sheet_name="Code", index=False, header=lst_column_name, freeze_panes=(1, 1))
+        print('Code detail was exported.')
+
+    def export_summary_file(self):
         # get dataframe of Hierarchy_5 level
         print('Start to generate Hierarchy_5 level page')
         snop_h5_generation = SNOPHierarchy5Export(self.__class__.bu_name)
@@ -680,20 +692,33 @@ class SNOPExportEntrance:
         print('Start to generate summary page.')
         snop_summary_generation = SNOPSummaryExport(self.__class__.bu_name)
         df_summary_page = snop_summary_generation.snop_summary_generation()
-        # get dataframe of SNOP summary sheet
         # export to excel
-        print('Start to export to excel file')
+        print('Start to export summary page to excel file')
         with pd.ExcelWriter(self.set_file_fullname('Summary')) as writer:
             df_h5.to_excel(writer, sheet_name="H5", index=True, freeze_panes=(1, 1))
             for item in df_summary_page:
                 [df_summary, (row_num, col_num)] = item
                 df_summary.to_excel(writer, sheet_name="SNOP_Summary", index=True, startrow=row_num, startcol=col_num)
-        with pd.ExcelWriter(self.set_file_fullname('Code')) as writer:
-            df_code.to_excel(writer, sheet_name="Code", index=False, header=lst_column_name, freeze_panes=(1, 1))
+        print('Summary page was exported.')
+
+    def start_snop_export(self):
+        # confirm if to start
+        print('== SNOP Excel File Export ==')
+        cmd_input = input('Please choose your option (1 - Code Detail, 2 - Summary Page , 0 - Both Page) : ')
+        if cmd_input == '1':
+            self.export_code_detail_file()
+        elif cmd_input == '2':
+            self.export_summary_file()
+        elif cmd_input == '0':
+            self.export_code_detail_file()
+            self.export_summary_file()
+        else:
+            print('Wrong input, please try again~')
+            return
         print('Done~')
 
 
 if __name__ == '__main__':
-    test_module = SNOPExportEntrance('TU')
-    test_module.start_snop_export()
+    test_module = SNOPSummaryExport('TU')
+    print(test_module.get_top_inv_v2('JNJ_INV'))
 
