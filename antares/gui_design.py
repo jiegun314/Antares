@@ -18,7 +18,7 @@ import wx.adv
 class DragonFrame ( wx.Frame ):
 
     def __init__( self, parent ):
-        wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = u"Project Dragon GUI v0601", pos = wx.DefaultPosition, size = wx.Size( 1280,800 ), style = wx.CAPTION|wx.CLOSE_BOX|wx.MINIMIZE_BOX|wx.TAB_TRAVERSAL )
+        wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = u"Project Dragon GUI v0604", pos = wx.DefaultPosition, size = wx.Size( 1280,800 ), style = wx.CAPTION|wx.CLOSE_BOX|wx.MINIMIZE_BOX|wx.TAB_TRAVERSAL )
 
         self.SetSizeHints( wx.DefaultSize, wx.DefaultSize )
 
@@ -230,27 +230,6 @@ class DragonFrame ( wx.Frame ):
 
         self.m_menubar1.Append( self.menuFile, u"File" )
 
-        self.menuDefineBU = wx.Menu()
-        self.mTrauma = wx.MenuItem( self.menuDefineBU, wx.ID_ANY, u"Trauma", wx.EmptyString, wx.ITEM_RADIO )
-        self.menuDefineBU.Append( self.mTrauma )
-
-        self.mCMFT = wx.MenuItem( self.menuDefineBU, wx.ID_ANY, u"CMFT", wx.EmptyString, wx.ITEM_RADIO )
-        self.menuDefineBU.Append( self.mCMFT )
-
-        self.mPT = wx.MenuItem( self.menuDefineBU, wx.ID_ANY, u"PT", wx.EmptyString, wx.ITEM_RADIO )
-        self.menuDefineBU.Append( self.mPT )
-
-        self.mJT = wx.MenuItem( self.menuDefineBU, wx.ID_ANY, u"Joint", wx.EmptyString, wx.ITEM_NORMAL )
-        self.menuDefineBU.Append( self.mJT )
-
-        self.mMT = wx.MenuItem( self.menuDefineBU, wx.ID_ANY, u"Mitek", wx.EmptyString, wx.ITEM_NORMAL )
-        self.menuDefineBU.Append( self.mMT )
-
-        self.mSP = wx.MenuItem( self.menuDefineBU, wx.ID_ANY, u"Spine", wx.EmptyString, wx.ITEM_NORMAL )
-        self.menuDefineBU.Append( self.mSP )
-
-        self.m_menubar1.Append( self.menuDefineBU, u"Business Unit" )
-
         self.menuAbout = wx.Menu()
         self.showAbout = wx.MenuItem( self.menuAbout, wx.ID_ANY, u"About", wx.EmptyString, wx.ITEM_NORMAL )
         self.menuAbout.Append( self.showAbout )
@@ -286,6 +265,32 @@ class DragonFrame ( wx.Frame ):
 
         self.m_toolBar1.AddSeparator()
 
+        self.m_toolBar1.AddSeparator()
+
+        self.m_toolBar1.AddSeparator()
+
+        self.m_toolBar1.AddSeparator()
+
+        self.m_toolBar1.AddSeparator()
+
+        self.m_toolBar1.AddSeparator()
+
+        self.m_toolBar1.AddSeparator()
+
+        self.m_toolBar1.AddSeparator()
+
+        self.mTU = self.m_toolBar1.AddLabelTool( wx.ID_ANY, u"tool", wx.Bitmap( u".icon/bu_TU.png", wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_RADIO, u"Trauma", wx.EmptyString, None )
+
+        self.mCMFT = self.m_toolBar1.AddLabelTool( wx.ID_ANY, u"tool", wx.Bitmap( u".icon/bu_CMFT.png", wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_RADIO, u"CMFT", wx.EmptyString, None )
+
+        self.mPT = self.m_toolBar1.AddLabelTool( wx.ID_ANY, u"tool", wx.Bitmap( u".icon/bu_PT.png", wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_RADIO, u"PowerTool", wx.EmptyString, None )
+
+        self.mJT = self.m_toolBar1.AddLabelTool( wx.ID_ANY, u"tool", wx.Bitmap( u".icon/bu_JT.png", wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_RADIO, u"Joint", wx.EmptyString, None )
+
+        self.mSpine = self.m_toolBar1.AddLabelTool( wx.ID_ANY, u"tool", wx.Bitmap( u".icon/bu_Spine.png", wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_RADIO, u"Spine", wx.EmptyString, None )
+
+        self.mMT = self.m_toolBar1.AddLabelTool( wx.ID_ANY, u"tool", wx.Bitmap( u".icon/bu_MT.png", wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_RADIO, u"Mitek", wx.EmptyString, None )
+
         self.m_toolBar1.Realize()
 
 
@@ -303,12 +308,6 @@ class DragonFrame ( wx.Frame ):
         self.btnBackorderExport.Bind( wx.EVT_BUTTON, self.export_backorder )
         self.btnOutputDownload.Bind( wx.EVT_BUTTON, self.export_listed_data )
         self.Bind( wx.EVT_MENU, self.exit_dragon, id = self.mExit.GetId() )
-        self.Bind( wx.EVT_MENU, self.select_bu_TU, id = self.mTrauma.GetId() )
-        self.Bind( wx.EVT_MENU, self.select_bu_CMFT, id = self.mCMFT.GetId() )
-        self.Bind( wx.EVT_MENU, self.select_bu_PT, id = self.mPT.GetId() )
-        self.Bind( wx.EVT_MENU, self.select_bu_JT, id = self.mJT.GetId() )
-        self.Bind( wx.EVT_MENU, self.select_bu_MT, id = self.mMT.GetId() )
-        self.Bind( wx.EVT_MENU, self.select_bu_SP, id = self.mSP.GetId() )
         self.Bind( wx.EVT_MENU, self.show_about_dialog, id = self.showAbout.GetId() )
         self.Bind( wx.EVT_TOOL, self.get_current_inventory_list, id = self.mDisplayCurrentInventory.GetId() )
         self.Bind( wx.EVT_TOOL, self.get_current_bo_list, id = self.mCurrentBackorder.GetId() )
@@ -317,6 +316,12 @@ class DragonFrame ( wx.Frame ):
         self.Bind( wx.EVT_TOOL, self.display_pending_inventory, id = self.mPendingInventory.GetId() )
         self.Bind( wx.EVT_TOOL, self.display_code_trend, id = self.mCodeTrend.GetId() )
         self.Bind( wx.EVT_TOOL, self.display_h5_trend, id = self.mH5Trend.GetId() )
+        self.Bind( wx.EVT_TOOL, self.select_bu_TU, id = self.mTU.GetId() )
+        self.Bind( wx.EVT_TOOL, self.select_bu_CMFT, id = self.mCMFT.GetId() )
+        self.Bind( wx.EVT_TOOL, self.select_bu_PT, id = self.mPT.GetId() )
+        self.Bind( wx.EVT_TOOL, self.select_bu_JT, id = self.mJT.GetId() )
+        self.Bind( wx.EVT_TOOL, self.select_bu_SP, id = self.mSpine.GetId() )
+        self.Bind( wx.EVT_TOOL, self.select_bu_MT, id = self.mMT.GetId() )
 
     def __del__( self ):
         pass
@@ -356,24 +361,6 @@ class DragonFrame ( wx.Frame ):
     def exit_dragon( self, event ):
         event.Skip()
 
-    def select_bu_TU( self, event ):
-        event.Skip()
-
-    def select_bu_CMFT( self, event ):
-        event.Skip()
-
-    def select_bu_PT( self, event ):
-        event.Skip()
-
-    def select_bu_JT( self, event ):
-        event.Skip()
-
-    def select_bu_MT( self, event ):
-        event.Skip()
-
-    def select_bu_SP( self, event ):
-        event.Skip()
-
     def show_about_dialog( self, event ):
         event.Skip()
 
@@ -396,6 +383,24 @@ class DragonFrame ( wx.Frame ):
         event.Skip()
 
     def display_h5_trend( self, event ):
+        event.Skip()
+
+    def select_bu_TU( self, event ):
+        event.Skip()
+
+    def select_bu_CMFT( self, event ):
+        event.Skip()
+
+    def select_bu_PT( self, event ):
+        event.Skip()
+
+    def select_bu_JT( self, event ):
+        event.Skip()
+
+    def select_bu_SP( self, event ):
+        event.Skip()
+
+    def select_bu_MT( self, event ):
         event.Skip()
 
 

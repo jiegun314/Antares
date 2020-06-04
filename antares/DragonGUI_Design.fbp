@@ -48,7 +48,7 @@
             <property name="size">1280,800</property>
             <property name="style">wxCAPTION|wxCLOSE_BOX|wxMINIMIZE_BOX</property>
             <property name="subclass">; ; forward_declare</property>
-            <property name="title">Project Dragon GUI v0601</property>
+            <property name="title">Project Dragon GUI v0604</property>
             <property name="tooltip"></property>
             <property name="window_extra_style"></property>
             <property name="window_name"></property>
@@ -1759,95 +1759,6 @@
                         <event name="OnMenuSelection">exit_dragon</event>
                     </object>
                 </object>
-                <object class="wxMenu" expanded="1">
-                    <property name="label">Business Unit</property>
-                    <property name="name">menuDefineBU</property>
-                    <property name="permission">protected</property>
-                    <object class="wxMenuItem" expanded="0">
-                        <property name="bitmap"></property>
-                        <property name="checked">0</property>
-                        <property name="enabled">1</property>
-                        <property name="help"></property>
-                        <property name="id">wxID_ANY</property>
-                        <property name="kind">wxITEM_RADIO</property>
-                        <property name="label">Trauma</property>
-                        <property name="name">mTrauma</property>
-                        <property name="permission">none</property>
-                        <property name="shortcut"></property>
-                        <property name="unchecked_bitmap"></property>
-                        <event name="OnMenuSelection">select_bu_TU</event>
-                    </object>
-                    <object class="wxMenuItem" expanded="0">
-                        <property name="bitmap"></property>
-                        <property name="checked">0</property>
-                        <property name="enabled">1</property>
-                        <property name="help"></property>
-                        <property name="id">wxID_ANY</property>
-                        <property name="kind">wxITEM_RADIO</property>
-                        <property name="label">CMFT</property>
-                        <property name="name">mCMFT</property>
-                        <property name="permission">none</property>
-                        <property name="shortcut"></property>
-                        <property name="unchecked_bitmap"></property>
-                        <event name="OnMenuSelection">select_bu_CMFT</event>
-                    </object>
-                    <object class="wxMenuItem" expanded="0">
-                        <property name="bitmap"></property>
-                        <property name="checked">0</property>
-                        <property name="enabled">1</property>
-                        <property name="help"></property>
-                        <property name="id">wxID_ANY</property>
-                        <property name="kind">wxITEM_RADIO</property>
-                        <property name="label">PT</property>
-                        <property name="name">mPT</property>
-                        <property name="permission">none</property>
-                        <property name="shortcut"></property>
-                        <property name="unchecked_bitmap"></property>
-                        <event name="OnMenuSelection">select_bu_PT</event>
-                    </object>
-                    <object class="wxMenuItem" expanded="1">
-                        <property name="bitmap"></property>
-                        <property name="checked">0</property>
-                        <property name="enabled">1</property>
-                        <property name="help"></property>
-                        <property name="id">wxID_ANY</property>
-                        <property name="kind">wxITEM_NORMAL</property>
-                        <property name="label">Joint</property>
-                        <property name="name">mJT</property>
-                        <property name="permission">none</property>
-                        <property name="shortcut"></property>
-                        <property name="unchecked_bitmap"></property>
-                        <event name="OnMenuSelection">select_bu_JT</event>
-                    </object>
-                    <object class="wxMenuItem" expanded="1">
-                        <property name="bitmap"></property>
-                        <property name="checked">0</property>
-                        <property name="enabled">1</property>
-                        <property name="help"></property>
-                        <property name="id">wxID_ANY</property>
-                        <property name="kind">wxITEM_NORMAL</property>
-                        <property name="label">Mitek</property>
-                        <property name="name">mMT</property>
-                        <property name="permission">none</property>
-                        <property name="shortcut"></property>
-                        <property name="unchecked_bitmap"></property>
-                        <event name="OnMenuSelection">select_bu_MT</event>
-                    </object>
-                    <object class="wxMenuItem" expanded="1">
-                        <property name="bitmap"></property>
-                        <property name="checked">0</property>
-                        <property name="enabled">1</property>
-                        <property name="help"></property>
-                        <property name="id">wxID_ANY</property>
-                        <property name="kind">wxITEM_NORMAL</property>
-                        <property name="label">Spine</property>
-                        <property name="name">mSP</property>
-                        <property name="permission">none</property>
-                        <property name="shortcut"></property>
-                        <property name="unchecked_bitmap"></property>
-                        <event name="OnMenuSelection">select_bu_SP</event>
-                    </object>
-                </object>
                 <object class="wxMenu" expanded="0">
                     <property name="label">About</property>
                     <property name="name">menuAbout</property>
@@ -1868,7 +1779,7 @@
                     </object>
                 </object>
             </object>
-            <object class="wxToolBar" expanded="0">
+            <object class="wxToolBar" expanded="1">
                 <property name="BottomDockable">1</property>
                 <property name="LeftDockable">1</property>
                 <property name="RightDockable">1</property>
@@ -2022,6 +1933,99 @@
                 </object>
                 <object class="toolSeparator" expanded="0">
                     <property name="permission">protected</property>
+                </object>
+                <object class="toolSeparator" expanded="1">
+                    <property name="permission">protected</property>
+                </object>
+                <object class="toolSeparator" expanded="1">
+                    <property name="permission">protected</property>
+                </object>
+                <object class="toolSeparator" expanded="1">
+                    <property name="permission">protected</property>
+                </object>
+                <object class="toolSeparator" expanded="1">
+                    <property name="permission">protected</property>
+                </object>
+                <object class="toolSeparator" expanded="1">
+                    <property name="permission">protected</property>
+                </object>
+                <object class="toolSeparator" expanded="1">
+                    <property name="permission">protected</property>
+                </object>
+                <object class="toolSeparator" expanded="1">
+                    <property name="permission">protected</property>
+                </object>
+                <object class="tool" expanded="1">
+                    <property name="bitmap">Load From File; .icon\bu_TU.png</property>
+                    <property name="context_menu">0</property>
+                    <property name="id">wxID_ANY</property>
+                    <property name="kind">wxITEM_RADIO</property>
+                    <property name="label">tool</property>
+                    <property name="name">mTU</property>
+                    <property name="permission">protected</property>
+                    <property name="statusbar"></property>
+                    <property name="tooltip">Trauma</property>
+                    <event name="OnMenuSelection">select_bu_TU</event>
+                </object>
+                <object class="tool" expanded="1">
+                    <property name="bitmap">Load From File; .icon\bu_CMFT.png</property>
+                    <property name="context_menu">0</property>
+                    <property name="id">wxID_ANY</property>
+                    <property name="kind">wxITEM_RADIO</property>
+                    <property name="label">tool</property>
+                    <property name="name">mCMFT</property>
+                    <property name="permission">protected</property>
+                    <property name="statusbar"></property>
+                    <property name="tooltip">CMFT</property>
+                    <event name="OnMenuSelection">select_bu_CMFT</event>
+                </object>
+                <object class="tool" expanded="1">
+                    <property name="bitmap">Load From File; .icon\bu_PT.png</property>
+                    <property name="context_menu">0</property>
+                    <property name="id">wxID_ANY</property>
+                    <property name="kind">wxITEM_RADIO</property>
+                    <property name="label">tool</property>
+                    <property name="name">mPT</property>
+                    <property name="permission">protected</property>
+                    <property name="statusbar"></property>
+                    <property name="tooltip">PowerTool</property>
+                    <event name="OnMenuSelection">select_bu_PT</event>
+                </object>
+                <object class="tool" expanded="1">
+                    <property name="bitmap">Load From File; .icon\bu_JT.png</property>
+                    <property name="context_menu">0</property>
+                    <property name="id">wxID_ANY</property>
+                    <property name="kind">wxITEM_RADIO</property>
+                    <property name="label">tool</property>
+                    <property name="name">mJT</property>
+                    <property name="permission">protected</property>
+                    <property name="statusbar"></property>
+                    <property name="tooltip">Joint</property>
+                    <event name="OnMenuSelection">select_bu_JT</event>
+                </object>
+                <object class="tool" expanded="1">
+                    <property name="bitmap">Load From File; .icon\bu_Spine.png</property>
+                    <property name="context_menu">0</property>
+                    <property name="id">wxID_ANY</property>
+                    <property name="kind">wxITEM_RADIO</property>
+                    <property name="label">tool</property>
+                    <property name="name">mSpine</property>
+                    <property name="permission">protected</property>
+                    <property name="statusbar"></property>
+                    <property name="tooltip">Spine</property>
+                    <event name="OnMenuSelection">select_bu_SP</event>
+                </object>
+                <object class="tool" expanded="1">
+                    <property name="bitmap">Load From File; .icon\bu_MT.png</property>
+                    <property name="context_menu">0</property>
+                    <property name="id">wxID_ANY</property>
+                    <property name="kind">wxITEM_RADIO</property>
+                    <property name="label">tool</property>
+                    <property name="name">mMT</property>
+                    <property name="permission">protected</property>
+                    <property name="statusbar"></property>
+                    <property name="tooltip">Mitek</property>
+                    <event name="OnMenuSelection">select_bu_MT</event>
                 </object>
             </object>
         </object>
