@@ -479,45 +479,32 @@ class CurrentInventoryCalculation:
     def get_low_inventory_alert(self, alert_month=1):
         # get ranking A, B code list
         master_data_db_fullname = self.__class__.db_path + self.__class__.bu_name + '_Master_Data.db'
+        master_data_table_name = self.__class__.bu_name + '_Master_Data'
         inventory_db_fullname = self.__class__.db_path + self.__class__.bu_name + '_CRT_INV.db'
         conn = sqlite3.connect(master_data_db_fullname)
-        c = conn.cursor()
-        c.execute('SELECT Material, IMS_Quantity FROM Ranking WHERE Ranking in (\"A\", \"B\") ')
-        ranking_ab_list = c.fetchall()
-        # get inventory and judge if low stock
+        # get AB list
+        sql_cmd = 'SELECT Material, Description, Hierarchy_5, Ranking FROM ' + master_data_table_name +\
+                  ' WHERE Ranking in (\"A\", \"B\") '
+        df_ab_list = pd.read_sql(sql=sql_cmd, con=conn, index_col='Material')
+        # get IMS quantity list
+        sql_cmd = 'SELECT Material, (IMS_Quantity / 6) as AVG_IMS FROM Ranking WHERE Ranking in (\"A\", \"B\") '
+        df_ims_list = pd.read_sql(sql=sql_cmd, con=conn, index_col='Material')
+        df_ab_list = df_ab_list.join(df_ims_list)
+        # get current update inventory list
         conn = sqlite3.connect(inventory_db_fullname)
-        c = conn.cursor()
         table_name = self.get_newest_date()
-        inventory_list_title = ['Material', 'Description', 'H5', 'Available_Stock', 'GIT_Quantity', 'Stock_Month',
-                                'Total_Stock_Month']
-        inventory_alert_list, inventory_alert_result = [], []
-        for item in ranking_ab_list:
-            material_name, ims_quantity = item[0], item[1]
-            sql_cmd = 'SELECT Material, Description, Hierarchy_5, Available_Stock, (GIT_1_Week + GIT_2_Week + ' \
-                      'GIT_3_Week + GIT_4_Week) as GIT_Quantity FROM ' + table_name + ' WHERE Material = \"' + \
-                      material_name + '\"'
-            c.execute(sql_cmd)
-            inventory_result = list(c.fetchall()[0])
-            inventory_result.append(inventory_result[3] * 6 / ims_quantity)
-            inventory_result.append(inventory_result[4] * 6 / ims_quantity)
-            if inventory_result[-2] <= alert_month:
-                inventory_alert_list.append(inventory_result)
-        if self.__class__.bu_name != "TU":
-            inventory_alert_result.insert(0, inventory_list_title)
-            return inventory_alert_list
-        else:
-            # remove phoenix codes from list
-            conn = sqlite3.connect(master_data_db_fullname)
-            c = conn.cursor()
-            for item in inventory_alert_list:
-                material_name = item[0]
-                sql_cmd = 'SELECT count(*) FROM TU_Phoenix_List WHERE [Exit SKU] = \"' + material_name + '\"'
-                c.execute(sql_cmd)
-                # if material code found in phoenix list
-                if c.fetchall()[0][0] == 0:
-                    inventory_alert_result.append(item)
-            inventory_alert_result.insert(0, inventory_list_title)
-            return inventory_alert_result
+        sql_cmd = 'SELECT Material, Available_Stock, (Available_Stock + GIT_1_Week + ' \
+                  'GIT_2_Week + GIT_3_Week + GIT_4_Week) as Total_Quantity FROM ' + table_name
+        df_inventory_list = pd.read_sql(sql=sql_cmd, con=conn, index_col='Material')
+        # Join two list to get inventory of
+        df_ab_list = df_ab_list.join(df_inventory_list)
+        df_ab_list['CRT_INV_Mth'] = df_ab_list['Available_Stock'] / df_ab_list['AVG_IMS']
+        df_ab_list['TTL_INV_Mth'] = df_ab_list['Total_Quantity'] / df_ab_list['AVG_IMS']
+        # delete IMS column
+        df_ab_list = df_ab_list.drop(['AVG_IMS'], axis=1)
+        # filter and sort
+        df_low_inventory = df_ab_list.loc[df_ab_list['CRT_INV_Mth'] < alert_month].sort_values(by=['Ranking','CRT_INV_Mth'])
+        return df_low_inventory
 
     # data mapping for a list of codes
     def inventory_mapping(self, code_list, table_name):
@@ -586,5 +573,5 @@ class CurrentInventoryCalculation:
 
 if __name__ == "__main__":
     test = CurrentInventoryCalculation("TU")
-    test.get_code_inv('04.210.116TS', 'INV20200428')
+    print(test.get_low_inventory_alert_v2())
     # test.inv_data_sync(50)

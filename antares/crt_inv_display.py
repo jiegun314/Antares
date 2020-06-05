@@ -115,8 +115,8 @@ class CurrentInventoryDisplay:
         # get low inventory result
         CodeCalculation = CIC(self.__class__.bu_name)
         low_inventory_list = CodeCalculation.get_low_inventory_alert()
-        print(tabulate(low_inventory_list, headers="firstrow", tablefmt="psql",
-                       showindex=range(1, len(low_inventory_list)), floatfmt=",.1f"))
+        print(tabulate(low_inventory_list, headers="keys", tablefmt="psql", showindex="always",
+                       floatfmt=(".0f", ".0f", ".1f", ".1f", ".0f", ".0f", ".1f", ".1f")))
 
     def display_current_inventory(self):
         CodeCalculation = CIC(self.__class__.bu_name)
