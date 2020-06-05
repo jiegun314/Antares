@@ -106,7 +106,7 @@ class DragonGUI(DragonFrame):
         h5_name = self.lstbxCodeSelection.GetStringSelection()
         CodeCalculation = CIC(self.__class__.bu_name)
         [inventory_list, inventory_total] = CodeCalculation.get_h5_inv_detail(h5_name, self.table_to_use)
-        self.show_inventory_list(inventory_list, 3)
+        self.show_list(inventory_list, 3)
         self.StatusBar.SetStatusText("Total Inventory: %s" % ("{:,.0f}".format(inventory_total)), 1)
         self.txtLog.Clear()
         self.txtLog.write("%s has been listed" % h5_name)
@@ -124,7 +124,7 @@ class DragonGUI(DragonFrame):
         CodeCalculation = CIC(self.__class__.bu_name)
         inventory_result = CodeCalculation.inventory_mapping(code_name_list, self.table_to_use)
         data_trigger_point = 4
-        self.show_inventory_list(inventory_result, data_trigger_point)
+        self.show_list(inventory_result, data_trigger_point)
         self.txtLog.write("Done, with data of %s." % self.table_to_use)
 
     def list_h5_name(self):
@@ -140,7 +140,7 @@ class DragonGUI(DragonFrame):
         data_trigger_point = 1
         CodeCalculation = CIC(self.__class__.bu_name)
         [inventory_result, total_inventory] = CodeCalculation.get_current_inventory(self.table_to_use)
-        self.show_inventory_list(inventory_result, data_trigger_point)
+        self.show_list(inventory_result, data_trigger_point)
         self.StatusBar.SetStatusText("Total Available Stock: %s, Total Useful Stock: %s."
                                      % ("{:,.0f}".format(total_inventory[0]), "{:,.0f}".format(total_inventory[1])), 1)
         self.txtLog.Clear()
@@ -152,10 +152,11 @@ class DragonGUI(DragonFrame):
         CodeCalculation = CIC(self.__class__.bu_name)
         inventory_result = CodeCalculation.get_current_bo(self.table_to_use)
         [backorder_total_qty, backorder_total_value] = inventory_result[-1][4:6]
-        self.show_inventory_list(inventory_result, data_trigger_point)
+        self.show_list(inventory_result, data_trigger_point)
         self.txtLog.write("Current Backorder List done, with data of %s." % self.table_to_use)
         self.StatusBar.SetStatusText("Total Backorder Qty; %s, Value: %s" %
-                                     ("{:,.0f}".format(backorder_total_qty), "{:,.0f}".format(backorder_total_value)), 1)
+                                     ("{:,.0f}".format(backorder_total_qty), "{:,.0f}".format(backorder_total_value)),
+                                     1)
 
     def display_backorder_trend(self, event):
         self.clear_frame_content()
@@ -164,7 +165,6 @@ class DragonGUI(DragonFrame):
         CodeCalculation.generate_backorder_trend()
         self.txtLog.Clear()
         self.txtLog.write("Done. The chart would be opened in your web browser.")
-
 
     def display_aging_backorder(self, event):
         self.clear_frame_content()
@@ -175,13 +175,13 @@ class DragonGUI(DragonFrame):
         self.txtLog.write("Calculation ongoing, please wait a moment...")
         [inventory_result, mapping_days] = CodeCalculation.calculate_aging_backorder(exception_list)
         data_trigger_point = 6
-        self.show_inventory_list(inventory_result, data_trigger_point)
+        self.show_list(inventory_result, data_trigger_point)
         self.StatusBar.SetStatusText("Total Mapping %s days" % ("{:,.0f}".format(mapping_days)), 1)
         self.txtLog.Clear()
         self.txtLog.write("Aging backorder calculation finished.")
 
     # shared function to display data in column list
-    def show_inventory_list(self, inventory_result, data_trigger_point):
+    def show_list(self, inventory_result, data_trigger_point):
         column_title = ["No", ] + list(inventory_result[0])
         for i in range(0, len(column_title)):
             if i <= data_trigger_point:
@@ -337,7 +337,17 @@ class DragonGUI(DragonFrame):
         CodeCalculation.generate_pending_trend()
         self.txtLog.Clear()
         self.txtLog.write("Done. The chart would be opened in your web browser.")
-        pass
+
+    # display low AB inventory
+    def display_low_AB_inventory(self, event):
+        self.clear_frame_content()
+        if self.__class__.bu_name != 'TU':
+            self.txtLog.write("Sorry, this function is not open for %s yet." % self.__class__.bu_name)
+        else:
+            CodeCalculation = CIC(self.__class__.bu_name)
+            df_low_inventory = CodeCalculation.get_low_inventory_alert()
+            lst_low_inventory = [['Material'] + df_low_inventory.columns.values.tolist()] + df_low_inventory.reset_index().values.tolist()
+            self.show_list(lst_low_inventory, 4)
 
     # clear input area:
     def clear_input(self, event):

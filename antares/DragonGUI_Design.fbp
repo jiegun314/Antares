@@ -1913,7 +1913,7 @@
                     <property name="name">mLowABInventory</property>
                     <property name="permission">protected</property>
                     <property name="statusbar"></property>
-                    <property name="tooltip"></property>
+                    <property name="tooltip">Display low inventory for Rank A, B products</property>
                     <event name="OnToolClicked">display_low_AB_inventory</event>
                 </object>
                 <object class="toolSeparator" expanded="0">
