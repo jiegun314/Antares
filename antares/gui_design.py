@@ -18,7 +18,7 @@ import wx.adv
 class DragonFrame ( wx.Frame ):
 
     def __init__( self, parent ):
-        wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = u"Project Dragon GUI v0604", pos = wx.DefaultPosition, size = wx.Size( 1280,800 ), style = wx.CAPTION|wx.CLOSE_BOX|wx.MINIMIZE_BOX|wx.TAB_TRAVERSAL )
+        wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = u"Project Dragon GUI v0605", pos = wx.DefaultPosition, size = wx.Size( 1280,800 ), style = wx.CAPTION|wx.CLOSE_BOX|wx.MINIMIZE_BOX|wx.TAB_TRAVERSAL )
 
         self.SetSizeHints( wx.DefaultSize, wx.DefaultSize )
 
@@ -257,6 +257,8 @@ class DragonFrame ( wx.Frame ):
 
         self.mPendingInventory = self.m_toolBar1.AddLabelTool( wx.ID_ANY, u"tool", wx.Bitmap( u".icon/pending.png", wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, u"Display trend for pending inventory value", wx.EmptyString, None )
 
+        self.mLowABInventory = self.m_toolBar1.AddLabelTool( wx.ID_ANY, u"tool", wx.Bitmap( u".icon/low_inventory.png", wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, wx.EmptyString, wx.EmptyString, None )
+
         self.m_toolBar1.AddSeparator()
 
         self.mCodeTrend = self.m_toolBar1.AddLabelTool( wx.ID_ANY, u"tool", wx.Bitmap( u".icon/code_trend.ico", wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, u"Display inventory trend by code", wx.EmptyString, None )
@@ -314,6 +316,7 @@ class DragonFrame ( wx.Frame ):
         self.Bind( wx.EVT_TOOL, self.display_backorder_trend, id = self.mBackorderTrend.GetId() )
         self.Bind( wx.EVT_TOOL, self.display_aging_backorder, id = self.mAgingBackorder.GetId() )
         self.Bind( wx.EVT_TOOL, self.display_pending_inventory, id = self.mPendingInventory.GetId() )
+        self.Bind( wx.EVT_TOOL, self.display_low_AB_inventory, id = self.mLowABInventory.GetId() )
         self.Bind( wx.EVT_TOOL, self.display_code_trend, id = self.mCodeTrend.GetId() )
         self.Bind( wx.EVT_TOOL, self.display_h5_trend, id = self.mH5Trend.GetId() )
         self.Bind( wx.EVT_TOOL, self.select_bu_TU, id = self.mTU.GetId() )
@@ -377,6 +380,9 @@ class DragonFrame ( wx.Frame ):
         event.Skip()
 
     def display_pending_inventory( self, event ):
+        event.Skip()
+
+    def display_low_AB_inventory( self, event ):
         event.Skip()
 
     def display_code_trend( self, event ):
