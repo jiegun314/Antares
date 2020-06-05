@@ -1878,7 +1878,7 @@
                     <event name="OnToolClicked">display_backorder_trend</event>
                 </object>
                 <object class="tool" expanded="0">
-                    <property name="bitmap">Load From File; .icon/aging_backorder.ico</property>
+                    <property name="bitmap">Load From File; .icon\aging_backorder.png</property>
                     <property name="context_menu">0</property>
                     <property name="id">wxID_ANY</property>
                     <property name="kind">wxITEM_NORMAL</property>
@@ -1920,7 +1920,7 @@
                     <property name="permission">protected</property>
                 </object>
                 <object class="tool" expanded="0">
-                    <property name="bitmap">Load From File; .icon/code_trend.ico</property>
+                    <property name="bitmap">Load From File; .icon\code_trend.png</property>
                     <property name="context_menu">0</property>
                     <property name="id">wxID_ANY</property>
                     <property name="kind">wxITEM_NORMAL</property>

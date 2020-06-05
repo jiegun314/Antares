@@ -251,7 +251,7 @@ class DragonFrame ( wx.Frame ):
 
         self.mBackorderTrend = self.m_toolBar1.AddLabelTool( wx.ID_ANY, u"tool", wx.Bitmap( u".icon/bo_trend.png", wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, u"display trend of backorder value", wx.EmptyString, None )
 
-        self.mAgingBackorder = self.m_toolBar1.AddLabelTool( wx.ID_ANY, u"tool", wx.Bitmap( u".icon/aging_backorder.ico", wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, u"display aging backorder", wx.EmptyString, None )
+        self.mAgingBackorder = self.m_toolBar1.AddLabelTool( wx.ID_ANY, u"tool", wx.Bitmap( u".icon/aging_backorder.png", wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, u"display aging backorder", wx.EmptyString, None )
 
         self.m_toolBar1.AddSeparator()
 
@@ -261,7 +261,7 @@ class DragonFrame ( wx.Frame ):
 
         self.m_toolBar1.AddSeparator()
 
-        self.mCodeTrend = self.m_toolBar1.AddLabelTool( wx.ID_ANY, u"tool", wx.Bitmap( u".icon/code_trend.ico", wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, u"Display inventory trend by code", wx.EmptyString, None )
+        self.mCodeTrend = self.m_toolBar1.AddLabelTool( wx.ID_ANY, u"tool", wx.Bitmap( u".icon/code_trend.png", wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, u"Display inventory trend by code", wx.EmptyString, None )
 
         self.mH5Trend = self.m_toolBar1.AddLabelTool( wx.ID_ANY, u"tool", wx.Bitmap( u".icon/h5_trend.png", wx.BITMAP_TYPE_ANY ), wx.NullBitmap, wx.ITEM_NORMAL, u"Display inventory trend of one hierarchy", wx.EmptyString, None )
 
