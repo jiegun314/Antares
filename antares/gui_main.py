@@ -299,22 +299,27 @@ class DragonGUI(DragonFrame):
     def display_code_trend(self, event):
         self.clear_frame_content()
         code_name = self.lstbxCodeSelection.GetStringSelection()
-        self.txtLog.write("Inventory Trend of %s is under generating. Please wait~" % code_name)
-        CodeCalculation = CIC(self.__class__.bu_name)
-        CodeCalculation.generate_code_inv_trend(code_name)
-        self.clear_frame_content()
-        self.txtLog.write("Done. The chart would be opened in your web browser.")
+        if code_name != '':
+            self.txtLog.write("Inventory Trend of %s is under generating. Please wait~" % code_name)
+            CodeCalculation = CIC(self.__class__.bu_name)
+            CodeCalculation.generate_code_inv_trend(code_name)
+            self.clear_frame_content()
+            self.txtLog.write("Done. The chart would be opened in your web browser.")
+        else:
+            self.txtLog.write("No code was selected. Please try again.")
 
     # display h5 trend
     def display_h5_trend(self, event):
         self.clear_frame_content()
         h5_name = self.lstbxCodeSelection.GetStringSelection()
-        self.txtLog.write("Inventory Trend of %s is under generating. Please wait~" % h5_name)
-        CodeCalculation = CIC(self.__class__.bu_name)
-        CodeCalculation.generate_h5_inventory_trend(h5_name)
-        self.clear_frame_content()
-        self.txtLog.write("Done. The chart would be opened in your web browser.")
-        pass
+        if h5_name != '':
+            self.txtLog.write("Inventory Trend of %s is under generating. Please wait~" % h5_name)
+            CodeCalculation = CIC(self.__class__.bu_name)
+            CodeCalculation.generate_h5_inventory_trend(h5_name)
+            self.clear_frame_content()
+            self.txtLog.write("Done. The chart would be opened in your web browser.")
+        else:
+            self.txtLog.write("No hierarchy_5 name was selected. Please try again.")
 
     # click bu total option
     def bu_level_selected(self, event):
