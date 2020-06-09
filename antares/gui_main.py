@@ -304,7 +304,7 @@ class DragonGUI(DragonFrame):
             h5_fulllist = pb_func.get_full_h5_list(self.__class__.bu_name)
             self.txtLog.write("Inventory Trend of %s is under generating. Please wait~" % selected_name)
             # if h5 name is selected
-            if selected_name in h5_fulllist:
+            if selected_name in h5_fulllist or selected_name == 'ALL':
                 CodeCalculation.generate_h5_inventory_trend(selected_name)
             else:
                 CodeCalculation.generate_code_inv_trend(selected_name)
