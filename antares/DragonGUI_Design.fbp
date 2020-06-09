@@ -48,7 +48,7 @@
             <property name="size">1280,800</property>
             <property name="style">wxCAPTION|wxCLOSE_BOX|wxMINIMIZE_BOX</property>
             <property name="subclass">; ; forward_declare</property>
-            <property name="title">Project Dragon GUI v0605</property>
+            <property name="title">Project Dragon GUI v0609</property>
             <property name="tooltip"></property>
             <property name="window_extra_style"></property>
             <property name="window_name"></property>
@@ -1919,29 +1919,17 @@
                 <object class="toolSeparator" expanded="0">
                     <property name="permission">protected</property>
                 </object>
-                <object class="tool" expanded="0">
-                    <property name="bitmap">Load From File; .icon\code_trend.png</property>
+                <object class="tool" expanded="1">
+                    <property name="bitmap">Load From File; .icon\inventory_trend.png</property>
                     <property name="context_menu">0</property>
                     <property name="id">wxID_ANY</property>
                     <property name="kind">wxITEM_NORMAL</property>
                     <property name="label">tool</property>
-                    <property name="name">mCodeTrend</property>
+                    <property name="name">mInvTrend</property>
                     <property name="permission">protected</property>
                     <property name="statusbar"></property>
-                    <property name="tooltip">Display inventory trend by code</property>
-                    <event name="OnToolClicked">display_code_trend</event>
-                </object>
-                <object class="tool" expanded="0">
-                    <property name="bitmap">Load From File; .icon/h5_trend.png</property>
-                    <property name="context_menu">0</property>
-                    <property name="id">wxID_ANY</property>
-                    <property name="kind">wxITEM_NORMAL</property>
-                    <property name="label">tool</property>
-                    <property name="name">mH5Trend</property>
-                    <property name="permission">protected</property>
-                    <property name="statusbar"></property>
-                    <property name="tooltip">Display inventory trend of one hierarchy</property>
-                    <event name="OnToolClicked">display_h5_trend</event>
+                    <property name="tooltip">Display inventory trend with selected name</property>
+                    <event name="OnToolClicked">display_inventory_trend</event>
                 </object>
                 <object class="toolSeparator" expanded="0">
                     <property name="permission">protected</property>

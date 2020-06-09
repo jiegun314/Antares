@@ -295,31 +295,23 @@ class DragonGUI(DragonFrame):
         else:
             self.txtLog.write("Error. No data in that day, please choose the correct date")
 
-    # display code trend
-    def display_code_trend(self, event):
+    # display inventory trend for both code and h5
+    def display_inventory_trend(self, event):
         self.clear_frame_content()
-        code_name = self.lstbxCodeSelection.GetStringSelection()
-        if code_name != '':
-            self.txtLog.write("Inventory Trend of %s is under generating. Please wait~" % code_name)
-            CodeCalculation = CIC(self.__class__.bu_name)
-            CodeCalculation.generate_code_inv_trend(code_name)
+        selected_name = self.lstbxCodeSelection.GetStringSelection()
+        CodeCalculation = CIC(self.__class__.bu_name)
+        if selected_name != '':
+            h5_fulllist = pb_func.get_full_h5_list(self.__class__.bu_name)
+            self.txtLog.write("Inventory Trend of %s is under generating. Please wait~" % selected_name)
+            # if h5 name is selected
+            if selected_name in h5_fulllist:
+                CodeCalculation.generate_h5_inventory_trend(selected_name)
+            else:
+                CodeCalculation.generate_code_inv_trend(selected_name)
             self.clear_frame_content()
             self.txtLog.write("Done. The chart would be opened in your web browser.")
         else:
-            self.txtLog.write("No code was selected. Please try again.")
-
-    # display h5 trend
-    def display_h5_trend(self, event):
-        self.clear_frame_content()
-        h5_name = self.lstbxCodeSelection.GetStringSelection()
-        if h5_name != '':
-            self.txtLog.write("Inventory Trend of %s is under generating. Please wait~" % h5_name)
-            CodeCalculation = CIC(self.__class__.bu_name)
-            CodeCalculation.generate_h5_inventory_trend(h5_name)
-            self.clear_frame_content()
-            self.txtLog.write("Done. The chart would be opened in your web browser.")
-        else:
-            self.txtLog.write("No hierarchy_5 name was selected. Please try again.")
+            self.txtLog.write("No code or hierarchy_5 was selected. Please try again.")
 
     # click bu total option
     def bu_level_selected(self, event):

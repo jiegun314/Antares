@@ -100,6 +100,18 @@ def get_available_h5_list(h5_name, bu_name):
     return h5_output
 
 
+def get_full_h5_list(bu_name):
+    db_fullname = db_path + bu_name + '_Master_Data.db'
+    table_name = bu_name + '_Master_Data'
+    conn = sqlite3.connect(db_fullname)
+    c = conn.cursor()
+    str_cmd = 'SELECT DISTINCT Hierarchy_5 COLLATE NOCASE from ' + table_name
+    c.execute(str_cmd)
+    result = c.fetchall()
+    conn.close()
+    return [item[0] for item in result]
+
+
 # read the command list from json file
 def display_command_list(command_type):
     # read json file
@@ -183,5 +195,5 @@ def display_ascii_graph(title):
 
 
 if __name__ == '__main__':
-    display_command_list("current_inventory_command")
+    print(get_full_h5_list('SPINE'))
     pass
