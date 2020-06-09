@@ -310,6 +310,7 @@ class DragonFrame ( wx.Frame ):
         self.btnInventoryExport.Bind( wx.EVT_BUTTON, self.export_inventory )
         self.btnBackorderExport.Bind( wx.EVT_BUTTON, self.export_backorder )
         self.btnOutputDownload.Bind( wx.EVT_BUTTON, self.export_listed_data )
+        self.listCtrlOutput.Bind( wx.EVT_LIST_ITEM_ACTIVATED, self.click_item_in_list )
         self.Bind( wx.EVT_MENU, self.exit_dragon, id = self.mExit.GetId() )
         self.Bind( wx.EVT_MENU, self.show_about_dialog, id = self.showAbout.GetId() )
         self.Bind( wx.EVT_TOOL, self.get_current_inventory_list, id = self.mDisplayCurrentInventory.GetId() )
@@ -359,6 +360,9 @@ class DragonFrame ( wx.Frame ):
         event.Skip()
 
     def export_listed_data( self, event ):
+        event.Skip()
+
+    def click_item_in_list( self, event ):
         event.Skip()
 
     def exit_dragon( self, event ):

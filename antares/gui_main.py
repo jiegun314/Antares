@@ -198,6 +198,32 @@ class DragonGUI(DragonFrame):
                     str_output = str(inventory_result[i][j])
                 self.listCtrlOutput.SetItem(index, j + 1, str_output)
 
+    def click_item_in_list(self, event):
+        self.txtLog.Clear()
+        CodeCalculation = CIC(self.__class__.bu_name)
+        selected_row = self.listCtrlOutput.GetFocusedItem()
+        column_length = self.listCtrlOutput.GetColumnCount()
+        lst_column_name = []
+        # get column name
+        for i in range(column_length):
+            lst_column_name.append(self.listCtrlOutput.GetColumn(i).Text)
+        if 'Material' in lst_column_name:
+            material_code_index = lst_column_name.index('Material')
+            selected_code = self.listCtrlOutput.GetItem(selected_row, material_code_index).Text
+            self.txtLog.write("Inventory Trend of %s is under generating. Please wait~" % selected_code)
+            CodeCalculation.generate_code_inv_trend(selected_code)
+            self.txtLog.Clear()
+            self.txtLog.write("Done. The chart for %s would be opened in your web browser." % selected_code)
+        elif 'Hierarchy_5' in lst_column_name:
+            material_code_index = lst_column_name.index('Hierarchy_5')
+            selected_code = self.listCtrlOutput.GetItem(selected_row, material_code_index).Text
+            self.txtLog.write("Inventory Trend of %s is under generating. Please wait~" % selected_code)
+            CodeCalculation.generate_h5_inventory_trend(selected_code)
+            self.txtLog.Clear()
+            self.txtLog.write("Done. The chart for %s would be opened in your web browser." % selected_code)
+        else:
+            self.txtLog.write("No valid code or hierarchy was selected.")
+
     # export data in control list
     def export_listed_data(self, event):
         column_length = self.listCtrlOutput.GetColumnCount()

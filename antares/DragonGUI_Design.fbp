@@ -1685,6 +1685,7 @@
                                                     <property name="window_extra_style"></property>
                                                     <property name="window_name"></property>
                                                     <property name="window_style"></property>
+                                                    <event name="OnListItemActivated">click_item_in_list</event>
                                                 </object>
                                             </object>
                                         </object>
@@ -1878,7 +1879,7 @@
                     <event name="OnToolClicked">display_backorder_trend</event>
                 </object>
                 <object class="tool" expanded="0">
-                    <property name="bitmap">Load From File; .icon\aging_backorder.png</property>
+                    <property name="bitmap">Load From File; .icon/aging_backorder.png</property>
                     <property name="context_menu">0</property>
                     <property name="id">wxID_ANY</property>
                     <property name="kind">wxITEM_NORMAL</property>
@@ -1905,7 +1906,7 @@
                     <event name="OnToolClicked">display_pending_inventory</event>
                 </object>
                 <object class="tool" expanded="1">
-                    <property name="bitmap">Load From File; .icon\low_inventory.png</property>
+                    <property name="bitmap">Load From File; .icon/low_inventory.png</property>
                     <property name="context_menu">0</property>
                     <property name="id">wxID_ANY</property>
                     <property name="kind">wxITEM_NORMAL</property>
@@ -1920,7 +1921,7 @@
                     <property name="permission">protected</property>
                 </object>
                 <object class="tool" expanded="1">
-                    <property name="bitmap">Load From File; .icon\inventory_trend.png</property>
+                    <property name="bitmap">Load From File; .icon/inventory_trend.png</property>
                     <property name="context_menu">0</property>
                     <property name="id">wxID_ANY</property>
                     <property name="kind">wxITEM_NORMAL</property>
@@ -1956,7 +1957,7 @@
                     <property name="permission">protected</property>
                 </object>
                 <object class="tool" expanded="0">
-                    <property name="bitmap">Load From File; .icon\bu_TU.png</property>
+                    <property name="bitmap">Load From File; .icon/bu_TU.png</property>
                     <property name="context_menu">0</property>
                     <property name="id">wxID_ANY</property>
                     <property name="kind">wxITEM_RADIO</property>
@@ -1968,7 +1969,7 @@
                     <event name="OnMenuSelection">select_bu_TU</event>
                 </object>
                 <object class="tool" expanded="0">
-                    <property name="bitmap">Load From File; .icon\bu_CMFT.png</property>
+                    <property name="bitmap">Load From File; .icon/bu_CMFT.png</property>
                     <property name="context_menu">0</property>
                     <property name="id">wxID_ANY</property>
                     <property name="kind">wxITEM_RADIO</property>
@@ -1980,7 +1981,7 @@
                     <event name="OnMenuSelection">select_bu_CMFT</event>
                 </object>
                 <object class="tool" expanded="0">
-                    <property name="bitmap">Load From File; .icon\bu_PT.png</property>
+                    <property name="bitmap">Load From File; .icon/bu_PT.png</property>
                     <property name="context_menu">0</property>
                     <property name="id">wxID_ANY</property>
                     <property name="kind">wxITEM_RADIO</property>
@@ -1992,7 +1993,7 @@
                     <event name="OnMenuSelection">select_bu_PT</event>
                 </object>
                 <object class="tool" expanded="0">
-                    <property name="bitmap">Load From File; .icon\bu_JT.png</property>
+                    <property name="bitmap">Load From File; .icon/bu_JT.png</property>
                     <property name="context_menu">0</property>
                     <property name="id">wxID_ANY</property>
                     <property name="kind">wxITEM_RADIO</property>
@@ -2004,7 +2005,7 @@
                     <event name="OnMenuSelection">select_bu_JT</event>
                 </object>
                 <object class="tool" expanded="0">
-                    <property name="bitmap">Load From File; .icon\bu_Spine.png</property>
+                    <property name="bitmap">Load From File; .icon/bu_Spine.png</property>
                     <property name="context_menu">0</property>
                     <property name="id">wxID_ANY</property>
                     <property name="kind">wxITEM_RADIO</property>
@@ -2016,7 +2017,7 @@
                     <event name="OnMenuSelection">select_bu_SP</event>
                 </object>
                 <object class="tool" expanded="0">
-                    <property name="bitmap">Load From File; .icon\bu_MT.png</property>
+                    <property name="bitmap">Load From File; .icon/bu_MT.png</property>
                     <property name="context_menu">0</property>
                     <property name="id">wxID_ANY</property>
                     <property name="kind">wxITEM_RADIO</property>
