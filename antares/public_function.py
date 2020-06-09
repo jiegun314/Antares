@@ -101,11 +101,10 @@ def get_available_h5_list(h5_name, bu_name):
 
 
 def get_full_h5_list(bu_name):
-    db_fullname = db_path + bu_name + '_Master_Data.db'
-    table_name = bu_name + '_Master_Data'
+    db_fullname = db_path + 'Master_Data.db'
     conn = sqlite3.connect(db_fullname)
     c = conn.cursor()
-    str_cmd = 'SELECT DISTINCT Hierarchy_5 COLLATE NOCASE from ' + table_name
+    str_cmd = 'SELECT DISTINCT Hierarchy_5 COLLATE NOCASE from Material_Master WHERE Business_Unit = \"' + bu_name +'\"'
     c.execute(str_cmd)
     result = c.fetchall()
     conn.close()

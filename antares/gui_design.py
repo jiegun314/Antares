@@ -192,6 +192,9 @@ class DragonFrame ( wx.Frame ):
         self.btnOutputDownload = wx.BitmapButton( self.pnlOneclick, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.DefaultSize, wx.BU_AUTODRAW|wx.BORDER_NONE )
 
         self.btnOutputDownload.SetBitmap( wx.Bitmap( u".icon/data_download.png", wx.BITMAP_TYPE_ANY ) )
+        self.btnOutputDownload.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOW ) )
+        self.btnOutputDownload.SetToolTip( u"Download data in the list" )
+
         bSizer8.Add( self.btnOutputDownload, 0, wx.ALL, 5 )
 
 

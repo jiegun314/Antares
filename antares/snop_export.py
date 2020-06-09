@@ -184,7 +184,7 @@ class SNOPExport:
         current_month = time.strftime("%Y-%m", time.localtime())
         # 读取active code列表
         print("==== <Start to generate SNOP report> ====")
-        get_code_list = data_import.DataInput(self.__class__.bu_name)
+        get_code_list = data_import.DataImport(self.__class__.bu_name)
         active_code_list = get_code_list.get_active_codes()
         print("=== <Get Active Code List - Done > ===")
         print("=== <Get Master Data, Sales & INV Data - Start > ===")
@@ -256,7 +256,7 @@ class SNOPExport:
 
     # test function
     def test(self):
-        get_code_list = data_import.DataInput(self.__class__.bu_name)
+        get_code_list = data_import.DataImport(self.__class__.bu_name)
         active_code_list = get_code_list.get_active_codes()
         lst_result = []
         for code in active_code_list:

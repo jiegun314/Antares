@@ -486,7 +486,7 @@ class GetStatisticalForecast:
             print("Wrong input! Please input a correct number!")
             return
         # 获取活跃代码列表
-        get_code_list = data_import.DataInput(self.__class__.bu_name)
+        get_code_list = data_import.DataImport(self.__class__.bu_name)
         active_code_list = get_code_list.get_active_codes('Normal', 'Forecast')
         # 获取历史销量数据
         historical_sales_qty = self.get_sale_list(active_code_list, data_type)

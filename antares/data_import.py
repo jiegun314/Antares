@@ -6,7 +6,7 @@ import db_create as db
 from datetime import datetime 
 
 
-class DataInput:
+class DataImport:
     bu_name = ""
     file_path = "../data/_Source_Data/"
     update_path = "../data/_Update/"
@@ -129,7 +129,7 @@ class DataInput:
 
 
 if __name__ == "__main__":
-    data_input = DataInput("TU")
+    data_input = DataImport("TU")
     data_input.get_active_codes()
     # data_input.get_active_codes()
     # cmd = int(input("选择需要导入的数据，1 - GTS，2 - LP Sales， 3 - IMS, 4 - LP_INV: "))
