@@ -1,2 +1,2 @@
 @echo off
-start pythonw gui_main.py
+start C:\Users\%username%\AppData\Local\Programs\Python\Python38\pythonw gui_main.py
