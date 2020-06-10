@@ -24,6 +24,7 @@ def line_chart(code_name, x_value, y_value, x_label, y_label, chart_ttl):
                 splitline_opts=opts.SplitLineOpts(is_show=True),
                 is_scale=True),
             title_opts=opts.TitleOpts(title=chart_ttl),
+            toolbox_opts=opts.ToolboxOpts(),
             datazoom_opts=[opts.DataZoomOpts(), opts.DataZoomOpts(type_="inside")],)
     )
     c.render(file_name)
@@ -45,6 +46,7 @@ def backorder_trend_chart(date_list, backorder_value):
         .add_yaxis("IND", backorder_value[0], stack="stack1")
         .set_series_opts(label_opts=opts.LabelOpts(is_show=False))
         .set_global_opts(title_opts=opts.TitleOpts(title="Backorder trend (Value in RMB)"),
+                         toolbox_opts=opts.ToolboxOpts(),
                          datazoom_opts=[opts.DataZoomOpts(), opts.DataZoomOpts(type_="inside")],)
     )
     c.render(file_name)
@@ -86,6 +88,7 @@ def backorder_trend_line_chart(date_list, backorder_value, bu_name):
         .set_series_opts(label_opts=opts.LabelOpts(is_show=False))
         .set_global_opts(
             title_opts=opts.TitleOpts(title=chart_title),
+            toolbox_opts=opts.ToolboxOpts(),
             tooltip_opts=opts.TooltipOpts(trigger="axis", axis_pointer_type="cross"),
             yaxis_opts=opts.AxisOpts(
                 type_="value",
@@ -114,6 +117,7 @@ def pending_inventory_trend_chart(date_list, pending_inventory_data, title_name)
         .add_yaxis("Bonded", pending_inventory_data[0], stack="stack1")
         .set_series_opts(label_opts=opts.LabelOpts(is_show=False))
         .set_global_opts(title_opts=opts.TitleOpts(title=title_name),
+                         toolbox_opts=opts.ToolboxOpts(),
                          datazoom_opts=[opts.DataZoomOpts(), opts.DataZoomOpts(type_="inside")],)
     )
     c.render(file_name)
@@ -132,8 +136,8 @@ def all_in_one_echart(name, final_month_list, jnj_inv_month, lp_inv_month, sales
     bar = (
         Bar(init_opts=opts.InitOpts(theme=ThemeType.MACARONS, width="1500px"))
         .add_xaxis(final_month_list)
-        .add_yaxis("JNJ", jnj_inv_month)
-        .add_yaxis("NED", lp_inv_month)
+        .add_yaxis("JNJ", jnj_inv_month, itemstyle_opts=opts.AreaStyleOpts(opacity=0.5))
+        .add_yaxis("NED", lp_inv_month, itemstyle_opts=opts.AreaStyleOpts(opacity=0.5))
         .extend_axis(
             yaxis=opts.AxisOpts(
                 axislabel_opts=opts.LabelOpts(formatter="{value} " + sales_unit)
@@ -141,6 +145,7 @@ def all_in_one_echart(name, final_month_list, jnj_inv_month, lp_inv_month, sales
         )
         .set_series_opts(label_opts=opts.LabelOpts(is_show=True))
         .set_global_opts(title_opts=opts.TitleOpts(title="All-in-one for " + name),
+                         toolbox_opts=opts.ToolboxOpts(),
                          datazoom_opts=[opts.DataZoomOpts(), opts.DataZoomOpts(type_="inside")], )
     )
     line_gts = Line().add_xaxis(final_month_list).add_yaxis("GTS", sales_gts, yaxis_index=1, is_smooth=True)\
