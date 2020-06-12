@@ -323,10 +323,10 @@ class MasterDataConsolidation:
     def bu_name(self, value):
         self._bu_name = value
 
-    def master_data_update_entrance(self):
+    def master_data_update_entrance(self, model='Normal'):
         print("==Start to refresh master data for %s==" % self._bu_name)
         # read master data
-        df_master_data = self.import_material_master()
+        df_master_data = self.import_material_master(model)
         # get code list
         print('--1. Getting Material Master--')
         code_list = df_master_data["Material"].tolist()
@@ -360,22 +360,32 @@ class MasterDataConsolidation:
         # get PM
         print('--8. Getting PM List--')
         df_master_data['PM'] = self.mapping_pm(hierarchy_5_list)
+        # update instrument PM
+        df_master_data.loc[
+            (~df_master_data['Material'].str.slice(stop=1).isin(['2', '4', '7'])) &
+            (~df_master_data['Material'].str.slice(stop=2).isin(['02', '04', '07'])) &
+            (df_master_data['Material'].str.slice(stop=3) != 'CNB'), 'PM'] = 'Instrument'
         # write back to database
         # print(df_master_data.head())
-        self.finalize_master_data(df_master_data)
+        self.finalize_master_data(df_master_data, model)
 
-    def finalize_master_data(self, df):
+    def finalize_master_data(self, df, model):
         database_file = self.__class__.db_path + self._bu_name + "_Master_Data.db"
-        data_sheet = self._bu_name + '_Master_Data'
+        if model == 'Normal':
+            data_sheet = self._bu_name + '_Master_Data'
+        else:
+            data_sheet = self._bu_name + '_Master_Data_Demo'
         conn = sqlite3.connect(database_file)
         df.to_sql(data_sheet, con=conn, index=False, if_exists='replace')
         print('--Done--')
 
-    def import_material_master(self):
+    def import_material_master(self, model):
         database_file = self.__class__.db_path + "Master_Data.db"
         conn = sqlite3.connect(database_file)
-        sql_cmd = 'SELECT * FROM MATERIAL_MASTER WHERE Business_Unit = \"' + self._bu_name + '\"'
-        # sql_cmd = 'SELECT * FROM MATERIAL_MASTER WHERE Business_Unit = \"' + self._bu_name + '\" LIMIT 100'
+        if model == 'Normal':
+            sql_cmd = 'SELECT * FROM MATERIAL_MASTER WHERE Business_Unit = \"' + self._bu_name + '\"'
+        else:
+            sql_cmd = 'SELECT * FROM MATERIAL_MASTER WHERE Business_Unit = \"' + self._bu_name + '\" LIMIT 100'
         df = pd.read_sql(sql=sql_cmd, con=conn)
         return df
 
