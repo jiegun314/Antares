@@ -349,8 +349,6 @@ class MasterDataConsolidation:
         df_master_data['Phoenix_Target_SKU'] = target_sku
         df_master_data['Phoenix_Discontinuation_Date'] = discontinuation_date
         df_master_data['Phoenix_Obsolescence_Date'] = obsolescence_date
-        # update all phoenix products to ranking C
-        df_master_data.loc[df_master_data['Phoenix_Status'] == 'Y', 'Ranking'] = 'C'
         # get GTIN
         print('--6. Getting GTIN--')
         df_master_data['GTIN'] = self.mapping_gtin(code_list)
@@ -617,24 +615,40 @@ class MasterDataUpdate:
         # get recent month IMS
         str_cmd = "SELECT Material, sum(Quantity) as IMS_Quantity,  sum(Value_SAP_Price) as IMS_Value from " + \
                   tbl_name + " WHERE Month in (" + month_list + ") GROUP by Material ORDER by IMS_Value DESC"
-        df_ims_query = pd.read_sql(sql=str_cmd, con=conn)
+        df_ims_query = pd.read_sql(sql=str_cmd, con=conn, index_col='Material')
         # get accumulate IMS data and ranking
         ims_total = df_ims_query['IMS_Value'].sum()
         df_ims_query['Ratio'] = df_ims_query['IMS_Value'] / ims_total
         df_ims_query['Cum_Ratio'] = df_ims_query['Ratio'].cumsum()
         df_ims_query['Ranking'] = df_ims_query['Cum_Ratio'].apply(lambda x: 'A' if x < 0.8 else ('B' if x < 0.95 else 'C'))
+        # get phoenix list
+        df_phoenix_list = self.get_phoenix_products_list()
+        df_ims_query = df_ims_query.join(df_phoenix_list)
+        # change all phoenix products to Ranking C
+        df_ims_query.loc[~df_ims_query['Target SKU'].isnull(), 'Ranking'] = 'C'
         # delete calculation column
-        df_ims_query.drop(['Ratio', 'Cum_Ratio'], axis=1, inplace=True)
+        df_ims_query.drop(['Ratio', 'Cum_Ratio', 'Target SKU'], axis=1, inplace=True)
         conn = sqlite3.connect(master_data_db_fullname)
-        df_ims_query.to_sql(name="Ranking", con=conn, if_exists='replace', index=False)
+        df_ims_query.to_sql(name="Ranking", con=conn, if_exists='replace')
         print('Ranking updated')
         conn.close()
 
+    # get phoenix products list
+    def get_phoenix_products_list(self):
+        database_file = self.__class__.db_path + self.bu_name + "_Master_Data.db"
+        data_sheet = self.bu_name + '_Phoenix_List'
+        conn = sqlite3.connect(database_file)
+        sql_cmd = 'SELECT [Exit SKU], [Target SKU] FROM ' + data_sheet
+        df_phoenix_list = pd.read_sql(sql=sql_cmd, con=conn, index_col='Exit SKU')
+        return df_phoenix_list
+
 
 if __name__ == "__main__":
-    DataUpdate = MasterDataConsolidation()
-    DataUpdate.bu_name = "TU"
-    DataUpdate.master_data_update_entrance()
+    # DataUpdate = MasterDataConsolidation()
+    # DataUpdate.bu_name = "TU"
+    # DataUpdate.master_data_update_entrance()
     # print(DataUpdate.mapping_rag(["440.834", "440.831S"]))
     # dataupdate = MonthlyUpdate('TU')
     # dataupdate.update_lp_inv()
+    test = MasterDataUpdate('TU')
+    test.generate_abc_ranking()
