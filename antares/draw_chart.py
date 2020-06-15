@@ -2,6 +2,7 @@ from pyecharts.charts import Line
 from pyecharts.charts import Bar
 from pyecharts import options as opts
 from pyecharts.globals import ThemeType
+from pyecharts.globals import WarningType
 import platform
 import subprocess
 import os
@@ -9,6 +10,7 @@ import os
 
 # draw line charter
 def line_chart(code_name, x_value, y_value, x_label, y_label, chart_ttl):
+    WarningType.ShowWarning = False
     sys_path = os.path.abspath('..')
     file_name = sys_path + "/data/_Charter/" + code_name.replace(" ", "_").replace("/", "_") + ".html"
     c = (
@@ -36,6 +38,7 @@ def line_chart(code_name, x_value, y_value, x_label, y_label, chart_ttl):
 
 # draw stack bar chart for backorder daily trend
 def backorder_trend_chart(date_list, backorder_value):
+    WarningType.ShowWarning = False
     sys_path = os.path.abspath('..')
     file_name = sys_path + "/data/_Charter/Backorder_trend.html"
     c = (
@@ -58,6 +61,7 @@ def backorder_trend_chart(date_list, backorder_value):
 
 # draw stack bar chart for backorder daily trend
 def backorder_trend_line_chart(date_list, backorder_value, bu_name):
+    WarningType.ShowWarning = False
     sys_path = os.path.abspath('..')
     file_name = sys_path + "/data/_Charter/" + bu_name + "_Backorder_trend.html"
     chart_title = "Backorder Trend of " + bu_name + " (Value in RMB)"
@@ -108,6 +112,7 @@ def backorder_trend_line_chart(date_list, backorder_value, bu_name):
 
 # draw stack bar chart for pending inventory trend
 def pending_inventory_trend_chart(date_list, pending_inventory_data, title_name):
+    WarningType.ShowWarning = False
     sys_path = os.path.abspath('..')
     file_name = sys_path + "/data/_Charter/pending_inventory_trend.html"
     c = (
@@ -130,6 +135,7 @@ def pending_inventory_trend_chart(date_list, pending_inventory_data, title_name)
 # draw all-in-one chart for code and h5 summary with echarts
 def all_in_one_echart(name, final_month_list, jnj_inv_month, lp_inv_month, sales_gts, sales_lpsales, sales_ims,
                       final_fcst_data, data_type):
+    WarningType.ShowWarning = False
     sys_path = os.path.abspath('..')
     file_name = sys_path + "/data/_Charter/" + name.replace("/", "_") + "-all-in-one.html"
     sales_unit = "PC" if data_type == "code" else "RMB"
