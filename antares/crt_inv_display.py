@@ -179,7 +179,7 @@ class CurrentInventoryDisplay:
         else:
             print("!!Error - This Material Code does NOT exist, Please re-input! ")
 
-    def display_h5_inventory_trend(self):
+    def display_h5_inventory_trend(self, chart_type='single_line'):
         CodeCalculation = CIC(self.__class__.bu_name)
         print("===Hierarchy_5 Available Stock Trend===")
         # 获取H5名称
@@ -190,15 +190,18 @@ class CurrentInventoryDisplay:
             h5_result = pb_func.get_available_h5_name(h5_input, self.__class__.bu_name)
         # if not right h5 name, return
         if h5_result != "NULL":
-            CodeCalculation.generate_h5_inventory_trend(h5_result)
+            if chart_type == 'single_line':
+                CodeCalculation.generate_h5_inventory_trend(h5_result)
+            elif chart_type == 'double_line':
+                CodeCalculation.generate_h5_inventory_trend_two_dimension(h5_result)
         else:
             print("!!Error, No such Hierarchy_5 name. Please try again!")
             return
 
-    def display_pending_trend(self, data_type="value"):
+    def display_pending_trend(self, chart_type='value'):
+        print("===Display Pending Inventory Trend for %s===" % self.__class__.bu_name)
         CodeCalculation = CIC(self.__class__.bu_name)
-        print("===Display Pending Inventory Trend===")
-        CodeCalculation.generate_pending_trend(data_type)
+        CodeCalculation.generate_pending_trend(chart_type)
         pass
 
     def synchronize_oneclick_data(self):
@@ -223,6 +226,7 @@ class CurrentInventoryDisplay:
                          "check": self.display_code_status,
                          "trend": self.display_code_inventory_trend,
                          "h5_trend": self.display_h5_inventory_trend,
+                         "h5_trend_q": (self.display_h5_inventory_trend, 'double_line'),
                          "h5_detail": self.display_h5_inv_detail,
                          "bo_trend": self.display_backorder_trend,
                          "mapping": self.display_mapping_inventory,
