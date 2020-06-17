@@ -449,6 +449,35 @@ class CurrentInventoryCalculation:
             else "Value by Std. Cost of " + h5_result
         chart.line_chart(h5_result, x_value, h5_inv_result, "Date", "Value", chart_title)
 
+    # display inventory of h5 of both qty and value
+    def generate_h5_inventory_trend_two_dimension(self, h5_result):
+        # get date list
+        table_list = self.get_tbl_list()
+        # link to database
+        db_name = self.__class__.db_path + self.__class__.bu_name + '_CRT_INV.db'
+        conn = sqlite3.connect(db_name)
+        c = conn.cursor()
+        h5_inv_result = []
+        for table_item in table_list:
+            if h5_result == 'ALL':
+                sql_cmd = 'SELECT sum(Available_Stock) AS inv_qty, sum(Available_Stock * Standard_Cost) AS inv_value ' \
+                          'FROM ' + table_item
+            else:
+                sql_cmd = 'SELECT sum(Available_Stock) AS inv_qty, sum(Available_Stock * Standard_Cost) AS inv_value ' \
+                          'FROM ' + table_item + ' WHERE Hierarchy_5 = \"' + h5_result.upper() + '\"'
+            c.execute(sql_cmd)
+            result = c.fetchone()
+            if not result[0]:
+                h5_inv_result.append([0, 0])
+            else:
+                h5_inv_result.append([int(result[0]), int(result[1])])
+        x_value = [item[-4:] for item in table_list]
+        qty_result = [item[0] for item in h5_inv_result]
+        value_result = [item[1] for item in h5_inv_result]
+        chart_title = "Qty & Value (by Std. Cost) of All " + self.__class__.bu_name if h5_result == "ALL" \
+            else "Qty & Value (by Std. Cost) of " + h5_result
+        chart.double_line_chart(h5_result, x_value, qty_result, value_result, 'Date', 'Qty', 'Value', chart_title)
+
     # 显示某个H5的库存明细
     def get_h5_inv_detail(self, h5_name, table_name):
         # generate title
@@ -573,5 +602,5 @@ class CurrentInventoryCalculation:
 
 if __name__ == "__main__":
     test = CurrentInventoryCalculation("TU")
-    print(test.get_low_inventory_alert_v2())
+    test.generate_h5_inventory_trend_two_dimension('PFNA-II')
     # test.inv_data_sync(50)

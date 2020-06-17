@@ -36,6 +36,24 @@ def line_chart(code_name, x_value, y_value, x_label, y_label, chart_ttl):
         os.startfile(file_name)
 
 
+# draw line charter
+def double_line_chart(material_name, x_value, y1_value, y2_value, x_label, y1_label, y2_label, chart_ttl):
+    WarningType.ShowWarning = False
+    sys_path = os.path.abspath('..')
+    file_name = sys_path + "/data/_Charter/" + material_name.replace(" ", "_").replace("/", "_") + ".html"
+    line_qty = (
+        Line(init_opts=opts.InitOpts(theme=ThemeType.ROMA, width="1500px"))
+        .add_xaxis(x_value)
+        .add_yaxis(y1_label, y1_value, is_smooth=True)
+        .add_yaxis(y2_label, y2_value, is_smooth=True)
+    )
+    line_qty.render(file_name)
+    if platform.system() == "Linux":
+        subprocess.call(["xdg-open", file_name])
+    else:
+        os.startfile(file_name)
+
+
 # draw stack bar chart for backorder daily trend
 def backorder_trend_chart(date_list, backorder_value):
     WarningType.ShowWarning = False
