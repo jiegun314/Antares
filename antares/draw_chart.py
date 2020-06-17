@@ -45,7 +45,24 @@ def double_line_chart(material_name, x_value, y1_value, y2_value, x_label, y1_la
         Line(init_opts=opts.InitOpts(theme=ThemeType.ROMA, width="1500px"))
         .add_xaxis(x_value)
         .add_yaxis(y1_label, y1_value, is_smooth=True)
-        .add_yaxis(y2_label, y2_value, is_smooth=True)
+        .add_yaxis(y2_label, y2_value, yaxis_index=1, is_smooth=True)
+        .set_series_opts(
+            label_opts=opts.LabelOpts(is_show=False),
+        )
+        .set_global_opts(
+            xaxis_opts=opts.AxisOpts(name=x_label),
+            yaxis_opts=opts.AxisOpts(
+                splitline_opts=opts.SplitLineOpts(is_show=True),
+                is_scale=True),
+            title_opts=opts.TitleOpts(title=chart_ttl),
+            toolbox_opts=opts.ToolboxOpts(),
+            datazoom_opts=[opts.DataZoomOpts(), opts.DataZoomOpts(type_="inside")], )
+        .extend_axis(
+            yaxis=opts.AxisOpts(
+                splitline_opts=opts.SplitLineOpts(is_show=True),
+                is_scale=True
+            )
+        )
     )
     line_qty.render(file_name)
     if platform.system() == "Linux":
