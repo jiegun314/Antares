@@ -3,7 +3,7 @@ import sqlite3
 # import time
 import numpy as np
 import db_create as db
-from datetime import datetime 
+from datetime import datetime
 
 
 class DataImport:
@@ -127,10 +127,34 @@ class DataImport:
             material_list = [item[0] for item in df_material_list.values.tolist()]
             return material_list
 
+    def input_hospital_sale(self):
+        source_file = self.__class__.file_path + self.__class__.bu_name + '_Hospital_Sales.xlsx'
+        database_file = self.__class__.db_path + self.__class__.bu_name + '_Hospital_Sales.db'
+        datasheet_name = self.__class__.bu_name + '_Hospital_Sales'
+        list_year = ['2017', '2018', '2019', '2020']
+        list_sales_data = []
+        for item_year in list_year:
+            df_hospital_sales = pd.read_excel(source_file, sheet_name=item_year)
+            month_list = df_hospital_sales.columns.values.tolist()[6:]
+            final_month_list = [item.strftime('%Y-%m') for item in month_list]
+            # read monthly data
+            for i in range(0, len(month_list)):
+                df_temp = pd.DataFrame(df_hospital_sales,
+                                       columns=['Hospital_Code', 'Hospital_Name', 'Hospital_Weight',
+                                                'Province', 'City', 'Hospital_Ranking'])
+                df_temp['Month'] = final_month_list[i]
+                df_temp['Sales_Value'] = df_hospital_sales[month_list[i]].values.tolist()
+                list_sales_data.append(df_temp)
+        df_sales_final = pd.concat(list_sales_data, ignore_index=True)
+        # write to sql
+        conn = sqlite3.connect(database_file)
+        df_sales_final.to_sql(datasheet_name, con=conn, if_exists='replace')
+        print('Done')
+
 
 if __name__ == "__main__":
     data_input = DataImport("TU")
-    data_input.get_active_codes()
+    data_input.input_hospital_sale()
     # data_input.get_active_codes()
     # cmd = int(input("选择需要导入的数据，1 - GTS，2 - LP Sales， 3 - IMS, 4 - LP_INV: "))
     # if cmd == 1:
