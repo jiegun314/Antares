@@ -218,7 +218,7 @@ class DragonGUI(DragonFrame):
             material_code_index = lst_column_name.index('Hierarchy_5')
             selected_code = self.listCtrlOutput.GetItem(selected_row, material_code_index).Text
             self.txtLog.write("Inventory Trend of %s is under generating. Please wait~" % selected_code)
-            CodeCalculation.generate_h5_inventory_trend(selected_code)
+            CodeCalculation.generate_h5_inventory_trend_two_dimension(selected_code)
             self.txtLog.Clear()
             self.txtLog.write("Done. The chart for %s would be opened in your web browser." % selected_code)
         else:
@@ -331,7 +331,7 @@ class DragonGUI(DragonFrame):
             self.txtLog.write("Inventory Trend of %s is under generating. Please wait~" % selected_name)
             # if h5 name is selected
             if selected_name in h5_fulllist or selected_name == 'ALL':
-                CodeCalculation.generate_h5_inventory_trend(selected_name)
+                CodeCalculation.generate_h5_inventory_trend_two_dimension(selected_name)
             else:
                 CodeCalculation.generate_code_inv_trend(selected_name)
             self.clear_frame_content()
