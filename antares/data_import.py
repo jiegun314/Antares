@@ -143,8 +143,9 @@ class DataImport:
                                        columns=['Hospital_Code', 'Hospital_Name', 'Hospital_Weight',
                                                 'Province', 'City', 'Hospital_Ranking'])
                 df_temp['Month'] = final_month_list[i]
-                df_temp['Sales_Value'] = df_hospital_sales[month_list[i]].values.tolist()
-                list_sales_data.append(df_temp)
+                if sum(df_hospital_sales[month_list[i]].values.tolist()):
+                    df_temp['Sales_Value'] = df_hospital_sales[month_list[i]].values.tolist()
+                    list_sales_data.append(df_temp)
         df_sales_final = pd.concat(list_sales_data, ignore_index=True)
         # write to sql
         conn = sqlite3.connect(database_file)
