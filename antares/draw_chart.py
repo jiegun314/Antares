@@ -175,7 +175,7 @@ def all_in_one_echart(name, final_month_list, jnj_inv_month, lp_inv_month, sales
     file_name = sys_path + "/data/_Charter/" + name.replace("/", "_") + "-all-in-one.html"
     sales_unit = "PC" if data_type == "code" else "RMB"
     bar = (
-        Bar(init_opts=opts.InitOpts(theme=ThemeType.MACARONS, width="1500px"))
+        Bar(init_opts=opts.InitOpts(theme=ThemeType.LIGHT, width="1500px", height="800px"))
         .add_xaxis(final_month_list)
         .add_yaxis("JNJ", jnj_inv_month, itemstyle_opts=opts.AreaStyleOpts(opacity=0.5))
         .add_yaxis("NED", lp_inv_month, itemstyle_opts=opts.AreaStyleOpts(opacity=0.5))
@@ -189,13 +189,13 @@ def all_in_one_echart(name, final_month_list, jnj_inv_month, lp_inv_month, sales
                          toolbox_opts=opts.ToolboxOpts(),
                          datazoom_opts=[opts.DataZoomOpts(), opts.DataZoomOpts(type_="inside")], )
     )
-    line_gts = Line().add_xaxis(final_month_list).add_yaxis("GTS", sales_gts, yaxis_index=1, is_smooth=True)\
+    line_gts = Line().add_xaxis(final_month_list).add_yaxis("GTS", sales_gts, yaxis_index=1, is_smooth=True, linestyle_opts=opts.LineStyleOpts(width=3))\
         .set_series_opts(label_opts=opts.LabelOpts(is_show=False))
-    line_lpsales = Line().add_xaxis(final_month_list).add_yaxis("NED Sales", sales_lpsales, yaxis_index=1, is_smooth=True)\
+    line_lpsales = Line().add_xaxis(final_month_list).add_yaxis("NED Sales", sales_lpsales, yaxis_index=1, is_smooth=True, linestyle_opts=opts.LineStyleOpts(width=3))\
         .set_series_opts(label_opts=opts.LabelOpts(is_show=False))
-    line_ims = Line().add_xaxis(final_month_list).add_yaxis("IMS", sales_ims, yaxis_index=1, is_smooth=True)\
+    line_ims = Line().add_xaxis(final_month_list).add_yaxis("IMS", sales_ims, yaxis_index=1, is_smooth=True, linestyle_opts=opts.LineStyleOpts(width=3))\
         .set_series_opts(label_opts=opts.LabelOpts(is_show=False))
-    line_fcst = Line().add_xaxis(final_month_list).add_yaxis("Forecast", final_fcst_data, yaxis_index=1, is_smooth=True)\
+    line_fcst = Line().add_xaxis(final_month_list).add_yaxis("Forecast", final_fcst_data, yaxis_index=1, is_smooth=True, linestyle_opts=opts.LineStyleOpts(width=3))\
         .set_series_opts(label_opts=opts.LabelOpts(is_show=False))
     bar.overlap(line_gts)
     bar.overlap(line_lpsales)

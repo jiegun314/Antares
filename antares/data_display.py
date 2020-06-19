@@ -283,7 +283,8 @@ class DataDisplay:
         # 读取final forecast
         h5_forecast = h5_info_check.get_h5_forecast(h5_name, "Final", 12)
         # Generate the chart with 12 months forecast
-        self.draw_sales_inv_fcst_chart(h5_name, h5_sales_result, h5_inv_result, h5_forecast, 12, "h5")
+        chart_name = self.__class__.bu_name if h5_name == 'ALL' else h5_name
+        self.draw_sales_inv_fcst_chart(chart_name, h5_sales_result, h5_inv_result, h5_forecast, 12, "h5")
         pass
 
     # 画综合图
