@@ -560,6 +560,48 @@ class SNOPHierarchy5Export:
         df_inv_result = df_inv.set_index('Hierarchy_5')
         return df_inv_result
 
+    def get_ytd_mapping_month_list(self, sales_type):
+        datasheet_name = self.__class__.bu_name + '_' + sales_type
+        database_fullname = self.__class__.db_path + datasheet_name + '.db'
+        conn = sqlite3.connect(database_fullname)
+        c = conn.cursor()
+        # get month list
+        sql_cmd = 'SELECT DISTINCT Month FROM ' + datasheet_name + ' ORDER by Month DESC'
+        c.execute(sql_cmd)
+        result = c.fetchall()
+        month_list = [item[0] for item in result]
+        current_year_index = month_list[0][:4]
+        # get current year month list
+        current_year_month_list = []
+        for index_item, list_item in enumerate(month_list):
+            if list_item[:4] == current_year_index:
+                current_year_month_list.append(list_item)
+            else:
+                year_gap_index = index_item
+                break
+        # get last year month list
+        last_year_month_list = month_list[12:12+year_gap_index]
+        return [current_year_month_list, last_year_month_list]
+
+    def generate_ytm_sales_mapping(self, sales_type):
+        [current_year_month_list, last_year_month_list] = self.get_ytd_mapping_month_list(sales_type)
+        datasheet_name = self.__class__.bu_name + '_' + sales_type
+        database_fullname = self.__class__.db_path + datasheet_name + '.db'
+        conn = sqlite3.connect(database_fullname)
+        sql_cmd = 'SELECT upper(Hierarchy_5) as Hierarchy_5, Month, sum(Value_SAP_Price) as Sales_Value FROM ' + \
+                  datasheet_name + ' GROUP by Month, Hierarchy_5 COLLATE NOCASE'
+        df_sales = pd.read_sql(con=conn, sql=sql_cmd)
+        df_sales_result = pd.pivot_table(df_sales, index='Hierarchy_5', columns='Month', values='Sales_Value')
+        df_current_year, df_last_year = df_sales_result.loc[:, current_year_month_list], df_sales_result.loc[:, last_year_month_list]
+        # get ytm sales result
+        df_current_year.loc[:, 'Current_Year_TTL'] = df_current_year.apply(lambda x: x.sum(), axis=1)
+        df_last_year.loc[:, 'Last_Year_TTL'] = df_last_year.apply(lambda x: x.sum(), axis=1)
+        # join and get the variance
+        df_current_year = df_current_year.join(df_last_year)
+        gap_title = sales_type + '_YTD_Gap'
+        df_current_year.loc[:, gap_title] = df_current_year['Current_Year_TTL'] - df_current_year['Last_Year_TTL']
+        return df_current_year[gap_title]
+
     def get_h5_backorder(self):
         datasheet_name = self.__class__.bu_name + '_JNJ_INV'
         database_fullname = self.__class__.db_path + datasheet_name + '.db'
@@ -642,10 +684,14 @@ class SNOPHierarchy5Export:
         # get ESO
         df_eso = self.get_h5_eso()
         df_result = df_result.join(df_eso)
+        # add YTM vs. last year
+        df_result = df_result.join(self.generate_ytm_sales_mapping('GTS'))
+        df_result = df_result.join(self.generate_ytm_sales_mapping('LPSales'))
+        df_result = df_result.join(self.generate_ytm_sales_mapping('IMS'))
         # add gts and jnj_inv ranking
         df_result['GTS_Rank'] = df_result['GTS_Value'].rank(method='min', ascending=False)
         df_result['JNJ_INV_Rank'] = df_result['JNJ_INV'].rank(method='min', ascending=False)
-        # Move tow ranking to head
+        # Move two ranking to head
         df_item_gts_rank = df_result['GTS_Rank']
         df_item_jnj_inv_rank = df_result['JNJ_INV_Rank']
         df_result.drop(labels=['GTS_Rank'], axis=1, inplace=True)
@@ -719,6 +765,6 @@ class SNOPExportEntrance:
 
 
 if __name__ == '__main__':
-    test_module = SNOPSummaryExport('TU')
-    print(test_module.get_top_inv_v2('JNJ_INV'))
+    test_module = SNOPExportEntrance('TU')
+    test_module.start_snop_export()
 
