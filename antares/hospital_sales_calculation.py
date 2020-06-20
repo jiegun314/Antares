@@ -13,7 +13,6 @@ import numpy as np
 import os
 
 
-
 class HospitalSalesCalculation:
     bu_name = ''
     database_path = '../data/_DB/'
@@ -131,7 +130,7 @@ class HospitalSalesCalculation:
         return [month_list, list_final_data, list_monthly_ttl, minNum, maxNum]
 
     # generate AIO chart
-    def get_year_chart(self, year, data, time_list, total_num, maxNum, minNum):
+    def generate_AIO_chart(self, year, data, time_list, total_num, maxNum, minNum):
         map_data = [
             [[x["name"], x["value"]] for x in d["data"]] for d in data if d["time"] == year
         ][0]
@@ -283,12 +282,13 @@ class HospitalSalesCalculation:
         return grid_chart
 
     def start_generate_AIO_chart(self):
+        WarningType.ShowWarning = False
         [time_list, data, total_num, minNum, maxNum] = self.get_data_for_AIO_chart()
         timeline = Timeline(
             init_opts=opts.InitOpts(width="1600px", height="900px", theme=ThemeType.PURPLE_PASSION)
         )
         for y in time_list:
-            g = self.get_year_chart(y, data, time_list, total_num, maxNum, minNum)
+            g = self.generate_AIO_chart(y, data, time_list, total_num, maxNum, minNum)
             timeline.add(g, time_point=str(y))
 
         timeline.add_schema(

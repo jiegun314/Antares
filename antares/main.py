@@ -105,6 +105,10 @@ class SystemIndex:
                 data_input.master_data_update_entrance()
             elif cmd_code == "450":
                 cmd_info_index.show_code_eso()
+            elif cmd_code == "500":
+                from hospital_sales_calculation import HospitalSalesCalculation
+                hospital_sale_review = HospitalSalesCalculation(self.__class__.bu_name)
+                hospital_sale_review.start_generate_AIO_chart()
             elif cmd_code == "000":
                 import crt_inv_cmd as crt
                 cmd_crt_inv = crt.CurrentInventoryMenu(self.__class__.bu_name)
