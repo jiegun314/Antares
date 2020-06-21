@@ -518,6 +518,159 @@ class MasterDataConsolidation:
         return lst_pm
 
 
+class MasterDataConsolidationV2:
+    db_path = '../data/_DB/'
+    bu_name = ''
+
+    def __init__(self, bu_name_input):
+        self.__class__.bu_name = bu_name_input
+
+    # get df of material master
+    def import_material_master(self, model):
+        database_file = self.__class__.db_path + "Master_Data.db"
+        conn = sqlite3.connect(database_file)
+        if model == 'Normal':
+            sql_cmd = 'SELECT * FROM MATERIAL_MASTER WHERE Business_Unit = \"' + self.__class__.bu_name + '\"'
+        else:
+            sql_cmd = 'SELECT * FROM MATERIAL_MASTER WHERE Business_Unit = \"' + self.__class__.bu_name + '\"'
+        df = pd.read_sql(sql=sql_cmd, con=conn, index_col='Material')
+        return df
+
+    def import_sap_price(self):
+        database_file = self.__class__.db_path + self.__class__.bu_name + "_Master_Data.db"
+        data_sheet = self.__class__.bu_name + '_SAP_Price'
+        conn = sqlite3.connect(database_file)
+        sql_cmd = 'SELECT Material, Price as SAP_Price FROM ' + data_sheet
+        df = pd.read_sql(con=conn, sql=sql_cmd, index_col='Material')
+        return df
+
+    def import_abc_ranking(self):
+        database_file = self.__class__.db_path + self.__class__.bu_name + "_Master_Data.db"
+        data_sheet = 'Ranking'
+        conn = sqlite3.connect(database_file)
+        sql_cmd = 'SELECT Material, Ranking FROM ' + data_sheet
+        df = pd.read_sql(con=conn, sql=sql_cmd, index_col='Material')
+        return df
+
+    def import_rop_setting(self):
+        database_file = self.__class__.db_path + self.__class__.bu_name + "_Master_Data.db"
+        data_sheet = self.__class__.bu_name + '_ROP_Setting'
+        conn = sqlite3.connect(database_file)
+        sql_cmd = 'SELECT Material, [MRP Type] as MRP_Type, [Reorder Point] as Reorder_Point FROM ' + data_sheet
+        df = pd.read_sql(con=conn, sql=sql_cmd, index_col='Material')
+        return df
+
+    def import_phoenix_setting(self):
+        database_file = self.__class__.db_path + self.__class__.bu_name + "_Master_Data.db"
+        data_sheet = self.__class__.bu_name + '_Phoenix_List'
+        conn = sqlite3.connect(database_file)
+        sql_cmd = 'SELECT [Exit SKU] as Material, Program as Phoenix_Status, [Target SKU] as Phoenix_Target_SKU, ' \
+                  '[Discontinuation Date] as Phoenix_Discontinuation_Date, ' \
+                  '[Obsolescence Date] as Phoenix_Obsolescence_Date FROM ' \
+                  + data_sheet
+        df = pd.read_sql(con=conn, sql=sql_cmd, index_col='Material')
+        df['Phoenix_Status'] = 'Y'
+        return df
+
+    def import_gtin(self):
+        database_file = self.__class__.db_path + 'Master_Data.db'
+        conn = sqlite3.connect(database_file)
+        sql_cmd = 'SELECT [Material code] as Material, Barcode as GTIN FROM GTIN'
+        df = pd.read_sql(con=conn, sql=sql_cmd, index_col='Material')
+        return df
+
+    def import_rag_data(self, material_list):
+        database_file = self.__class__.db_path + 'Master_Data.db'
+        conn = sqlite3.connect(database_file)
+        sql_cmd = 'SELECT MATNR as Material, REGLICNO, REGAPDATE, REGEXDATE, LIFEYEAR FROM RAG_Report ORDER BY REGAPDATE'
+        df_rag = pd.read_sql(con=conn, sql=sql_cmd)
+        dict_rag = {}
+        for material_item in material_list:
+            df_rag_result = df_rag.loc[df_rag['Material'] == material_item,
+                                         ['REGLICNO', 'REGAPDATE', 'REGEXDATE', 'LIFEYEAR']]
+            list_rag_result = df_rag_result.values.tolist()
+            dict_rag_item = {}
+            for i in range(len(list_rag_result)):
+                dict_element_rag = {}
+                for j in range(len(list_rag_result[i])):
+                    dict_element_rag["REGLICNO"] = list_rag_result[i][0]
+                    dict_element_rag["REGAPDATE"] = list_rag_result[i][1]
+                    dict_element_rag["REGEXDATE"] = list_rag_result[i][2]
+                    dict_element_rag["LIFEYEAR"] = list_rag_result[i][3]
+                dict_rag_item[str(i + 1)] = dict_element_rag
+            dict_rag[material_item] = json.dumps(dict_rag_item)
+        df_rag_return = pd.DataFrame.from_dict(dict_rag, orient='index', columns=['RAG'])
+        return df_rag_return
+
+    def import_pm(self):
+        database_file = self.__class__.db_path + self.__class__.bu_name + '_Master_Data.db'
+        data_sheet = self.__class__.bu_name + '_PM_List'
+        conn = sqlite3.connect(database_file)
+        sql_cmd = 'SELECT Hierarchy_5, PM FROM ' + data_sheet
+        df = pd.read_sql(con=conn, sql=sql_cmd)
+        return df
+
+    def master_data_update_entrance(self, model='Normal'):
+        print("==Start to refresh master data for %s==" % self.__class__.bu_name)
+        # read master data
+        df_master_data = self.import_material_master(model)
+        # get code list
+        print('--1. Getting Material Master--')
+        code_list = list(df_master_data.index)
+        hierarchy_5_list = df_master_data["Hierarchy_5"].unique().tolist()
+        # get sap price
+        print('--2. Getting SAP Price--')
+        df_master_data = df_master_data.join(self.import_sap_price())
+        df_master_data.loc[df_master_data['SAP_Price'].isna(), 'SAP_Price'] = 0
+        # get ranking
+        print('--3. Getting Ranking--')
+        df_master_data = df_master_data.join(self.import_abc_ranking())
+        df_master_data.loc[df_master_data['Ranking'].isna(), 'Ranking'] = 'C'
+        # get ROP setting
+        print('--4. Getting MRP Type--')
+        df_master_data = df_master_data.join(self.import_rop_setting())
+        # get phoenix status
+        print('--5. Getting Phoenix Status--')
+        df_master_data = df_master_data.join(self.import_phoenix_setting())
+        df_master_data.loc[df_master_data['Phoenix_Status'].isna(), 'Phoenix_Status'] = 'N'
+        # get GTIN
+        print('--6. Getting GTIN--')
+        df_master_data = df_master_data.join(self.import_gtin())
+        # get RAG
+        print('--7. Getting RAG--')
+        df_master_data = df_master_data.join(self.import_rag_data(code_list))
+        # get PM
+        print('--8. Getting PM List--')
+        pm_list = self.import_pm().values.tolist()
+        for item in pm_list:
+            df_master_data.loc[df_master_data['Hierarchy_5'] == item[0], 'PM'] = item[1]
+        # re-arrange pm list for instrument
+        df_master_data = df_master_data.reset_index()
+        df_master_data.rename(columns={"index": "Material"}, inplace=True)
+        # test judgement of implant and instrument
+        # df_master_data['Product_Type'] = 'Instrument'
+        # df_master_data.loc[df_master_data['Material'].str.slice(stop=1).isin(['2', '4', '7']), 'Product_Type'] = 'Implant'
+        # df_master_data.loc[
+        #     df_master_data['Material'].str.slice(stop=2).isin(['02', '04', '07']), 'Product_Type'] = 'Implant'
+        # df_master_data.loc[df_master_data['Material'].str.slice(stop=3) == 'CNB', 'Product_Type'] = 'Implant'
+        df_master_data.loc[
+            (~df_master_data['Material'].str.slice(stop=1).isin(['2', '4', '7'])) &
+            (~df_master_data['Material'].str.slice(stop=2).isin(['02', '04', '07'])) &
+            (df_master_data['Material'].str.slice(stop=3) != 'CNB'), 'PM'] = 'Instrument'
+        # write to database
+        self.finalize_master_data(df_master_data, model)
+
+    def finalize_master_data(self, df, model):
+        database_file = self.__class__.db_path + self.__class__.bu_name + "_Master_Data.db"
+        if model == 'Normal':
+            data_sheet = self.__class__.bu_name + '_Master_Data'
+        else:
+            data_sheet = self.__class__.bu_name + '_Master_Data_Demo'
+        conn = sqlite3.connect(database_file)
+        df.to_sql(data_sheet, con=conn, index=False, if_exists='replace')
+        print('--Done--')
+
+
 class MasterDataUpdate:
     bu_name = ''
     file_path = "../data/_Source_Data/"
@@ -644,11 +797,9 @@ class MasterDataUpdate:
 
 
 if __name__ == "__main__":
-    # DataUpdate = MasterDataConsolidation()
-    # DataUpdate.bu_name = "TU"
+    DataUpdate = MasterDataConsolidationV2('TU')
+    DataUpdate.master_data_update_entrance('Test')
     # DataUpdate.master_data_update_entrance()
     # print(DataUpdate.mapping_rag(["440.834", "440.831S"]))
     # dataupdate = MonthlyUpdate('TU')
     # dataupdate.update_lp_inv()
-    test = MasterDataUpdate('TU')
-    test.generate_abc_ranking()
