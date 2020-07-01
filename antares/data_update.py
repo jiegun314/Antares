@@ -236,22 +236,19 @@ class MonthlyUpdate:
         if input("Ready to proceed? (Y/N): ").upper() != 'Y':
             return
         print("Start to read forecast file")
-        df_forecast = pd.read_excel(file_fullname).fillna(0)
+        df_forecast = pd.read_excel(file_fullname, index_col='Material').fillna(0)
         # get month list
-        month_list = np.delete(df_forecast.columns.values, 0, 0).tolist()
+        month_list = df_forecast.columns.values.tolist()
         month_length = len(month_list)
         # get code list
-        code_list = df_forecast['Code'].values.tolist()
+        code_list = df_forecast.index.values.tolist()
         # get hierarchy name and sap_price
-        infocheck = cclt.InfoCheck(self.__class__.bu_name)
-        print("Start to map Hierarchy_5 data")
-        hierarchy_5_list = infocheck.get_master_data_for_list(code_list, "Hierarchy_5")
-        print("Start to map SAP_Price data")
-        sap_price_list = infocheck.get_master_data_for_list(code_list, "SAP_Price")
-        print("Start to generate list")
-        # merge back to dataframe
-        df_forecast.insert(1, "Hierarchy_5", hierarchy_5_list)
-        df_forecast.insert(2, "SAP_Price", sap_price_list)
+        database_full_name = self.__class__.db_path + self.__class__.bu_name + '_Master_Data.db'
+        datafile_name = self.__class__.bu_name + '_Master_Data'
+        conn = sqlite3.connect(database_full_name)
+        sql_cmd = 'SELECT Material, Hierarchy_5, SAP_Price FROM ' + datafile_name
+        df_master_data = pd.read_sql(sql=sql_cmd, con=conn, index_col='Material')
+        df_forecast = df_forecast.join(df_master_data)
         # merge sap value
         print("Start to generate forecast in value format")
         # print(df_forecast.head())
@@ -259,22 +256,15 @@ class MonthlyUpdate:
             column_name = 'Value_' + month_list[index]
             df_forecast[column_name] = df_forecast.apply(lambda x: x[month_list[index]] * x['SAP_Price'], axis=1)
         print("Convert to import list")
-        list_forecast_raw = df_forecast.values.tolist()
         forecast_to_upload = []
-        for forecast_item in list_forecast_raw:
-            index = 0
+        for code_item in code_list:
+            # add code and hierarchy_5
+            list_item_basic_info = [code_item, df_forecast.at[code_item, 'Hierarchy_5']]
+            # add value
             for month_item in month_list:
-                # insert code and hierarchy_5
-                forecast_single_line = forecast_item[0:2]
-                # insert month
-                forecast_single_line.append(month_item)
-                # insert forecast quantity
-                forecast_single_line.append(forecast_item[index + 3])
-                # insert forecast value
-                forecast_single_line.append(forecast_item[index + 3 + month_length])
-                # insert single line for one code in one month
-                forecast_to_upload.append(forecast_single_line)
-                index += 1
+                list_item_unit = list_item_basic_info + [month_item, df_forecast.at[code_item, month_item],
+                                                         df_forecast.at[code_item, 'Value_' + month_item]]
+                forecast_to_upload.append(list_item_unit)
         # change to dataframe for upload
         df_forecast_upload = pd.DataFrame(forecast_to_upload,
                                           columns=["Material", "Hierarchy_5", "Month", "Quantity", "Value_SAP_Price"])
@@ -797,8 +787,8 @@ class MasterDataUpdate:
 
 
 if __name__ == "__main__":
-    DataUpdate = MasterDataConsolidationV2('TU')
-    DataUpdate.master_data_update_entrance('Test')
+    DataUpdate = MonthlyUpdate('TU')
+    DataUpdate.update_final_forecast()
     # DataUpdate.master_data_update_entrance()
     # print(DataUpdate.mapping_rag(["440.834", "440.831S"]))
     # dataupdate = MonthlyUpdate('TU')
