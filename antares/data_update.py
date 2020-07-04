@@ -248,6 +248,7 @@ class MonthlyUpdate:
         conn = sqlite3.connect(database_full_name)
         sql_cmd = 'SELECT Material, Hierarchy_5, SAP_Price FROM ' + datafile_name
         df_master_data = pd.read_sql(sql=sql_cmd, con=conn, index_col='Material')
+        print(df_forecast.head(), df_master_data.head())
         df_forecast = df_forecast.join(df_master_data)
         # merge sap value
         print("Start to generate forecast in value format")
