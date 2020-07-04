@@ -248,7 +248,7 @@ class MonthlyUpdate:
         conn = sqlite3.connect(database_full_name)
         sql_cmd = 'SELECT Material, Hierarchy_5, SAP_Price FROM ' + datafile_name
         df_master_data = pd.read_sql(sql=sql_cmd, con=conn, index_col='Material')
-        print(df_forecast.head(), df_master_data.head())
+        # print(df_forecast.head(), df_master_data.head())
         df_forecast = df_forecast.join(df_master_data)
         # merge sap value
         print("Start to generate forecast in value format")
@@ -273,10 +273,8 @@ class MonthlyUpdate:
                                 'Quantity': [item[3]*1 for item in forecast_to_upload],
                                 'Value_SAP_Price': [item[4]*1 for item in forecast_to_upload]}
         df_forecast_upload = pd.DataFrame(dict_forecast_upload)
-        # df_forecast_upload['Quantity'] = pd.to_numeric(df_forecast_upload['Quantity'])
-        # df_forecast_upload.to_excel(self.__class__.update_path + "forecast.xlsx")
         # write to final forecast
-        print(df_forecast_upload.info())
+        # print(df_forecast_upload.info())
         print("Update to database as final forecast")
         tbl_final_fcst = self.__class__.bu_name + "_Final_Forecast"
         db_final_fcst_fullname = self.__class__.db_path + tbl_final_fcst + ".db"
