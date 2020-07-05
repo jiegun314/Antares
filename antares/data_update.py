@@ -206,26 +206,30 @@ class MonthlyUpdate:
         print("===== <JNJ Inventory Import Successfully!> =====")
 
     def update_eso(self):
-        # 29 个元素
-        file_name = self.__class__.bu_name + "_ESO"
-        file_fullname = self.__class__.update_path + "Update_" + file_name + ".xlsx"
-        db_fullname = self.__class__.db_path + file_name + ".db"
+        file_name = self.__class__.bu_name + '_ESO'
+        file_fullname = self.__class__.update_path + 'Update_' + file_name + '.xlsx'
+        eso_db_fullname = self.__class__.db_path + file_name + '.db'
+        master_data_filename = self.__class__.db_path + self.__class__.bu_name + '_Master_Data.db'
+        master_data_sheetname = self.__class__.bu_name + '_Master_Data'
+        # read excel
         print("Start to read the Excel file")
-        start_time = datetime.now()
-        df_eso = pd.read_excel(file_fullname)
-        eso_data = df_eso.values
-        stop_time = datetime.now()
-        print("FIle is read by using %s seconds" % (stop_time - start_time).seconds)
-        conn = sqlite3.connect(db_fullname)
-        sql_cmd = "INSERT INTO " + file_name + " values("
-        for i in range(28):
-            sql_cmd = sql_cmd + "?,"
-        sql_cmd = sql_cmd + "?)"
-        conn.executemany(sql_cmd, eso_data)
-        conn.commit()
-        conn.close()
-        print("ESO File is updated")
-        pass
+        df_eso = pd.read_excel(file_fullname, index_col='Material')
+        df_eso['Total_ESO_Quantity'] = df_eso['Excess_Quantity'] + df_eso['Obsolete_Quantity'] + df_eso['Slow_Moving_Quantity']
+        # print(df_eso.head(), df_eso.info())
+        # read master data
+        conn = sqlite3.connect(master_data_filename)
+        sql_cmd = 'SELECT Material, Hierarchy_5, PM, Phoenix_Status FROM ' + master_data_sheetname
+        df_master_data = pd.read_sql(sql=sql_cmd, con=conn, index_col='Material')
+        # print(df_master_data.head(), df_master_data.info())
+        df_eso = df_eso.join(df_master_data)
+        # judge Suzhou products
+        df_eso['Suzhou'] = 'N'
+        df_eso.loc[df_eso.index.str.endswith('CN'), 'Suzhou'] = 'Y'
+        # df_eso.to_csv(self.__class__.db_path + 'Test.csv', index=True)
+        # print(df_eso.head(), df_eso.info())
+        conn = sqlite3.connect(eso_db_fullname)
+        df_eso.to_sql(file_name, con=conn, if_exists='append')
+        print('ESO updated')
 
     # import final forecast
     def update_final_forecast(self):
@@ -794,7 +798,7 @@ class MasterDataUpdate:
 
 if __name__ == "__main__":
     DataUpdate = MonthlyUpdate('TU')
-    DataUpdate.update_final_forecast()
+    DataUpdate.update_eso()
     # DataUpdate.master_data_update_entrance()
     # print(DataUpdate.mapping_rag(["440.834", "440.831S"]))
     # dataupdate = MonthlyUpdate('TU')

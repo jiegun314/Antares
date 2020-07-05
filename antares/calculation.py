@@ -356,16 +356,16 @@ class InfoCheck:
         conn = sqlite3.connect(db_fullname)
         c = conn.cursor()
         if eso_type == "code":
-            sql_cmd = "SELECT Month, Excess_Quantity, Slow_Moving_Quantity, Obsolete_Quantity, ESO_Quantity, " \
-                  "ESO_Value_Standard_Cost, ESO_Value_SAP_Price FROM " + filename + " WHERE Material = \'" + \
+            sql_cmd = "SELECT Month, Excess_Quantity, Slow_Moving_Quantity, Obsolete_Quantity, Total_ESO_Quantity, " \
+                  "Total_ESO_Value FROM " + filename + " WHERE Material = \'" + \
                   material_name + "\' ORDER BY Month"
         else:
             if material_name.upper() != "ALL":
-                sql_cmd = "SELECT Month, sum(ESO_Value_Standard_Cost), sum(ESO_Value_SAP_Price) FROM " + filename + \
+                sql_cmd = "SELECT Month, sum(Total_ESO_Value) FROM " + filename + \
                       " WHERE Hierarchy_5 = \'" + material_name + "\' COLLATE NOCASE GROUP by Month, Hierarchy_5 " \
                                                                   "ORDER BY Month"
             else:
-                sql_cmd = "SELECT Month, sum(ESO_Value_Standard_Cost), sum(ESO_Value_SAP_Price) FROM " + filename + \
+                sql_cmd = "SELECT Month, sum(Total_ESO_Value) FROM " + filename + \
                           " GROUP by Month ORDER BY Month"
         try:
             c.execute(sql_cmd)
@@ -380,7 +380,7 @@ if __name__ == "__main__":
     info_check = InfoCheck("TU")
     # info_check.generate_abc_ranking()
     # info_check.get_code_phoenix_result("689.893")
-    print(info_check.get_single_code_all_master_data('440.834', ['Description', 'Hierarchy_5', 'RAG']))
+    print(info_check.get_material_eso('440.834'))
 
 
 

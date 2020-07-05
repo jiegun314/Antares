@@ -230,10 +230,9 @@ class DataDisplay:
         info_check = calculation.InfoCheck(self.__class__.bu_name)
         eso_result = info_check.get_material_eso(material_code, eso_type)
         if eso_type == "code":
-            eso_output = [["Cycle", ], ["E_Qty", ], ["SM_Qty", ], ["O_Qty", ], ["ESO_Qty", ], ["ESO_Value_Std_Cost", ],
-                           ["ESO_Value_SAP_Price", ]]
+            eso_output = [["Cycle", ], ["E_Qty", ], ["SM_Qty", ], ["O_Qty", ], ["ESO_Qty", ], ["Total_ESO_Value", ]]
         else:
-            eso_output = [["Cycle", ], ["ESO_Value_Std_Cost", ], ["ESO_Value_SAP_Price", ]]
+            eso_output = [["Cycle", ], ["Total_ESO_Value", ]]
         for item in eso_result:
             for index in range(0, len(eso_output)):
                 eso_output[index].append(item[index])
