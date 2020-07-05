@@ -128,7 +128,7 @@ class SNOPCodeExport:
         df_eso = pd.read_sql(sql=sql_cmd, con=conn)
         df_eso_result = pd.pivot_table(df_eso, index='Material',
                                        values=['Excess_Quantity', 'Slow_Moving_Quantity', 'Obsolete_Quantity',
-                                               'ESO_Quantity', 'ESO_Value_Standard_Cost'],
+                                               'Total_ESO_Quantity', 'NPI_Reverse_Value', 'Total_ESO_Value'],
                                        columns="Month", fill_value=0)
         return df_eso_result
 
@@ -394,7 +394,7 @@ class SNOPSummaryExport:
         [current_cycle_month, last_cycle_month] = [item[0] for item in month_list]
         # get eso of current cycle
         crt_title = 'ESO_' + material_type + current_cycle_month.replace('-', '')
-        sql_cmd = 'SELECT Hierarchy_5, sum(ESO_Value_Standard_Cost) as ' + crt_title + ' FROM ' + datasheet_name + \
+        sql_cmd = 'SELECT Hierarchy_5, sum(Total_ESO_Value) as ' + crt_title + ' FROM ' + datasheet_name + \
                   ' WHERE Instrument = \'' + type_trigger + '\' AND Suzhou = \'N\' AND Month = \'' \
                   + current_cycle_month + '\' GROUP by Hierarchy_5'
         df_eso = pd.read_sql(sql=sql_cmd, con=conn)
@@ -405,7 +405,7 @@ class SNOPSummaryExport:
         df_eso['Ratio'] = df_eso[crt_title] / df_eso[crt_title].sum()
         # get last cycle
         pre_title = 'ESO_' + material_type + last_cycle_month.replace('-', '')
-        sql_cmd = 'SELECT Hierarchy_5, sum(ESO_Value_Standard_Cost) as ' + pre_title + ' FROM ' + datasheet_name + \
+        sql_cmd = 'SELECT Hierarchy_5, sum(Total_ESO_Value) as ' + pre_title + ' FROM ' + datasheet_name + \
                   ' WHERE Instrument = \'' + type_trigger + '\' AND Suzhou = \'N\' AND Month = \'' \
                   + last_cycle_month + '\' GROUP by Hierarchy_5 COLLATE NOCASE'
         df_eso_pre = pd.read_sql(sql=sql_cmd, con=conn)
@@ -628,7 +628,7 @@ class SNOPHierarchy5Export:
         c.execute(sql_cmd)
         month_result = c.fetchall()[0][0]
         sql_cmd = 'SELECT Hierarchy_5, sum(Excess_Quantity) as E_Qty, sum(Slow_Moving_Quantity) as SM_Qty, ' \
-                  'sum(Obsolete_Quantity) as Q_Qty, sum(ESO_Value_Standard_Cost) as ESO_Value FROM TU_ESO ' \
+                  'sum(Obsolete_Quantity) as Q_Qty, sum(NPI_Reverse_Value) as NPI_ESO, sum(Total_ESO_Value) as ESO_Value FROM TU_ESO ' \
                   'WHERE Month=\"' + month_result + '\" GROUP by Hierarchy_5 COLLATE NOCASE'
         df_eso = pd.read_sql(sql=sql_cmd, con=conn)
         df_eso['Hierarchy_5'] = df_eso['Hierarchy_5'].str.upper()

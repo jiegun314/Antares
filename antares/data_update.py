@@ -218,7 +218,7 @@ class MonthlyUpdate:
         # print(df_eso.head(), df_eso.info())
         # read master data
         conn = sqlite3.connect(master_data_filename)
-        sql_cmd = 'SELECT Material, Hierarchy_5, PM, Phoenix_Status FROM ' + master_data_sheetname
+        sql_cmd = 'SELECT Material, Hierarchy_5, PM, Phoenix_Status, Instrument FROM ' + master_data_sheetname
         df_master_data = pd.read_sql(sql=sql_cmd, con=conn, index_col='Material')
         # print(df_master_data.head(), df_master_data.info())
         df_eso = df_eso.join(df_master_data)
@@ -657,6 +657,9 @@ class MasterDataConsolidationV2:
             (~df_master_data['Material'].str.slice(stop=1).isin(['2', '4', '7'])) &
             (~df_master_data['Material'].str.slice(stop=2).isin(['02', '04', '07'])) &
             (df_master_data['Material'].str.slice(stop=3) != 'CNB'), 'PM'] = 'Instrument'
+        # update implant/instrument
+        df_master_data['Instrument'] = 'N'
+        df_master_data.loc[df_master_data['PM'] == 'Instrument', 'Instrument'] = 'Y'
         # write to database
         self.finalize_master_data(df_master_data, model)
 
