@@ -2,6 +2,7 @@ import sqlite3
 import time
 import public_function as pb_fnc
 import pandas as pd
+import numpy as np
 
 
 class InfoCheck:
@@ -361,11 +362,11 @@ class InfoCheck:
                   material_name + "\' ORDER BY Month"
         else:
             if material_name.upper() != "ALL":
-                sql_cmd = "SELECT Month, sum(Total_ESO_Value) FROM " + filename + \
+                sql_cmd = "SELECT Month, sum(NPI_Reverse_Value), sum(Total_ESO_Value) FROM " + filename + \
                       " WHERE Hierarchy_5 = \'" + material_name + "\' COLLATE NOCASE GROUP by Month, Hierarchy_5 " \
                                                                   "ORDER BY Month"
             else:
-                sql_cmd = "SELECT Month, sum(Total_ESO_Value) FROM " + filename + \
+                sql_cmd = "SELECT Month, sum(NPI_Reverse_Value), sum(Total_ESO_Value) FROM " + filename + \
                           " GROUP by Month ORDER BY Month"
         try:
             c.execute(sql_cmd)
@@ -375,12 +376,36 @@ class InfoCheck:
         eso_result = c.fetchall()
         return eso_result
 
+    # get eso result with pandas
+    def get_eso_result(self, material_name, eso_type="code"):
+        filename = self.__class__.bu_name + "_ESO"
+        db_fullname = self.__class__.db_path + filename + ".db"
+        conn = sqlite3.connect(db_fullname)
+        if eso_type == "code":
+            pass
+        else:
+            if material_name.upper() != "ALL":
+                sql_cmd = 'SELECT * FROM ' + filename + \
+                          ' WHERE Hierarchy_5 = \"' + material_name + '\" COLLATE NOCASE'
+            else:
+                sql_cmd = 'SELECT * FROM ' + filename + ' WHERE Total_ESO_Value>0'
+            df_eso = pd.read_sql(sql=sql_cmd, con=conn)
+            df_eso['ESO_Neat_Total'] = df_eso['Excess_Value'] + df_eso['Slow_Moving_Value'] + \
+                                       df_eso['Obsolete_Value']
+            df_eso_result = pd.pivot_table(df_eso, columns=['Phoenix_Status', 'Suzhou'],
+                                           values=['NPI_Reverse_Value', 'ESO_Neat_Total'],
+                                           index='Month', aggfunc=[np.sum], fill_value=0)
+            df_eso_result = df_eso_result[-5:]
+            print(df_eso_result.head(), df_eso_result.info())
+
+        pass
+
 
 if __name__ == "__main__":
     info_check = InfoCheck("TU")
     # info_check.generate_abc_ranking()
     # info_check.get_code_phoenix_result("689.893")
-    print(info_check.get_material_eso('440.834'))
+    info_check.get_eso_result('ALL', eso_type='Hierarchy_5')
 
 
 

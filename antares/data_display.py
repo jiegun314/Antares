@@ -232,7 +232,7 @@ class DataDisplay:
         if eso_type == "code":
             eso_output = [["Cycle", ], ["E_Qty", ], ["SM_Qty", ], ["O_Qty", ], ["ESO_Qty", ], ["Total_ESO_Value", ]]
         else:
-            eso_output = [["Cycle", ], ["Total_ESO_Value", ]]
+            eso_output = [["Cycle", ], ["NPI_Reverse_ESO", ], ["Total_ESO_Value", ]]
         for item in eso_result:
             for index in range(0, len(eso_output)):
                 eso_output[index].append(item[index])
