@@ -218,7 +218,7 @@ class CurrentInventoryCalculation:
                       ''' WHERE Available_Stock !=0'''
         else:
             sql_cmd = '''SELECT Material, Description, Available_Stock, Pending_Inventory_Bonded_Total_Qty, 
-            GIT_1_Week, GIT_2_Week, GIT_3_Week, GIT_3_Week, Open_PO FROM ''' + table_name + \
+            GIT_1_Week, GIT_2_Week, GIT_3_Week, GIT_4_Week, Open_PO FROM ''' + table_name + \
                       ''' WHERE Available_Stock !=0'''
         try:
             df = pd.read_sql(sql=sql_cmd, con=conn)
