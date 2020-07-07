@@ -1,6 +1,6 @@
 import sqlite3
 # import pandas as pd
-# import numpy as np
+import numpy as np
 from tabulate import tabulate
 import draw_chart as chart
 import os
@@ -449,6 +449,12 @@ class CurrentInventoryCalculation:
             else "Value by Std. Cost of " + h5_result
         chart.line_chart(h5_result, x_value, h5_inv_result, "Date", "Value", chart_title)
 
+    # calculate linear regression
+    def get_linear_regression(self, list_data):
+        x = np.arange(1, len(list_data) + 1)
+        [para_slope, para_intercept] = np.polyfit(x, list_data, 1)
+        return [item * para_slope + para_intercept for item in x]
+
     # display inventory of h5 of both qty and value
     def generate_h5_inventory_trend_two_dimension(self, h5_result):
         # get date list
@@ -602,5 +608,5 @@ class CurrentInventoryCalculation:
 
 if __name__ == "__main__":
     test = CurrentInventoryCalculation("TU")
-    test.generate_h5_inventory_trend_two_dimension('PFNA-II')
+    print(test.get_linear_regression([3.5,3.5,3.5,3.5,4.5]))
     # test.inv_data_sync(50)
