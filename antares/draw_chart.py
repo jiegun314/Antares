@@ -37,7 +37,7 @@ def line_chart(code_name, x_value, y_value, x_label, y_label, chart_ttl):
 
 
 # draw line charter
-def double_line_chart(material_name, x_value, y1_value, y2_value, x_label, y1_label, y2_label, chart_ttl):
+def double_line_chart(material_name, x_value, y1_value, y2_value, x_label, y1_label, y2_label, chart_ttl, y_index=1):
     WarningType.ShowWarning = False
     sys_path = os.path.abspath('..')
     file_name = sys_path + "/data/_Charter/" + material_name.replace(" ", "_").replace("/", "_") + ".html"
@@ -45,7 +45,7 @@ def double_line_chart(material_name, x_value, y1_value, y2_value, x_label, y1_la
         Line(init_opts=opts.InitOpts(theme=ThemeType.ROMA, width="1500px"))
         .add_xaxis(x_value)
         .add_yaxis(y1_label, y1_value, is_smooth=True)
-        .add_yaxis(y2_label, y2_value, yaxis_index=1, is_smooth=True)
+        .add_yaxis(y2_label, y2_value, yaxis_index=y_index, is_smooth=True)
         .set_series_opts(
             label_opts=opts.LabelOpts(is_show=False),
         )

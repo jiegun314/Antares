@@ -382,7 +382,7 @@ class SNOPSummaryExport:
 
     def get_top_eso_v2(self, material_type, num=20):
         # check material type:
-        type_trigger = 'Y' if material_type == 'Instrument' else 'N'
+        instrument_trigger = 'Y' if material_type == 'Instrument' else 'N'
         # link to ESO db
         datasheet_name = self.__class__.bu_name + "_" + "ESO"
         database_fullname = self.__class__.db_path + datasheet_name + ".db"
@@ -393,10 +393,14 @@ class SNOPSummaryExport:
         month_list = c.fetchall()
         [current_cycle_month, last_cycle_month] = [item[0] for item in month_list]
         # get eso of current cycle
-        crt_title = 'ESO_' + material_type + current_cycle_month.replace('-', '')
-        sql_cmd = 'SELECT Hierarchy_5, sum(Total_ESO_Value) as ' + crt_title + ' FROM ' + datasheet_name + \
-                  ' WHERE Instrument = \'' + type_trigger + '\' AND Suzhou = \'N\' AND Month = \'' \
-                  + current_cycle_month + '\' GROUP by Hierarchy_5'
+        crt_title = 'ESO_' + material_type + '_' + current_cycle_month.replace('-', '')
+        if material_type == 'NPI':
+            sql_cmd = 'SELECT Hierarchy_5, sum(NPI_Reverse_Value) as ' + crt_title + ' FROM ' + datasheet_name + \
+                      ' WHERE Month= \'' + current_cycle_month + '\' GROUP by Hierarchy_5'
+        else:
+            sql_cmd = 'SELECT Hierarchy_5, sum(Excess_Value + Obsolete_Value + Slow_Moving_Value) as ' + crt_title + \
+                      ' FROM ' + datasheet_name + ' WHERE Instrument = \'' + instrument_trigger + \
+                      '\' AND Suzhou = \'N\' AND Month = \'' + current_cycle_month + '\' GROUP by Hierarchy_5'
         df_eso = pd.read_sql(sql=sql_cmd, con=conn)
         # change to capitalized h5 name
         df_eso['Hierarchy_5'] = df_eso['Hierarchy_5'].str.upper()
@@ -404,16 +408,23 @@ class SNOPSummaryExport:
         # add ratio
         df_eso['Ratio'] = df_eso[crt_title] / df_eso[crt_title].sum()
         # get last cycle
-        pre_title = 'ESO_' + material_type + last_cycle_month.replace('-', '')
-        sql_cmd = 'SELECT Hierarchy_5, sum(Total_ESO_Value) as ' + pre_title + ' FROM ' + datasheet_name + \
-                  ' WHERE Instrument = \'' + type_trigger + '\' AND Suzhou = \'N\' AND Month = \'' \
-                  + last_cycle_month + '\' GROUP by Hierarchy_5 COLLATE NOCASE'
+        pre_title = 'ESO_' + material_type + '_' + last_cycle_month.replace('-', '')
+        if material_type == 'NPI':
+            sql_cmd = 'SELECT Hierarchy_5, sum(NPI_Reverse_Value) as ' + pre_title + ' FROM ' + datasheet_name + \
+                      ' WHERE Month= \'' + last_cycle_month + '\' GROUP by Hierarchy_5'
+        else:
+            sql_cmd = 'SELECT Hierarchy_5, sum(Excess_Value + Obsolete_Value + Slow_Moving_Value) as ' + pre_title + \
+                      ' FROM ' + datasheet_name + ' WHERE Instrument = \'' + instrument_trigger + \
+                      '\' AND Suzhou = \'N\' AND Month = \'' + last_cycle_month + \
+                      '\' GROUP by Hierarchy_5 COLLATE NOCASE'
         df_eso_pre = pd.read_sql(sql=sql_cmd, con=conn)
         # change to capitalized h5 name
         df_eso_pre['Hierarchy_5'] = df_eso_pre['Hierarchy_5'].str.upper()
         df_eso_pre = df_eso_pre.set_index('Hierarchy_5')
+        # test
+        # print(df_eso.head(), df_eso_pre.head())
         # combine and sort
-        if type_trigger == 'N':
+        if material_type != 'Instrument':
             df_eso = df_eso.join(df_eso_pre).join(self.get_pm()).sort_values([crt_title], ascending=False)
         else:
             df_eso = df_eso.join(df_eso_pre).sort_values([crt_title], ascending=False)
@@ -465,6 +476,13 @@ class SNOPSummaryExport:
         df_top_implant_eso = self.get_top_eso_v2('Implant')
         # df_top_implant_eso.to_excel(writer, sheet_name="SNOP_Summary", index=True, startrow=1, startcol=28)
         list_snop_summary.append([df_top_implant_eso, (1, 28)])
+
+        # export top 20 eso - Implant
+        print('Export TOP ESO - NPI')
+        df_top_implant_eso = self.get_top_eso_v2('NPI')
+        # df_top_implant_eso.to_excel(writer, sheet_name="SNOP_Summary", index=True, startrow=1, startcol=28)
+        list_snop_summary.append([df_top_implant_eso, (1, 34)])
+
         return list_snop_summary
         # writer.close()
 
@@ -765,6 +783,6 @@ class SNOPExportEntrance:
 
 
 if __name__ == '__main__':
-    test_module = SNOPExportEntrance('TU')
-    test_module.start_snop_export()
+    test_module = SNOPSummaryExport('TU')
+    print(test_module.get_top_eso_v2('NPI'))
 

@@ -154,8 +154,8 @@ class DataImport:
 
 
 if __name__ == "__main__":
-    data_input = DataImport("TU")
-    data_input.input_hospital_sale()
+    data_input = DataImport("JT")
+    data_input.sales_input('IMS')
     # data_input.get_active_codes()
     # cmd = int(input("选择需要导入的数据，1 - GTS，2 - LP Sales， 3 - IMS, 4 - LP_INV: "))
     # if cmd == 1:
