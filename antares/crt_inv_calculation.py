@@ -218,8 +218,7 @@ class CurrentInventoryCalculation:
                       ''' WHERE Available_Stock !=0'''
         else:
             sql_cmd = '''SELECT Material, Description, Available_Stock, Pending_Inventory_Bonded_Total_Qty, 
-            GIT_1_Week, GIT_2_Week, GIT_3_Week, GIT_4_Week, Open_PO FROM ''' + table_name + \
-                      ''' WHERE Available_Stock !=0'''
+            GIT_1_Week, GIT_2_Week, GIT_3_Week, GIT_4_Week, Open_PO FROM ''' + table_name
         try:
             df = pd.read_sql(sql=sql_cmd, con=conn)
         except pd.io.sql.DatabaseError:
@@ -496,7 +495,7 @@ class CurrentInventoryCalculation:
         sql_cmd = "SELECT Material, Description, CSC, Available_Stock, (Standard_Cost * Inventory_OnHand) as " \
                   "Onhand_INV_Value, Pending_Inventory_Bonded_Total_Qty, GIT_1_Week, GIT_2_Week, GIT_3_Week, " \
                   "GIT_4_Week FROM " + table_name + " WHERE Hierarchy_5 = \"" + h5_name.upper() + \
-                  "\" AND Available_Stock != 0 ORDER by Material"
+                  "\" ORDER by Material"
         try:
             c.execute(sql_cmd)
         except sqlite3.OperationalError:
