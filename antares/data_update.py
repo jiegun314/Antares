@@ -743,8 +743,12 @@ class MasterDataUpdate:
         print("!Make sure you have put file %s in %s" % (master_data_filename, master_data_path))
         # start to read file
         print("Start to read data file.")
-        if cmd_code == "2":
-            df = pd.read_excel(master_data_file, sheet_name="REPORT")
+        if cmd_code == '3':
+            df = pd.read_excel(master_data_file,  dtype={'Barcode': str})
+            # print(df.info())
+        elif cmd_code == "2":
+            df = pd.read_excel(master_data_file, sheet_name="REPORT", dtype={'REGAPDATE': str, 'REGEXDATE': str},
+                               skiprows=[1, ])
         else:
             df = pd.read_excel(master_data_file)
         print("Start to import into database.")
@@ -800,8 +804,8 @@ class MasterDataUpdate:
 
 
 if __name__ == "__main__":
-    DataUpdate = MonthlyUpdate('TU')
-    DataUpdate.update_eso()
+    DataUpdate = MasterDataUpdate('TU')
+    DataUpdate.import_public_master_data()
     # DataUpdate.master_data_update_entrance()
     # print(DataUpdate.mapping_rag(["440.834", "440.831S"]))
     # dataupdate = MonthlyUpdate('TU')
