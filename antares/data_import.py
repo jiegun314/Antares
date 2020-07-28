@@ -152,10 +152,20 @@ class DataImport:
         df_sales_final.to_sql(datasheet_name, con=conn, if_exists='replace')
         print('Done')
 
+    def import_local_hierarchy(self):
+        source_file = self.__class__.file_path + self.__class__.bu_name + '_Local_Hierarchy.xlsx'
+        database_file = self.__class__.db_path + self.__class__.bu_name + '_Master_Data.db'
+        datasheet_name = self.__class__.bu_name + '_Local_Hierarchy'
+        df_local_hierarchy = pd.read_excel(source_file)
+        conn = sqlite3.connect(database_file)
+        df_local_hierarchy.to_sql(con=conn, name=datasheet_name, if_exists='replace')
+        print('Done')
+        pass
+
 
 if __name__ == "__main__":
     data_input = DataImport("JT")
-    data_input.sales_input('IMS')
+    data_input.import_local_hierarchy()
     # data_input.get_active_codes()
     # cmd = int(input("选择需要导入的数据，1 - GTS，2 - LP Sales， 3 - IMS, 4 - LP_INV: "))
     # if cmd == 1:
