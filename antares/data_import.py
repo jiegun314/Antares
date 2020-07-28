@@ -158,7 +158,7 @@ class DataImport:
         datasheet_name = self.__class__.bu_name + '_Local_Hierarchy'
         df_local_hierarchy = pd.read_excel(source_file)
         conn = sqlite3.connect(database_file)
-        df_local_hierarchy.to_sql(con=conn, name=datasheet_name, if_exists='replace')
+        df_local_hierarchy.to_sql(con=conn, name=datasheet_name, if_exists='replace', index=None)
         print('Done')
         pass
 

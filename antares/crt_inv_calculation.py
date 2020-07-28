@@ -88,10 +88,30 @@ class CurrentInventoryCalculation:
         df.loc[df['Business_Unit'] == 'SP', 'Business_Unit'] = 'Spine'
         df.loc[df['Business_Unit'] == 'SPINE', 'Business_Unit'] = 'Spine'
         df_single_bu = df.loc[(df['Business_Unit'] == self.__class__.bu_name) & (df['Loc'] == "Total")]
+        # mapping local Hierarchy
+        if self.__class__.bu_name == 'JT':
+            df_single_bu = self.map_local_hierarchy(df_single_bu)
         database_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
         conn = sqlite3.connect(database_name)
         df_single_bu.to_sql("INV" + str_date, con=conn, if_exists="replace", index=False)
         return 1
+
+    # mapping local hierarchy
+    def map_local_hierarchy(self, df_input):
+        # get local hierarchy
+        df_input.set_index('Material', inplace=True)
+        database_name = self.__class__.db_path + self.__class__.bu_name + '_Master_Data.db'
+        local_hierarchy_datasheet = self.__class__.bu_name + '_Local_Hierarchy'
+        conn = sqlite3.connect(database_name)
+        sql_cmd = 'SELECT Material, Local_Hierarchy FROM ' + local_hierarchy_datasheet
+        df_local_hierarchy = pd.read_sql(sql=sql_cmd, con=conn, index_col='Material')
+        # join the local hierarchy and replace current h5
+        df_output = df_input.join(df_local_hierarchy)
+        df_output.loc[df_output['Local_Hierarchy'].notnull(), 'Hierarchy_5'] = df_output['Local_Hierarchy']
+        df_output.drop(columns=['Local_Hierarchy'], inplace=True)
+        df_output.reset_index(inplace=True)
+        # print(df_output.head())
+        return df_output
 
     # calculate current inventory, return detail list and summary result
     def get_current_inventory(self, table_name):
@@ -606,6 +626,6 @@ class CurrentInventoryCalculation:
 
 
 if __name__ == "__main__":
-    test = CurrentInventoryCalculation("TU")
-    print(test.get_linear_regression([3.5,3.5,3.5,3.5,4.5]))
+    test = CurrentInventoryCalculation("JT")
+    test.oneclick_inventory_import('20200728')
     # test.inv_data_sync(50)
