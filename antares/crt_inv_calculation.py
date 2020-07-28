@@ -489,7 +489,7 @@ class CurrentInventoryCalculation:
                           'FROM ' + table_item
             else:
                 sql_cmd = 'SELECT sum(Available_Stock) AS inv_qty, sum(Available_Stock * Standard_Cost) AS inv_value ' \
-                          'FROM ' + table_item + ' WHERE Hierarchy_5 = \"' + h5_result.upper() + '\"'
+                          'FROM ' + table_item + ' WHERE Hierarchy_5 = \"' + h5_result.upper() + '\" COLLATE NOCASE'
             c.execute(sql_cmd)
             result = c.fetchone()
             if not result[0]:
@@ -515,7 +515,7 @@ class CurrentInventoryCalculation:
         sql_cmd = "SELECT Material, Description, CSC, Available_Stock, (Standard_Cost * Inventory_OnHand) as " \
                   "Onhand_INV_Value, Pending_Inventory_Bonded_Total_Qty, GIT_1_Week, GIT_2_Week, GIT_3_Week, " \
                   "GIT_4_Week FROM " + table_name + " WHERE Hierarchy_5 = \"" + h5_name.upper() + \
-                  "\" ORDER by Material"
+                  "\" COLLATE NOCASE ORDER by Material"
         try:
             c.execute(sql_cmd)
         except sqlite3.OperationalError:
