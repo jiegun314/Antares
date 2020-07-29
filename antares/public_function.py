@@ -88,12 +88,33 @@ def get_available_h5_name(h5_name, bu_name):
 
 
 def get_available_h5_list(h5_name, bu_name):
-    db_fullname = db_path + "Master_Data.db"
-    conn = sqlite3.connect(db_fullname)
+    if bu_name == 'JT':
+        return get_oneclick_h5_list(h5_name, bu_name)
+    else:
+        db_fullname = db_path + "Master_Data.db"
+        conn = sqlite3.connect(db_fullname)
+        c = conn.cursor()
+        str_cmd = "SELECT distinct Hierarchy_5 COLLATE NOCASE from MATERIAL_MASTER WHERE Hierarchy_5 LIKE \'%" + \
+                  h5_name + "%\' AND Business_Unit = \'" + bu_name + "\' COLLATE NOCASE ORDER BY Hierarchy_5"
+        c.execute(str_cmd)
+        result = c.fetchall()
+        h5_output = [item[0] for item in result]
+        conn.close()
+        return h5_output
+
+
+def get_oneclick_h5_list(h5_name, bu_name):
+    database_fullname = db_path + bu_name + '_CRT_INV.db'
+    conn = sqlite3.connect(database_fullname)
     c = conn.cursor()
-    str_cmd = "SELECT distinct Hierarchy_5 COLLATE NOCASE from MATERIAL_MASTER WHERE Hierarchy_5 LIKE \'%" + \
-              h5_name + "%\' AND Business_Unit = \'" + bu_name + "\' COLLATE NOCASE ORDER BY Hierarchy_5"
-    c.execute(str_cmd)
+    # get latest table
+    sql_cmd = 'SELECT NAME FROM Sqlite_Master WHERE Type = \'table\' ORDER BY NAME DESC'
+    c.execute(sql_cmd)
+    table_current_day = c.fetchall()[0][0]
+    # get h5 list
+    sql_cmd = 'SELECT distinct Hierarchy_5 COLLATE NOCASE from ' + table_current_day + ' WHERE Hierarchy_5 LIKE \'%' + \
+              h5_name + '%\' ORDER BY Hierarchy_5'
+    c.execute(sql_cmd)
     result = c.fetchall()
     h5_output = [item[0] for item in result]
     conn.close()
@@ -101,14 +122,17 @@ def get_available_h5_list(h5_name, bu_name):
 
 
 def get_full_h5_list(bu_name):
-    db_fullname = db_path + 'Master_Data.db'
-    conn = sqlite3.connect(db_fullname)
-    c = conn.cursor()
-    str_cmd = 'SELECT DISTINCT Hierarchy_5 COLLATE NOCASE from Material_Master WHERE Business_Unit = \"' + bu_name +'\"'
-    c.execute(str_cmd)
-    result = c.fetchall()
-    conn.close()
-    return [item[0] for item in result]
+    if bu_name == 'JT':
+        return get_oneclick_h5_list('', bu_name)
+    else:
+        db_fullname = db_path + 'Master_Data.db'
+        conn = sqlite3.connect(db_fullname)
+        c = conn.cursor()
+        str_cmd = 'SELECT DISTINCT Hierarchy_5 COLLATE NOCASE from Material_Master WHERE Business_Unit = \"' + bu_name +'\"'
+        c.execute(str_cmd)
+        result = c.fetchall()
+        conn.close()
+        return [item[0] for item in result]
 
 
 # read the command list from json file
@@ -194,5 +218,5 @@ def display_ascii_graph(title):
 
 
 if __name__ == '__main__':
-    print(get_full_h5_list('SPINE'))
+    get_oneclick_h5_list('Att', 'JT')
     pass
