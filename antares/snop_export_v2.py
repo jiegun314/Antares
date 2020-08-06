@@ -331,7 +331,7 @@ class SNOPSummaryExport:
         return df
 
     # get monthly inventory of recent 6 months
-    def get_monthly_inventory_list_v2(self, inv_type, month_qty=6):
+    def get_monthly_inventory_list(self, inv_type, month_qty=6):
         # link to database
         datasheet_name = self.__class__.bu_name + "_" + inv_type
         database_fullname = self.__class__.db_path + datasheet_name + ".db"
@@ -359,6 +359,16 @@ class SNOPSummaryExport:
         df_inv = df_inv.join(df_inv_suzhou)
         df_inv = df_inv.join(df_inv_total).tail(month_qty)
         return df_inv.stack().unstack(0)
+
+    # get total inv and inventory month by IMS
+    def get_total_inv_month(self):
+        df_jnj_inv = self.get_monthly_inventory_list('JNJ_INV').drop(['Suzhou', 'Phoenix', 'Total'])
+        df_lp_inv = self.get_monthly_inventory_list('LP_INV').drop(['Suzhou', 'Phoenix', 'Total'])
+        # merge two df
+        df_total_inv = pd.concat([df_jnj_inv.rename(index={'Normal': 'JNJ_INV'}),
+                                  df_lp_inv.rename(index={'Normal': 'LP_INV'})])
+        print(df_total_inv.head(10))
+        pass
 
     # get monthly sales of recent 6 months
     def get_monthly_sales_summary(self, month_number=6):
@@ -437,13 +447,13 @@ class SNOPSummaryExport:
 
         # export 6 months JNJ inventory
         print('Export 6 months JNJ Inventory')
-        df_jnj_monthly_inv = self.get_monthly_inventory_list_v2('JNJ_INV')
+        df_jnj_monthly_inv = self.get_monthly_inventory_list('JNJ_INV')
         # df_jnj_monthly_inv.to_excel(writer, sheet_name="SNOP_Summary", index=True, startrow=1, startcol=1)
         list_snop_summary.append([df_jnj_monthly_inv, (1, 1)])
 
         # export 6 months LP inventory
         print('Export 6 months NED Inventory')
-        df_lp_monthly_inv = self.get_monthly_inventory_list_v2('LP_INV')
+        df_lp_monthly_inv = self.get_monthly_inventory_list('LP_INV')
         # df_lp_monthly_inv.to_excel(writer, sheet_name="SNOP_Summary", index=True, startrow=6, startcol=1)
         list_snop_summary.append([df_lp_monthly_inv, (6, 1)])
 
@@ -784,5 +794,5 @@ class SNOPExportEntrance:
 
 if __name__ == '__main__':
     test_module = SNOPSummaryExport('TU')
-    print(test_module.get_top_eso_v2('NPI'))
+    test_module.get_total_inv_month()
 

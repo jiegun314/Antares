@@ -254,6 +254,7 @@ class MonthlyUpdate:
         df_master_data = pd.read_sql(sql=sql_cmd, con=conn, index_col='Material')
         # print(df_forecast.head(), df_master_data.head())
         df_forecast = df_forecast.join(df_master_data)
+        df_forecast.fillna(0, inplace=True)
         # merge sap value
         print("Start to generate forecast in value format")
         # print(df_forecast.head())
@@ -284,8 +285,9 @@ class MonthlyUpdate:
         db_final_fcst_fullname = self.__class__.db_path + tbl_final_fcst + ".db"
         tbl_name = tbl_final_fcst + "_" + time.strftime("%Y%m", time.localtime())
         conn = sqlite3.connect(db_final_fcst_fullname)
+        # df_forecast_upload.to_csv('test.csv')
         df_forecast_upload.to_sql(tbl_name, conn, index=False, if_exists='replace')
-        df_forecast.to_sql('TEMP', conn, index=True, if_exists='replace')
+        # df_forecast.to_sql('TEMP', conn, index=True, if_exists='replace')
         conn.commit()
         conn.close()
         print("Final forecast updated!~")
@@ -804,8 +806,8 @@ class MasterDataUpdate:
 
 
 if __name__ == "__main__":
-    DataUpdate = MasterDataUpdate('TU')
-    DataUpdate.import_public_master_data()
+    DataUpdate = MonthlyUpdate('TU')
+    DataUpdate.update_final_forecast()
     # DataUpdate.master_data_update_entrance()
     # print(DataUpdate.mapping_rag(["440.834", "440.831S"]))
     # dataupdate = MonthlyUpdate('TU')
