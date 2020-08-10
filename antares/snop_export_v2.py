@@ -362,13 +362,50 @@ class SNOPSummaryExport:
 
     # get total inv and inventory month by IMS
     def get_total_inv_month(self):
-        df_jnj_inv = self.get_monthly_inventory_list('JNJ_INV').drop(['Suzhou', 'Phoenix', 'Total'])
-        df_lp_inv = self.get_monthly_inventory_list('LP_INV').drop(['Suzhou', 'Phoenix', 'Total'])
-        # merge two df
-        df_total_inv = pd.concat([df_jnj_inv.rename(index={'Normal': 'JNJ_INV'}),
-                                  df_lp_inv.rename(index={'Normal': 'LP_INV'})])
-        print(df_total_inv.head(10))
+        # get inventory
+        df_jnj_inv = self._get_inventory_by_sap_price('JNJ_INV')
+        df_lp_inv = self._get_inventory_by_sap_price('LP_INV')
+        df_total_inv = df_jnj_inv.join(df_lp_inv)
+        df_total_inv['Total_INV'] = df_total_inv['JNJ_INV'] + df_total_inv['LP_INV']
+        df_total_inv['AVG_IMS'] = self._get_6m_avg_ims_sap_price()
+        df_total_inv['Total_INV_Month'] = df_total_inv['Total_INV'] / df_total_inv['AVG_IMS']
+        df_total_inv = df_total_inv.stack().unstack(0)
+        print(df_total_inv.head(7))
         pass
+
+    # get inventory value by sap price
+    def _get_inventory_by_sap_price(self, inv_type):
+        # link to database
+        datasheet_name = self.__class__.bu_name + '_' + inv_type
+        database_fullname = self.__class__.db_path + datasheet_name + '.db'
+        conn = sqlite3.connect(database_fullname)
+        # get normal inventory
+        sql_cmd_normal = 'SELECT Month, sum(Value_SAP_Price) AS ' + inv_type + ' FROM ' + datasheet_name + \
+                         ' WHERE Suzhou =\'N\' AND Phoenix = \'N\' GROUP BY Month ORDER BY Month DESC LIMIT 6'
+        df_inv_normal = pd.read_sql(sql=sql_cmd_normal, con=conn, index_col='Month')
+        return df_inv_normal
+
+    # get recent avg ims data
+    # month_qty; cycle numbers need to calculalte
+    # avg_month_qty: months in cycle while calculating AVG
+    def _get_6m_avg_ims_sap_price(self, month_qty=6, avg_month_qty=6):
+        # link to database
+        datasheet_name = self.__class__.bu_name + '_IMS'
+        database_fullname = self.__class__.db_path + datasheet_name + '.db'
+        conn = sqlite3.connect(database_fullname)
+        sql_cmd = 'SELECT Month, sum(Value_SAP_Price) as IMS FROM ' + datasheet_name + \
+                  ' GROUP BY Month ORDER BY Month DESC'
+        c = conn.cursor()
+        c.execute(sql_cmd)
+        ims_result = c.fetchall()
+        # calculate AVG IMS
+        list_avg_ims = []
+        for i in range(month_qty):
+            ims_6m_sum = 0
+            for j in range(i, i+avg_month_qty):
+                ims_6m_sum += ims_result[j][1]
+            list_avg_ims.append(ims_6m_sum/6)
+        return list_avg_ims
 
     # get monthly sales of recent 6 months
     def get_monthly_sales_summary(self, month_number=6):
