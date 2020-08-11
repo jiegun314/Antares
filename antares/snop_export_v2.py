@@ -369,9 +369,11 @@ class SNOPSummaryExport:
         df_total_inv['Total_INV'] = df_total_inv['JNJ_INV'] + df_total_inv['LP_INV']
         df_total_inv['AVG_IMS'] = self._get_6m_avg_ims_sap_price()
         df_total_inv['Total_INV_Month'] = df_total_inv['Total_INV'] / df_total_inv['AVG_IMS']
-        df_total_inv = df_total_inv.stack().unstack(0)
-        print(df_total_inv.head(7))
-        pass
+        # resort the list with data increase
+        list_index = list(df_total_inv.index)
+        list_index.reverse()
+        df_total_inv = df_total_inv.reindex(index=list_index)
+        return df_total_inv.stack().unstack(0)
 
     # get inventory value by sap price
     def _get_inventory_by_sap_price(self, inv_type):
@@ -499,6 +501,11 @@ class SNOPSummaryExport:
         df_six_month_sales = self.get_monthly_sales_summary(6)
         # df_six_month_sales.to_excel(writer, sheet_name="SNOP_Summary", index=True, startrow=12, startcol=1)
         list_snop_summary.append([df_six_month_sales, (12, 1)])
+
+        # export total inventory month
+        print('Export total inventory month')
+        df_total_inv_month = self.get_total_inv_month()
+        list_snop_summary.append([df_total_inv_month, (18, 1)])
 
         # export top 20 gts products
         print('Export TOP GTS')
