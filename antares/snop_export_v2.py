@@ -369,6 +369,7 @@ class SNOPSummaryExport:
         df_total_inv['Total_INV'] = df_total_inv['JNJ_INV'] + df_total_inv['LP_INV']
         df_total_inv['AVG_IMS'] = self._get_6m_avg_ims_sap_price()
         df_total_inv['Total_INV_Month'] = df_total_inv['Total_INV'] / df_total_inv['AVG_IMS']
+        df_total_inv = df_total_inv.drop(columns=['AVG_IMS'], axis=1)
         # resort the list with data increase
         list_index = list(df_total_inv.index)
         list_index.reverse()
