@@ -749,11 +749,15 @@ class SNOPHierarchy5Export:
         df_avg_lpsales = self.get_h5_6m_sales('LPSales')
         df_result = df_result.join(df_avg_lpsales)
         df_result['LP_INV_Mth'] = df_result['LP_INV'] / df_result['SixMth_AVG_LPSales']
-        # delete avg sales
-        df_result.drop(['SixMth_AVG_GTS', 'SixMth_AVG_LPSales'], axis=1, inplace=True)
         # get LP Inventory of last year
         df_lp_inv_last_year = self.get_h5_inv('LP_INV', 'last_year')
         df_result = df_result.join(df_lp_inv_last_year)
+        # get 6M AVG IMS
+        df_avg_ims = self.get_h5_6m_sales('IMS')
+        df_result = df_result.join(df_avg_ims)
+        df_result['TTL_INV_Mth'] = (df_result['JNJ_INV'] + df_result['LP_INV']) / df_result['SixMth_AVG_IMS']
+        # delete avg sales
+        df_result.drop(['SixMth_AVG_GTS', 'SixMth_AVG_LPSales', 'SixMth_AVG_IMS'], axis=1, inplace=True)
         # get ESO
         df_eso = self.get_h5_eso()
         df_result = df_result.join(df_eso)
