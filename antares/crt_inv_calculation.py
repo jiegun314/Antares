@@ -13,6 +13,7 @@ class CurrentInventoryCalculation:
     db_path = "../data/_DB/"
     backorder_path = "../data/_Backorder/"
     inventory_path = "../data/_INV_Export/"
+    update_file_path = "../data/_Update/"
     oneclick_path = "L:\\COMPASS\\Oneclick Inventory Report\\Output\\"
     currency_rate = 7.0842
 
@@ -624,8 +625,45 @@ class CurrentInventoryCalculation:
         most_updated_table = self.get_tbl_list()[-1]
         return [import_success_count, import_fail_count, most_updated_table]
 
+    # sync NED real time inventory
+    def sync_ned_inventory(self):
+        source_file_path = self.__class__.update_file_path + 'NED_INV/'
+        # get file under that folder
+        filename_list = []
+        try:
+            for file_name in os.listdir(source_file_path):
+                filename_list.append(file_name)
+        except FileNotFoundError:
+            return 0
+        # get date list in file
+        ned_inv_file_list = [item[0:16] for item in filename_list]
+        # get table list in database
+        database_name = self.__class__.db_path + self.bu_name + '_LP_CRT_INV.db'
+        conn = sqlite3.connect(database_name)
+        c = conn.cursor()
+        c.execute('SELECT name FROM sqlite_master WHERE TYPE=\'table\'')
+        result = c.fetchall()
+        ned_inv_db_list = [item[0] for item in result]
+        # import data if file not in database
+        for file_name in ned_inv_file_list:
+            if file_name not in ned_inv_db_list:
+                self.import_ned_current_inventory(file_name)
+            else:
+                pass
+        print('Done')
+
+    # import ned weekly update data
+    def import_ned_current_inventory(self, file_name):
+        source_file_path = self.__class__.update_file_path + 'NED_INV/'
+        database_name = self.__class__.db_path + self.bu_name + '_LP_CRT_INV.db'
+        data_filename = file_name + '.xlsx'
+        df_lp_inv = pd.read_excel(source_file_path + data_filename).rename(columns={'型号': 'Material', '数量': 'Quantity'})
+        conn = sqlite3.connect(database_name)
+        df_lp_inv.to_sql(con=conn, name=file_name, if_exists='replace', index=None)
+        print(file_name, ' Imported')
+
 
 if __name__ == "__main__":
-    test = CurrentInventoryCalculation("JT")
-    test.oneclick_inventory_import('20200728')
+    test = CurrentInventoryCalculation("TU")
+    test.sync_ned_inventory()
     # test.inv_data_sync(50)
