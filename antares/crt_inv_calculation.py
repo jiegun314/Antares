@@ -656,8 +656,25 @@ class CurrentInventoryCalculation:
     def import_ned_current_inventory(self, file_name):
         source_file_path = self.__class__.update_file_path + 'NED_INV/'
         database_name = self.__class__.db_path + self.bu_name + '_LP_CRT_INV.db'
+        master_data_table_name = self.bu_name + '_Master_Data'
+        master_data_database_name = self.__class__.db_path + self.bu_name + '_Master_Data.db'
         data_filename = file_name + '.xlsx'
         df_lp_inv = pd.read_excel(source_file_path + data_filename).rename(columns={'型号': 'Material', '数量': 'Quantity'})
+        df_lp_inv.set_index('Material', inplace=True)
+        # mapping with master data
+        conn = sqlite3.connect(master_data_database_name)
+        sql_cmd = 'SELECT Material, Description, Hierarchy_5, Phoenix_Status, Standard_Cost, SAP_Price FROM ' + \
+                  master_data_table_name
+        df_master_data = pd.read_sql(sql=sql_cmd, con=conn, index_col='Material')
+        df_lp_inv = df_lp_inv.join(df_master_data)
+        df_lp_inv['Value_Standard_Cost'] = df_lp_inv['Quantity'] * df_lp_inv['Standard_Cost']
+        df_lp_inv['Value_SAP_Price'] = df_lp_inv['Quantity'] * df_lp_inv['SAP_Price']
+        df_lp_inv.reset_index(inplace=True)
+        # reset column sequence
+        cols_new = ['Material', 'Description', 'Hierarchy_5', 'Phoenix_Status', 'Standard_Cost', 'SAP_Price',
+                    'Quantity', 'Value_Standard_Cost', 'Value_SAP_Price']
+        df_lp_inv = df_lp_inv[cols_new]
+        # write into database
         conn = sqlite3.connect(database_name)
         df_lp_inv.to_sql(con=conn, name=file_name, if_exists='replace', index=None)
         print(file_name, ' Imported')
