@@ -22,6 +22,7 @@ def line_chart(code_name, x_value, y_value, x_label, y_label, chart_ttl):
             )
         .set_global_opts(
             xaxis_opts=opts.AxisOpts(name=x_label),
+            tooltip_opts=opts.TooltipOpts(trigger="axis", axis_pointer_type="cross"),
             yaxis_opts=opts.AxisOpts(
                 splitline_opts=opts.SplitLineOpts(is_show=True),
                 is_scale=True),
@@ -56,6 +57,7 @@ def double_line_chart(material_name, x_value, y1_value, y2_value, x_label, y1_la
                 is_scale=True),
             title_opts=opts.TitleOpts(title=chart_ttl),
             toolbox_opts=opts.ToolboxOpts(),
+            tooltip_opts=opts.TooltipOpts(trigger="axis", axis_pointer_type="line"),
             datazoom_opts=[opts.DataZoomOpts(), opts.DataZoomOpts(type_="inside")], )
         .extend_axis(
             yaxis=opts.AxisOpts(
