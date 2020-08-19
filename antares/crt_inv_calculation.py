@@ -548,18 +548,40 @@ class CurrentInventoryCalculation:
         # get current update inventory list
         conn = sqlite3.connect(inventory_db_fullname)
         table_name = self.get_newest_date()
-        sql_cmd = 'SELECT Material, Available_Stock, (Available_Stock + GIT_1_Week + ' \
-                  'GIT_2_Week + GIT_3_Week + GIT_4_Week) as Total_Quantity FROM ' + table_name
+        sql_cmd = 'SELECT Material, Available_Stock, (Pending_Inventory_Bonded_Total_Qty + GIT_1_Week + ' \
+                  'GIT_2_Week + GIT_3_Week + GIT_4_Week) as GIT_Quantity, Open_PO FROM ' + table_name
         df_inventory_list = pd.read_sql(sql=sql_cmd, con=conn, index_col='Material')
         # Join two list to get inventory of
         df_ab_list = df_ab_list.join(df_inventory_list)
         df_ab_list['CRT_INV_Mth'] = df_ab_list['Available_Stock'] / df_ab_list['AVG_IMS']
-        df_ab_list['TTL_INV_Mth'] = df_ab_list['Total_Quantity'] / df_ab_list['AVG_IMS']
+        # move column of inventory month after available stock
+        col_inv_month = df_ab_list.pop('CRT_INV_Mth')
+        df_ab_list.insert(5, 'CRT_INV_Mth', col_inv_month)
         # delete IMS column
         df_ab_list = df_ab_list.drop(['AVG_IMS'], axis=1)
+        # mapping with lp inventory
+        df_lp_inv = self._get_lp_inventory_quantity_list(month='newest')
+        df_ab_list = df_ab_list.join(df_lp_inv)
+        df_ab_list.fillna(0, inplace=True)
+        df_ab_list['Total_INV'] = df_ab_list['Available_Stock'] + df_ab_list['NED_INV']
         # filter and sort
         df_low_inventory = df_ab_list.loc[df_ab_list['CRT_INV_Mth'] < alert_month].sort_values(by=['Ranking','CRT_INV_Mth'])
         return df_low_inventory
+
+    # get lp inventory
+    def _get_lp_inventory_quantity_list(self, month='newest'):
+        lp_inventory_db_fullname = self.__class__.db_path + self.__class__.bu_name + '_LP_CRT_INV.db'
+        conn = sqlite3.connect(lp_inventory_db_fullname)
+        c = conn.cursor()
+        if month == 'newest':
+            sql_cmd = 'SELECT name FROM Sqlite_master WHERE type=\'table\' ORDER by name DESC LIMIT 1'
+            c.execute(sql_cmd)
+            table_name = c.fetchall()[0][0]
+        else:
+            table_name = 'NED_INV_' + month
+        sql_cmd = 'SELECT Material, Quantity as NED_INV FROM ' + table_name
+        df_lp_inv = pd.read_sql(sql=sql_cmd, con=conn, index_col='Material')
+        return df_lp_inv
 
     # data mapping for a list of codes
     def inventory_mapping(self, code_list, table_name):
