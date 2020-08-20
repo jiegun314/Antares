@@ -116,7 +116,7 @@ class CurrentInventoryDisplay:
         CodeCalculation = CIC(self.__class__.bu_name)
         low_inventory_list = CodeCalculation.get_low_inventory_alert()
         print(tabulate(low_inventory_list, headers="keys", tablefmt="psql", showindex="always",
-                       floatfmt=(".0f", ".0f", ".1f", ".1f", ".0f", ".0f", ".1f", ".1f")))
+                       floatfmt=(".0f", ".0f", ".1f", ".1f", ".0f", ".1f", ".0f", ".0f", ".0f")))
 
     def display_current_inventory(self):
         CodeCalculation = CIC(self.__class__.bu_name)
@@ -215,6 +215,16 @@ class CurrentInventoryDisplay:
             print(">> Synchronization succeed!")
             print(">> %s days succeed, %s days fail. Updated to %s" % (sync_result[0], sync_result[1], sync_result[2]))
 
+    def sync_ned_inventory(self):
+        CodeCalculation = CIC(self.__class__.bu_name)
+        print("===Sync Current NED Inventory Data===")
+        sync_result = CodeCalculation.sync_ned_inventory()
+        if sync_result:
+            print(">> Synchronization succeed!")
+        else:
+            print(">> Synchronization fail")
+        pass
+
     def command_list(self):
         cmd_list_dict = {"inv": self.display_current_inventory,
                          "inv_export": self.export_inventory_data,
@@ -232,6 +242,7 @@ class CurrentInventoryDisplay:
                          "mapping": self.display_mapping_inventory,
                          "aging": self.display_aging_backorder,
                          "sync": self.synchronize_oneclick_data,
+                         "ned_sync":self.sync_ned_inventory,
                          "help": self.show_command_list
                          }
         cmd_code = input("cmd >> crt_inv >> ")

@@ -672,7 +672,7 @@ class CurrentInventoryCalculation:
                 self.import_ned_current_inventory(file_name)
             else:
                 pass
-        print('Done')
+        return 1
 
     # import ned weekly update data
     def import_ned_current_inventory(self, file_name):

@@ -131,7 +131,8 @@ Note：单代码调整的连续输入格式 YYYYMM:数量，分号分隔可以�
 | h5_detail  | 查询某个Hierarchy_5的库存情况                      |
 | inv_export | 导出某天的库存数据（仅包含有库存或者有缺货订单的） |
 | bo_export  | 给NED提供现有的缺货信息汇总                        |
-| sync       | 与L盘同步，获取最新的库存信息                      |
+| sync       | 与L盘同步，获取最新的JNJ库存信息                      |
+| ned_sync   | 与离线数据同步，获取最新的NED库存信息                      |
 | bo_trend   | 缺货金额趋势图                                     |
 | inv_alert  | 显示所有库存低于1个月的AB类产品（仅限Trauma）      |
 | exit       | 退回到Dragon主界面                                 |
