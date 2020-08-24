@@ -64,7 +64,8 @@ class SNOPCodeExport:
         file_name = self.__class__.bu_name + "_" + sales_type
         db_fullname = self.__class__.db_path + file_name + ".db"
         conn = sqlite3.connect(db_fullname)
-        sql_cmd = "SELECT Material, Month, Quantity, Value_Standard_Cost, Value_SAP_Price from " + file_name + \
+        sql_cmd = "SELECT Material, Month, sum(Quantity) AS Quantity, sum(Value_Standard_Cost) AS Value_Standard_Cost," \
+                  "  sum(Value_SAP_Price) AS Value_SAP_Price from " + file_name +\
                   " WHERE Month IN (" + str_month_list + ") GROUP by Material, Month Order by Month"
         df = pd.read_sql(sql=sql_cmd, con=conn)
         conn.commit()
@@ -842,6 +843,6 @@ class SNOPExportEntrance:
 
 
 if __name__ == '__main__':
-    test_module = SNOPSummaryExport('TU')
-    test_module.get_total_inv_month()
+    test_module = SNOPHierarchy5Export('TU')
+    print(test_module.generate_ytm_sales_mapping('GTS'))
 
