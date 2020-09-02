@@ -177,7 +177,7 @@ def all_in_one_echart(name, final_month_list, jnj_inv_month, lp_inv_month, sales
     file_name = sys_path + "/data/_Charter/" + name.replace("/", "_") + "-all-in-one.html"
     sales_unit = "PC" if data_type == "code" else "RMB"
     bar = (
-        Bar(init_opts=opts.InitOpts(theme=ThemeType.LIGHT, width="1500px", height="800px"))
+        Bar(init_opts=opts.InitOpts(theme=ThemeType.WHITE, width="1500px", height="800px"))
         .add_xaxis(final_month_list)
         .add_yaxis("JNJ", jnj_inv_month, itemstyle_opts=opts.AreaStyleOpts(opacity=0.5))
         .add_yaxis("NED", lp_inv_month, itemstyle_opts=opts.AreaStyleOpts(opacity=0.5))
