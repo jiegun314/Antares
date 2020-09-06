@@ -557,13 +557,16 @@ class CurrentInventoryCalculation:
         # move column of inventory month after available stock
         col_inv_month = df_ab_list.pop('CRT_INV_Mth')
         df_ab_list.insert(5, 'CRT_INV_Mth', col_inv_month)
-        # delete IMS column
-        df_ab_list = df_ab_list.drop(['AVG_IMS'], axis=1)
         # mapping with lp inventory
         df_lp_inv = self._get_lp_inventory_quantity_list(month='newest')
         df_ab_list = df_ab_list.join(df_lp_inv)
         df_ab_list.fillna(0, inplace=True)
-        df_ab_list['Total_INV'] = df_ab_list['Available_Stock'] + df_ab_list['NED_INV']
+        # calculate total inventory
+        df_ab_list['JNJ_Actual_INV'] = df_ab_list['Available_Stock']
+        df_ab_list.loc[df_ab_list['Available_Stock'] < 0, 'JNJ_Actual_INV'] = 0
+        df_ab_list['Total_INV'] = df_ab_list['JNJ_Actual_INV'] + df_ab_list['NED_INV']
+        # delete unuseful column
+        df_ab_list = df_ab_list.drop(['AVG_IMS', 'JNJ_Actual_INV'], axis=1)
         # filter and sort
         df_low_inventory = df_ab_list.loc[df_ab_list['CRT_INV_Mth'] < alert_month].sort_values(by=['Ranking','CRT_INV_Mth'])
         return df_low_inventory
