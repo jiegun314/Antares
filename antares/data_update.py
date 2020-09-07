@@ -578,8 +578,9 @@ class MasterDataConsolidationV2:
         database_file = self.__class__.db_path + 'Master_Data.db'
         conn = sqlite3.connect(database_file)
         sql_cmd = 'SELECT [Material code] as Material, Barcode as GTIN FROM GTIN'
-        df = pd.read_sql(con=conn, sql=sql_cmd, index_col='Material')
-        return df
+        df_gtin = pd.read_sql(con=conn, sql=sql_cmd, index_col='Material')
+        df_gtin = df_gtin[~df_gtin.index.duplicated()]
+        return df_gtin
 
     def import_rag_data(self, material_list):
         database_file = self.__class__.db_path + 'Master_Data.db'

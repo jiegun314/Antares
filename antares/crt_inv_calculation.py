@@ -420,6 +420,19 @@ class CurrentInventoryCalculation:
                 code_inv_output.append([title[i], int(result[i])])
         return code_inv_output
 
+    # check single code inventory with END most updated inventory
+    def get_code_inv_with_ned(self, code_name, table_name):
+        # get jnj inventory
+        lst_jnj_inventory = self.get_code_inv(code_name, table_name)
+        # get ned inventory
+        df_ned_inventory = self._get_lp_inventory_quantity_list(month='newest')
+        try:
+            ned_inventory = df_ned_inventory.loc[code_name, 'NED_INV']
+        except KeyError:
+            ned_inventory = 0
+        lst_jnj_inventory.insert(-1, ['NED_INV', ned_inventory])
+        return lst_jnj_inventory
+
     # 查询单个代码可用库存趋势
     def generate_code_inv_trend(self, code_name):
         # 获取日期清单
@@ -613,6 +626,27 @@ class CurrentInventoryCalculation:
         # fill material code with blank
         return inventory_result
 
+    # data mapping with ned inventory for list of codes
+    def inventory_mapping_with_ned_inv(self, code_list, table_name):
+        jnj_inventory_database = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
+        # get jnj inventory
+        conn = sqlite3.connect(jnj_inventory_database)
+        sql_cmd = "SELECT Material, Description, Hierarchy_5, CSC, Available_Stock, " \
+                  "Pending_Inventory_Bonded_Total_Qty, Pending_Inventory_NonB_Total_Qty, GIT_1_Week, GIT_2_Week, " \
+                  "GIT_3_Week, GIT_4_Week, Open_PO FROM " + table_name
+        df_jnj_inventory = pd.read_sql(sql=sql_cmd, con=conn, index_col='Material')
+        # get ned inventory
+        df_ned_inventory = self._get_lp_inventory_quantity_list(month='newest')
+        print(df_ned_inventory[df_ned_inventory.index.duplicated()])
+        # combine total inventory
+        df_total_inventory = df_jnj_inventory.join(df_ned_inventory)
+        # mapping with code list
+        df_total_inventory = df_total_inventory.reindex(code_list)
+        df_total_inventory.fillna(0, inplace=True)
+        df_total_inventory.reset_index()
+        print(df_total_inventory.head())
+        pass
+
     # 数据同步
     def inv_data_sync(self, sync_days, lst_xcpt):
         onclick_path = "L:\\COMPASS\\Oneclick Inventory Report\\Output\\"
@@ -707,5 +741,5 @@ class CurrentInventoryCalculation:
 
 if __name__ == "__main__":
     test = CurrentInventoryCalculation("TU")
-    test.sync_ned_inventory()
+    test.inventory_mapping_with_ned_inv(['440.834', '440.834P'], 'INV20200907')
     # test.inv_data_sync(50)
