@@ -632,20 +632,22 @@ class CurrentInventoryCalculation:
         # get jnj inventory
         conn = sqlite3.connect(jnj_inventory_database)
         sql_cmd = "SELECT Material, Description, Hierarchy_5, CSC, Available_Stock, " \
-                  "Pending_Inventory_Bonded_Total_Qty, Pending_Inventory_NonB_Total_Qty, GIT_1_Week, GIT_2_Week, " \
-                  "GIT_3_Week, GIT_4_Week, Open_PO FROM " + table_name
+                  "Pending_Inventory_Bonded_Total_Qty as PD_BD_Qty, Pending_Inventory_NonB_Total_Qty as PD_NB_Qty, " \
+                  "GIT_1_Week, GIT_2_Week, GIT_3_Week, GIT_4_Week, Open_PO FROM " + table_name
         df_jnj_inventory = pd.read_sql(sql=sql_cmd, con=conn, index_col='Material')
         # get ned inventory
         df_ned_inventory = self._get_lp_inventory_quantity_list(month='newest')
-        print(df_ned_inventory[df_ned_inventory.index.duplicated()])
         # combine total inventory
         df_total_inventory = df_jnj_inventory.join(df_ned_inventory)
         # mapping with code list
         df_total_inventory = df_total_inventory.reindex(code_list)
         df_total_inventory.fillna(0, inplace=True)
-        df_total_inventory.reset_index()
-        print(df_total_inventory.head())
-        pass
+        df_total_inventory.reset_index(inplace=True)
+        # get output
+        lst_columns = df_total_inventory.columns.values.tolist()
+        lst_value = df_total_inventory.values.tolist()
+        lst_value.insert(0, lst_columns)
+        return lst_value
 
     # 数据同步
     def inv_data_sync(self, sync_days, lst_xcpt):

@@ -289,6 +289,30 @@ class TraumaCurrentInventoryDisplay(CurrentInventoryDisplay):
         code_inv_output = CodeCalculation.get_code_inv_with_ned(code_name, table_name)
         print(tabulate(code_inv_output, headers="firstrow", floatfmt=",.0f", tablefmt="github"))
 
+    def display_mapping_inventory(self):
+        CodeCalculation = CIC(self.__class__.bu_name)
+        print("===Inventory Status Mapping with Lists===")
+        # get data file
+        file_fullname = self.__class__.source_file_path + "Data_Mapping.txt"
+        try:
+            fo = open(file_fullname, "r")
+        except FileNotFoundError:
+            print("!Error, please make sure you have put Data_Mapping.txt under _Source_Data folder")
+            return
+        code_list = [item.strip() for item in fo.readlines()]
+        # get the date
+        inventory_date = input("Inventory Data (YYYYMMDD, Press Enter to get newest) : ")
+        if inventory_date == "":
+            table_name = CodeCalculation.get_newest_date()
+        else:
+            table_name = "INV" + inventory_date
+        if not CodeCalculation.check_date_availability(table_name):
+            print("!Error, please make sure you input the correct date.")
+            return
+        inventory_result = CodeCalculation.inventory_mapping_with_ned_inv(code_list, table_name)
+        print(tabulate(inventory_result, headers="firstrow", tablefmt="github",
+                       showindex=range(1, len(inventory_result))))
+
 
 class PowerToolCurrentInventoryDisplay(CurrentInventoryDisplay):
     def __init__(self):

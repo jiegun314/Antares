@@ -122,7 +122,10 @@ class DragonGUI(DragonFrame):
         for code_item in code_name_list:
             self.lstbxCodeSelection.Append(code_item)
         CodeCalculation = CIC(self.__class__.bu_name)
-        inventory_result = CodeCalculation.inventory_mapping(code_name_list, self.table_to_use)
+        if self.__class__.bu_name == 'TU':
+            inventory_result = CodeCalculation.inventory_mapping_with_ned_inv(code_name_list, self.table_to_use)
+        else:
+            inventory_result = CodeCalculation.inventory_mapping(code_name_list, self.table_to_use)
         data_trigger_point = 4
         self.show_list(inventory_result, data_trigger_point)
         self.txtLog.write("Done, with data of %s." % self.table_to_use)
