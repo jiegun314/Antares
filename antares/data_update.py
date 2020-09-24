@@ -750,7 +750,7 @@ class MasterDataUpdate:
             df = pd.read_excel(master_data_file,  dtype={'Barcode': str})
             # print(df.info())
         elif cmd_code == "2":
-            df = pd.read_excel(master_data_file, sheet_name="REPORT", dtype={'REGAPDATE': str, 'REGEXDATE': str},
+            df = pd.read_excel(master_data_file, dtype={'REGAPDATE': str, 'REGEXDATE': str},
                                skiprows=[1, ])
         else:
             df = pd.read_excel(master_data_file)
