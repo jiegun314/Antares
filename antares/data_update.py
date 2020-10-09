@@ -18,6 +18,40 @@ class MonthlyUpdate:
     def __init__(self, bu):
         self.__class__.bu_name = bu
 
+    def update_sales_with_pandas(self, inv_type):
+        print("==" + inv_type + " Import==")
+        # 输入Y确认进行导入
+        print("--*Warning* - Please make sure data is correctly named and put in _Update folder.")
+        cmd_key = input("Ready to continue? (Y/N): ")
+        if cmd_key.upper() != "Y":
+            return
+        # read excel file
+        print("==Start to read the data==")
+        file_name = self.__class__.update_path + "Update_" + self.__class__.bu_name + "_" + inv_type + ".xlsx"
+        df_qty = pd.read_excel(file_name, dtype={'Month': object}, index_col='Material')
+        print("==Reading complete, start to map master data==")
+        # read master data
+        master_data_fullname = self.__class__.db_path + self.__class__.bu_name + "_Master_Data.db"
+        conn = sqlite3.connect(master_data_fullname)
+        table_name = self.__class__.bu_name + "_Master_Data"
+        sql_cmd = 'SELECT Material, Standard_Cost, SAP_Price, Hierarchy_4, Hierarchy_5 FROM ' + table_name
+        df_master_data = pd.read_sql(sql=sql_cmd, con=conn, index_col='Material')
+        # join and calculate value
+        df_sales = df_qty.join(df_master_data)
+        df_sales['Value_Standard_Cost'] = df_sales['Quantity'] * df_sales['Standard_Cost']
+        df_sales['Value_SAP_Price'] = df_sales['Quantity'] * df_sales['SAP_Price']
+        df_sales['Business_Unit'] = self.__class__.bu_name
+        df_sales.drop(columns=['Standard_Cost', 'SAP_Price'], inplace=True)
+        df_sales.reset_index(inplace=True)
+        # write to db
+        print("==Mapping complete, start to import to database==")
+        file_name = self.__class__.bu_name + "_" + inv_type
+        db_fullname = self.__class__.db_path + file_name + ".db"
+        conn = sqlite3.connect(db_fullname)
+        df_sales.to_sql(name=file_name, con=conn, index=False, if_exists='append')
+        print("===== <%s Import Successfully!> =====" % inv_type)
+        pass
+
     def update_sales(self, inv_type):
         print("==" + inv_type + " Import==")
         # 输入Y确认进行导入
@@ -294,11 +328,11 @@ class MonthlyUpdate:
 
     def data_update_entrance(self, cmd):
         if cmd == "901":
-            self.update_sales("GTS")
+            self.update_sales_with_pandas("GTS")
         elif cmd == "902":
-            self.update_sales("LPSales")
+            self.update_sales_with_pandas("LPSales")
         elif cmd == "903":
-            self.update_sales("IMS")
+            self.update_sales_with_pandas("IMS")
         elif cmd == '905':
             self.update_jnj_inv()
         elif cmd == "906":
@@ -808,7 +842,7 @@ class MasterDataUpdate:
 
 if __name__ == "__main__":
     DataUpdate = MonthlyUpdate('TU')
-    DataUpdate.update_final_forecast()
+    DataUpdate.update_sales_with_pandas('LPSales')
     # DataUpdate.master_data_update_entrance()
     # print(DataUpdate.mapping_rag(["440.834", "440.831S"]))
     # dataupdate = MonthlyUpdate('TU')

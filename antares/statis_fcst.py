@@ -33,6 +33,7 @@ import data_import
 import pandas as pd
 import sqlite3
 from datetime import datetime
+from alive_progress import alive_bar
 
 
 class GetStatisticalForecast:
@@ -504,26 +505,37 @@ class GetStatisticalForecast:
         start_time = datetime.now()
         print("====== Simulation Start ======")
         # 计数变量
-        counter = 0
-        list_length = len(historical_sales_qty)
-        list_show = []
-        gap_show = int(list_length / 20)
-        for i in range(1, 21):
-            list_show.append(i * gap_show)
-        num = 5
-        # 拟合开始
+        # counter = 0
+        # list_length = len(historical_sales_qty)
+        # list_show = []
+        # gap_show = int(list_length / 20)
+        # for i in range(1, 21):
+        #     list_show.append(i * gap_show)
+        # num = 5
+        # # 拟合开始
+        # fcst_result = []
+        # for sales_item in historical_sales_qty:
+        #     pre_volume = tuple(sales_item)
+        #     # 运行计算
+        #     result = self.forecast_calculation(x_square, lst_week_in_month, lst_cny_index, pre_volume, self.__class__.base_year)
+        #     fcst_result.append(result)
+        #     # 显示计数
+        #     counter += 1
+        #     if counter in list_show:
+        #         print(" -->", num, "%", end="", flush=True)
+        #         num += 5
+        # print("\n")
+        # print("====== Simulation Done, Start Writing Data to System ======")
+        # simulate with progress bar
         fcst_result = []
-        for sales_item in historical_sales_qty:
-            pre_volume = tuple(sales_item)
-            # 运行计算
-            result = self.forecast_calculation(x_square, lst_week_in_month, lst_cny_index, pre_volume, self.__class__.base_year)
-            fcst_result.append(result)
-            # 显示计数
-            counter += 1
-            if counter in list_show:
-                print(" -->", num, "%", end="", flush=True)
-                num += 5
-        print("\n")
+        with alive_bar(len(historical_sales_qty), bar='blocks') as bar:
+            for sales_item in historical_sales_qty:
+                pre_volume = tuple(sales_item)
+                # 运行计算
+                result = self.forecast_calculation(x_square, lst_week_in_month, lst_cny_index, pre_volume,
+                                                   self.__class__.base_year)
+                fcst_result.append(result)
+                bar()
         print("====== Simulation Done, Start Writing Data to System ======")
         # 数据整合
         final_result = []
