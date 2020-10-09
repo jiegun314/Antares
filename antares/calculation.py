@@ -273,8 +273,9 @@ class InfoCheck:
     # Generate month list.
     # The previous month list does not include current month.
     # The future month list include current month.
-    def get_time_list(self, start_point, parameter):
-        # Get month list in format YYYYMM (start_point)
+    @staticmethod
+    def get_time_list(start_point, parameter):
+        # Get month list in format YYYY-MM (start_point)
         # parameter, the month list we need to generate
         start_year, start_month = int(start_point[0:4]), int(start_point[-2:])
         month_list = []

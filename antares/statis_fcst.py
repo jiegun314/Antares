@@ -143,142 +143,50 @@ class GetStatisticalForecast:
         print("====== Read %s Codes for Calculation======" % len(code_list))
         return sales_qty_result
 
-    # 36个月的历史纪录取最小偏差
-    def fun_36(self, args):
-        # 读取月销量
+    # get sales quantity
+    def get_historical_sales_qty(self, code_list, sales_type):
+        print("====== Read %s Historical Data======" % sales_type)
+        crt_mth = time.strftime("%Y-%m", time.localtime())
+        mth_list = calculation.InfoCheck.get_time_list(crt_mth, 0 - self.__class__.base_year * 12)
+        lst_blank = [0 * item for item in range(0, self.__class__.base_year * 12)]
+        str_mth_list = '('
+        for i in range(len(mth_list)):
+            if i != (len(mth_list) - 1):
+                str_mth_list = str_mth_list + '\"' + mth_list[i] + '\",'
+            else:
+                str_mth_list = str_mth_list + '\"' + mth_list[i] + '\")'
+        sales_qty_result = []
+        # connect to database
+        databse_fullname = self.__class__.db_path + self.__class__.bu_name + '_' + sales_type + '.db'
+        table_name = self.__class__.bu_name + '_' + sales_type
+        conn = sqlite3.connect(databse_fullname)
+        sql_cmd = 'SELECT Material, Month, Quantity FROM ' + table_name + ' WHERE Month in ' + str_mth_list
+        df_qty = pd.read_sql(con=conn, sql=sql_cmd)
+        df_pivot = pd.pivot_table(df_qty, index='Material', columns='Month', values='Quantity')
+        df_pivot.fillna(0, inplace=True)
+        # fill the last month if no data
+        if mth_list[-1] not in df_pivot.columns.tolist():
+            df_pivot[mth_list[-1]] = df_pivot[mth_list[-2]]
+        # mapping to the code list
+        for code_item in code_list:
+            try:
+                sales_qty_result.append(df_pivot.loc[code_item].values.tolist())
+            except KeyError:
+                sales_qty_result.append(lst_blank)
+        return sales_qty_result
+
+    # new func to get minimum variance of legacy sales recorde in past months
+    def func(self, args, mth_qty):
         week_num, cny_index, pre_volume = args
-
         # _Season,_AS9,_AT9,_Base,_WeekNUM,_AS14,_Pre_Volume=args
-        def v(x): return (((x[12] * 1 ** 2 + x[13] * 1 + x[14]) * (week_num[0] * x[0] * x[16] + x[15] * cny_index[0]) -
-                           pre_volume[0]) ** 2 +
-                          ((x[12] * 2 ** 2 + x[13] * 2 + x[14]) * (week_num[1] * x[1] * x[16] + x[15] * cny_index[12]) -
-                           pre_volume[1]) ** 2 +
-                          ((x[12] * 3 ** 2 + x[13] * 3 + x[14]) * (week_num[2] * x[2] * x[16] + x[15] * cny_index[13]) -
-                           pre_volume[2]) ** 2 +
-                          ((x[12] * 4 ** 2 + x[13] * 4 + x[14]) * (week_num[3] * x[3] * x[16] + x[15] * cny_index[14]) -
-                           pre_volume[3]) ** 2 +
-                          ((x[12] * 5 ** 2 + x[13] * 5 + x[14]) * (week_num[4] * x[4] * x[16] + x[15] * cny_index[4]) -
-                           pre_volume[4]) ** 2 +
-                          ((x[12] * 6 ** 2 + x[13] * 6 + x[14]) * (week_num[5] * x[5] * x[16] + x[15] * cny_index[5]) -
-                           pre_volume[5]) ** 2 +
-                          ((x[12] * 7 ** 2 + x[13] * 7 + x[14]) * (week_num[6] * x[6] * x[16] + x[15] * cny_index[6]) -
-                           pre_volume[6]) ** 2 +
-                          ((x[12] * 8 ** 2 + x[13] * 8 + x[14]) * (week_num[7] * x[7] * x[16] + x[15] * cny_index[7]) -
-                           pre_volume[7]) ** 2 +
-                          ((x[12] * 9 ** 2 + x[13] * 9 + x[14]) * (week_num[8] * x[8] * x[16] + x[15] * cny_index[8]) -
-                           pre_volume[8]) ** 2 +
-                          ((x[12] * 10 ** 2 + x[13] * 10 + x[14]) * (
-                                      week_num[9] * x[9] * x[16] + x[15] * cny_index[9]) - pre_volume[9]) ** 2 +
-                          ((x[12] * 11 ** 2 + x[13] * 11 + x[14]) * (
-                                      week_num[10] * x[10] * x[16] + x[15] * cny_index[10]) - pre_volume[10]) ** 2 +
-                          ((x[12] * 12 ** 2 + x[13] * 12 + x[14]) * (
-                                      week_num[11] * x[11] * x[16] + x[15] * cny_index[11]) - pre_volume[11]) ** 2 +
-                          ((x[12] * 13 ** 2 + x[13] * 13 + x[14]) * (
-                                      week_num[12] * x[0] * x[16] + x[15] * cny_index[12]) - pre_volume[12]) ** 2 +
-                          ((x[12] * 14 ** 2 + x[13] * 14 + x[14]) * (
-                                      week_num[13] * x[1] * x[16] + x[15] * cny_index[13]) - pre_volume[13]) ** 2 +
-                          ((x[12] * 15 ** 2 + x[13] * 15 + x[14]) * (
-                                      week_num[14] * x[2] * x[16] + x[15] * cny_index[14]) - pre_volume[14]) ** 2 +
-                          ((x[12] * 16 ** 2 + x[13] * 16 + x[14]) * (
-                                      week_num[15] * x[3] * x[16] + x[15] * cny_index[15]) - pre_volume[15]) ** 2 +
-                          ((x[12] * 17 ** 2 + x[13] * 17 + x[14]) * (
-                                      week_num[16] * x[4] * x[16] + x[15] * cny_index[16]) - pre_volume[16]) ** 2 +
-                          ((x[12] * 18 ** 2 + x[13] * 18 + x[14]) * (
-                                      week_num[17] * x[5] * x[16] + x[15] * cny_index[17]) - pre_volume[17]) ** 2 +
-                          ((x[12] * 19 ** 2 + x[13] * 19 + x[14]) * (
-                                      week_num[18] * x[6] * x[16] + x[15] * cny_index[18]) - pre_volume[18]) ** 2 +
-                          ((x[12] * 20 ** 2 + x[13] * 20 + x[14]) * (
-                                      week_num[19] * x[7] * x[16] + x[15] * cny_index[19]) - pre_volume[19]) ** 2 +
-                          ((x[12] * 21 ** 2 + x[13] * 21 + x[14]) * (
-                                      week_num[20] * x[8] * x[16] + x[15] * cny_index[20]) - pre_volume[20]) ** 2 +
-                          ((x[12] * 22 ** 2 + x[13] * 22 + x[14]) * (
-                                      week_num[21] * x[9] * x[16] + x[15] * cny_index[21]) - pre_volume[21]) ** 2 +
-                          ((x[12] * 23 ** 2 + x[13] * 23 + x[14]) * (
-                                      week_num[22] * x[10] * x[16] + x[15] * cny_index[22]) - pre_volume[22]) ** 2 +
-                          ((x[12] * 24 ** 2 + x[13] * 24 + x[14]) * (
-                                      week_num[23] * x[11] * x[16] + x[15] * cny_index[23]) - pre_volume[23]) ** 2 +
-                          ((x[12] * 25 ** 2 + x[13] * 25 + x[14]) * (
-                                      week_num[24] * x[0] * x[16] + x[15] * cny_index[24]) - pre_volume[24]) ** 2 +
-                          ((x[12] * 26 ** 2 + x[13] * 26 + x[14]) * (
-                                      week_num[25] * x[1] * x[16] + x[15] * cny_index[25]) - pre_volume[25]) ** 2 +
-                          ((x[12] * 27 ** 2 + x[13] * 27 + x[14]) * (
-                                      week_num[26] * x[2] * x[16] + x[15] * cny_index[26]) - pre_volume[26]) ** 2 +
-                          ((x[12] * 28 ** 2 + x[13] * 28 + x[14]) * (
-                                      week_num[27] * x[3] * x[16] + x[15] * cny_index[27]) - pre_volume[27]) ** 2 +
-                          ((x[12] * 29 ** 2 + x[13] * 29 + x[14]) * (
-                                      week_num[28] * x[4] * x[16] + x[15] * cny_index[28]) - pre_volume[28]) ** 2 +
-                          ((x[12] * 30 ** 2 + x[13] * 30 + x[14]) * (
-                                      week_num[29] * x[5] * x[16] + x[15] * cny_index[29]) - pre_volume[29]) ** 2 +
-                          ((x[12] * 31 ** 2 + x[13] * 31 + x[14]) * (
-                                      week_num[30] * x[6] * x[16] + x[15] * cny_index[30]) - pre_volume[30]) ** 2 +
-                          ((x[12] * 32 ** 2 + x[13] * 32 + x[14]) * (
-                                      week_num[31] * x[7] * x[16] + x[15] * cny_index[31]) - pre_volume[31]) ** 2 +
-                          ((x[12] * 33 ** 2 + x[13] * 33 + x[14]) * (
-                                      week_num[32] * x[8] * x[16] + x[15] * cny_index[32]) - pre_volume[32]) ** 2 +
-                          ((x[12] * 34 ** 2 + x[13] * 34 + x[14]) * (
-                                      week_num[33] * x[9] * x[16] + x[15] * cny_index[33]) - pre_volume[33]) ** 2 +
-                          ((x[12] * 35 ** 2 + x[13] * 35 + x[14]) * (
-                                      week_num[34] * x[10] * x[16] + x[15] * cny_index[34]) - pre_volume[34]) ** 2 +
-                          ((x[12] * 36 ** 2 + x[13] * 36 + x[14]) * (
-                                      week_num[35] * x[11] * x[16] + x[15] * cny_index[35]) - pre_volume[35]) ** 2) / 36
 
-        return v
-
-    # 24个月的历史纪录取最小偏差
-    def fun_24(self, args):
-        # 读取月销量
-        week_num, cny_index, pre_volume = args
-
-        # _Season,_AS9,_AT9,_Base,_WeekNUM,_AS14,_Pre_Volume=args
-        def v(x): return (((x[12] * 1 ** 2 + x[13] * 1 + x[14]) * (week_num[0] * x[0] * x[16] + x[15] * cny_index[0]) -
-                           pre_volume[0]) ** 2 +
-                          ((x[12] * 2 ** 2 + x[13] * 2 + x[14]) * (week_num[1] * x[1] * x[16] + x[15] * cny_index[12]) -
-                           pre_volume[1]) ** 2 +
-                          ((x[12] * 3 ** 2 + x[13] * 3 + x[14]) * (week_num[2] * x[2] * x[16] + x[15] * cny_index[13]) -
-                           pre_volume[2]) ** 2 +
-                          ((x[12] * 4 ** 2 + x[13] * 4 + x[14]) * (week_num[3] * x[3] * x[16] + x[15] * cny_index[14]) -
-                           pre_volume[3]) ** 2 +
-                          ((x[12] * 5 ** 2 + x[13] * 5 + x[14]) * (week_num[4] * x[4] * x[16] + x[15] * cny_index[4]) -
-                           pre_volume[4]) ** 2 +
-                          ((x[12] * 6 ** 2 + x[13] * 6 + x[14]) * (week_num[5] * x[5] * x[16] + x[15] * cny_index[5]) -
-                           pre_volume[5]) ** 2 +
-                          ((x[12] * 7 ** 2 + x[13] * 7 + x[14]) * (week_num[6] * x[6] * x[16] + x[15] * cny_index[6]) -
-                           pre_volume[6]) ** 2 +
-                          ((x[12] * 8 ** 2 + x[13] * 8 + x[14]) * (week_num[7] * x[7] * x[16] + x[15] * cny_index[7]) -
-                           pre_volume[7]) ** 2 +
-                          ((x[12] * 9 ** 2 + x[13] * 9 + x[14]) * (week_num[8] * x[8] * x[16] + x[15] * cny_index[8]) -
-                           pre_volume[8]) ** 2 +
-                          ((x[12] * 10 ** 2 + x[13] * 10 + x[14]) * (
-                                      week_num[9] * x[9] * x[16] + x[15] * cny_index[9]) - pre_volume[9]) ** 2 +
-                          ((x[12] * 11 ** 2 + x[13] * 11 + x[14]) * (
-                                      week_num[10] * x[10] * x[16] + x[15] * cny_index[10]) - pre_volume[10]) ** 2 +
-                          ((x[12] * 12 ** 2 + x[13] * 12 + x[14]) * (
-                                      week_num[11] * x[11] * x[16] + x[15] * cny_index[11]) - pre_volume[11]) ** 2 +
-                          ((x[12] * 13 ** 2 + x[13] * 13 + x[14]) * (
-                                      week_num[12] * x[0] * x[16] + x[15] * cny_index[12]) - pre_volume[12]) ** 2 +
-                          ((x[12] * 14 ** 2 + x[13] * 14 + x[14]) * (
-                                      week_num[13] * x[1] * x[16] + x[15] * cny_index[13]) - pre_volume[13]) ** 2 +
-                          ((x[12] * 15 ** 2 + x[13] * 15 + x[14]) * (
-                                      week_num[14] * x[2] * x[16] + x[15] * cny_index[14]) - pre_volume[14]) ** 2 +
-                          ((x[12] * 16 ** 2 + x[13] * 16 + x[14]) * (
-                                      week_num[15] * x[3] * x[16] + x[15] * cny_index[15]) - pre_volume[15]) ** 2 +
-                          ((x[12] * 17 ** 2 + x[13] * 17 + x[14]) * (
-                                      week_num[16] * x[4] * x[16] + x[15] * cny_index[16]) - pre_volume[16]) ** 2 +
-                          ((x[12] * 18 ** 2 + x[13] * 18 + x[14]) * (
-                                      week_num[17] * x[5] * x[16] + x[15] * cny_index[17]) - pre_volume[17]) ** 2 +
-                          ((x[12] * 19 ** 2 + x[13] * 19 + x[14]) * (
-                                      week_num[18] * x[6] * x[16] + x[15] * cny_index[18]) - pre_volume[18]) ** 2 +
-                          ((x[12] * 20 ** 2 + x[13] * 20 + x[14]) * (
-                                      week_num[19] * x[7] * x[16] + x[15] * cny_index[19]) - pre_volume[19]) ** 2 +
-                          ((x[12] * 21 ** 2 + x[13] * 21 + x[14]) * (
-                                      week_num[20] * x[8] * x[16] + x[15] * cny_index[20]) - pre_volume[20]) ** 2 +
-                          ((x[12] * 22 ** 2 + x[13] * 22 + x[14]) * (
-                                      week_num[21] * x[9] * x[16] + x[15] * cny_index[21]) - pre_volume[21]) ** 2 +
-                          ((x[12] * 23 ** 2 + x[13] * 23 + x[14]) * (
-                                      week_num[22] * x[10] * x[16] + x[15] * cny_index[22]) - pre_volume[22]) ** 2 +
-                          ((x[12] * 24 ** 2 + x[13] * 24 + x[14]) * (
-                                      week_num[23] * x[11] * x[16] + x[15] * cny_index[23]) - pre_volume[23]) ** 2) / 24
-
+        def v(x):
+            ttl_rsl = 0
+            for i in range(mth_qty):
+                ttl_rsl += ((x[12] * (i + 1) ** 2 + x[13] * (i + 1) + x[14]) *
+                            (week_num[i] * x[i % 12] * x[16] + x[15] * cny_index[i]) - pre_volume[i]) ** 2
+            ttl_rsl = ttl_rsl / mth_qty
+            return ttl_rsl
         return v
 
     def con(self, args):
@@ -353,9 +261,9 @@ class GetStatisticalForecast:
              _as9_start, _at9_start, _base_start, _as14_start, _as10_start))
         # 运行拟合
         if _base_year == 3:
-            res = minimize(self.fun_36(args), x0, method='SLSQP', constraints=cons, tol=0.1)
+            res = minimize(self.func(args, 36), x0, method='SLSQP', constraints=cons, tol=0.1)
         else:
-            res = minimize(self.fun_24(args), x0, method='SLSQP', constraints=cons, tol=0.1)
+            res = minimize(self.func(args, 24), x0, method='SLSQP', constraints=cons, tol=0.1)
         # 打印拟合结果
         result = res.x
         # 打印历史值
@@ -490,10 +398,10 @@ class GetStatisticalForecast:
         get_code_list = data_import.DataImport(self.__class__.bu_name)
         active_code_list = get_code_list.get_active_codes('Normal', 'Forecast')
         # 获取历史销量数据
-        historical_sales_qty = self.get_sale_list(active_code_list, data_type)
+        historical_sales_qty = self.get_historical_sales_qty(active_code_list, data_type)
         # 对于IMS的最后一个月进行判断补足
-        if inv_type == "2":
-            historical_sales_qty = self.fulfill_last_month_ims(historical_sales_qty)
+        # if inv_type == "2":
+        #     historical_sales_qty = self.fulfill_last_month_ims(historical_sales_qty)
         # 获取月份列表
         lst_month = self.get_month_list("all")
         # 月份星期数统计
@@ -504,28 +412,6 @@ class GetStatisticalForecast:
         # 开始计时
         start_time = datetime.now()
         print("====== Simulation Start ======")
-        # 计数变量
-        # counter = 0
-        # list_length = len(historical_sales_qty)
-        # list_show = []
-        # gap_show = int(list_length / 20)
-        # for i in range(1, 21):
-        #     list_show.append(i * gap_show)
-        # num = 5
-        # # 拟合开始
-        # fcst_result = []
-        # for sales_item in historical_sales_qty:
-        #     pre_volume = tuple(sales_item)
-        #     # 运行计算
-        #     result = self.forecast_calculation(x_square, lst_week_in_month, lst_cny_index, pre_volume, self.__class__.base_year)
-        #     fcst_result.append(result)
-        #     # 显示计数
-        #     counter += 1
-        #     if counter in list_show:
-        #         print(" -->", num, "%", end="", flush=True)
-        #         num += 5
-        # print("\n")
-        # print("====== Simulation Done, Start Writing Data to System ======")
         # simulate with progress bar
         fcst_result = []
         with alive_bar(len(historical_sales_qty), bar='blocks') as bar:
@@ -560,5 +446,5 @@ class GetStatisticalForecast:
 
 
 if __name__ == '__main__':
-    new_fcst = GetStatisticalForecast('JT')
+    new_fcst = GetStatisticalForecast('TU')
     new_fcst.get_forecast_entrance()
