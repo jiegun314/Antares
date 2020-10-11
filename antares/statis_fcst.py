@@ -51,8 +51,8 @@ class GetStatisticalForecast:
         return time.strftime("%Y-%m", time.localtime())
 
     # 获取code by month的N个月的月份列表
-    def get_month_list(self, cclt_mode):
-        # cclt_mode计算模式，historical表示只要历史月份，all表示包含将来预计月份
+    def get_month_list(self, cclt_mode) -> list:
+        # cclt_mode计算模式，historical表示只要历史月份，future表示将来月份, all表示包含将来预计月份
         # years表示历史数据的年份
         # 获得当前月份
         if cclt_mode == "historical":
@@ -77,6 +77,7 @@ class GetStatisticalForecast:
                 tmp_month = 1
                 tmp_year = tmp_year + 1
             i = i + 1
+        result_month = result_month[-24:] if cclt_mode == 'future' else result_month
         return result_month
 
     # 获取每个月中的星期数
@@ -226,13 +227,12 @@ class GetStatisticalForecast:
         # 第一个参数代表二次项系数的最大值，如果为零，则表示为开口向下的二次函数
         args_con = (x2_parameter, 0, 12)
         cons = self.con(args_con)
-
         # 设置_AS9,_AS14,_AS10
         _as9_start, _as14_start, _as10_start = 0, 0, 0.25
         # 获取_AT9, _Base
         # 生成x轴月份列表
-        i = 0
-        x = np.arange(1, 25, 1) if _base_year == 2 else np.arange(1, 37, 1)
+        # i = 0
+        x = np.arange(1, _base_year * 12 + 1, 1)
         # 线性拟合
         z1 = np.polyfit(x, list(_pre_volume), 1)
         # 获取截距和斜率
@@ -241,8 +241,7 @@ class GetStatisticalForecast:
         # 猜测初始值
         # 基本思路，当历史销量都为零时，直接放入零，当斜率和截距的总和为负数时，选择1，其余情况，取前三年实际均值和拟合值的比值
         s_index = []
-        k = 1
-        while k <= 12:
+        for k in range(1, 13):
             if _at9_start == 0 and _base_start == 0:
                 ratio = 0
             elif (_at9_start + _base_start) < 0:
@@ -254,7 +253,6 @@ class GetStatisticalForecast:
                     avg_temp = (_pre_volume[k - 1] + _pre_volume[k + 11] + _pre_volume[k + 23]) / 3
                 ratio = min(10, avg_temp / (_at9_start * k + _base_start))
             s_index.append(ratio)
-            k = k + 1
         x0 = np.asarray(
             (s_index[0], s_index[1], s_index[2], s_index[3], s_index[4], s_index[5], s_index[6], s_index[7], s_index[8],
              s_index[9], s_index[10], s_index[11],
@@ -266,34 +264,43 @@ class GetStatisticalForecast:
             res = minimize(self.func(args, 24), x0, method='SLSQP', constraints=cons, tol=0.1)
         # 打印拟合结果
         result = res.x
-        # 打印历史值
-        # print(_pre_volume)
-        # 拟合过去几个月的量
-        pre_result = []
-        j = 0
-        while j < 12 * _base_year:
-            # print(result[j%12-1])
-            # 获得计算值
-            value_cclt = (result[12] * (j + 1) ** 2 + result[13] * (j + 1) + result[14]) * (_week_num[j] * result[j % 12] * result[16] + result[15] * cny_index[j])
-            pre_result.append(max(0, value_cclt))
-            j = j + 1
-        # print(pre_result)
-        # 计算将来24个月的量
-        fcst_result = []
-        j = 1
-        while j <= 24:
-            # print(result[j%12-1])
-            if j != 12 and j != 24:
-                k = j % 12 - 1
-            else:
-                k = 11
-            value_cclt = (result[12] * (j + 36) ** 2 + result[13] * (j + 36) + result[14]) * (_week_num[j - 1] * result[k] * result[16] + result[15] * _cny_index[j - 1])
-            fcst_result.append(max(0, value_cclt))
-            j = j + 1
-        # print(fcst_result)
-        simulation_result = pre_result + fcst_result
-        # 返回所有今年的模拟值
-        return simulation_result
+        # return the new parameter
+        _as9_result, _at9_result, _base_result, _as14_result, _as10_result = result[-5:]
+        # get fcst value in future 24 months
+        fcst_year = 2
+        forecast_result = []
+        for j in range(fcst_year * 12):
+            k = j % 12
+            mth_index = j + 12 * _base_year + 1
+            item_result = (_as9_result * mth_index ** 2 + _at9_result * mth_index + _base_result) * \
+                          (_week_num[j] * result[k] * _as10_result + _as14_result * _cny_index[j])
+            forecast_result.append(max(0, item_result))
+        return forecast_result
+        # # 打印历史值
+        # # print(_pre_volume)
+        # # 拟合过去几个月的量
+        # pre_result = []
+        # for j in range(12 * _base_year):
+        #     # print(result[j%12-1])
+        #     # 获得计算值
+        #     value_cclt = (result[12] * (j + 1) ** 2 + result[13] * (j + 1) + result[14]) * (_week_num[j] * result[j % 12] * result[16] + result[15] * cny_index[j])
+        #     pre_result.append(max(0, value_cclt))
+        # # print(pre_result)
+        # # 计算将来24个月的量
+        # fcst_result = []
+        # for j in range(1, 25):
+        #     # print(result[j%12-1])
+        #     if j != 12 and j != 24:
+        #         k = j % 12 - 1
+        #     else:
+        #         k = 11
+        #     value_cclt = (result[12] * (j + 12 * _base_year) ** 2 + result[13] * (j + 12 * _base_year) + result[14]) * \
+        #                  (_week_num[j - 1] * result[k] * result[16] + result[15] * _cny_index[j - 1])
+        #     fcst_result.append(max(0, value_cclt))
+        # # print(fcst_result)
+        # simulation_result = pre_result + fcst_result
+        # # 返回所有今年的模拟值
+        # return simulation_result
 
     # 写入excel报表
     def export_to_excel(self, lst_data, data_type):
@@ -308,8 +315,43 @@ class GetStatisticalForecast:
         df.to_excel(file_fullname, index_label="Material", float_format="%.2f")
         print("=== Find your result in %s ===" % file_fullname)
 
+    # write to database
+    def export_to_database(self, lst_data_input):
+        # get month list
+        lst_month = lst_data_input.pop(0)
+        lst_month.pop(0)
+        # change to format for forecast and reformat to dataframe
+        lst_data = []
+        for item_input in lst_data_input:
+            str_material = item_input.pop(0)
+            for i in range(len(item_input)):
+                lst_data.append([str_material, lst_month[i], round(item_input[i])])
+        df_fcst = pd.DataFrame(np.array(lst_data), columns=['Material', 'Month', 'Quantity'])
+        df_fcst.set_index('Material', inplace=True)
+        df_fcst['Quantity'] = df_fcst['Quantity'].astype('int64')
+        # get master data
+        master_data_database = self.__class__.db_path + self.__class__.bu_name + "_Master_Data.db"
+        table_name = self.__class__.bu_name + "_Master_Data"
+        conn = sqlite3.connect(master_data_database)
+        sql_cmd = 'SELECT Material, Hierarchy_5, SAP_Price FROM ' + table_name
+        df_master_data = pd.read_sql(sql=sql_cmd, con=conn, index_col='Material')
+        # combine and caculate the value
+        df_fcst = df_fcst.join(df_master_data)
+        df_fcst.fillna(0, inplace=True)
+        df_fcst['Value_SAP_Price'] = df_fcst['Quantity'] * df_fcst['SAP_Price']
+        # remove value column and reformat
+        df_fcst.drop(columns='SAP_Price', inplace=True)
+        df_fcst = df_fcst[['Hierarchy_5', 'Month', 'Quantity', 'Value_SAP_Price']]
+        df_fcst.reset_index(inplace=True)
+        # write to database
+        fcst_databse_name = self.__class__.db_path + self.__class__.bu_name + "_Statistical_Forecast.db"
+        table_name = self.__class__.bu_name + "_Statistical_Forecast" + "_" + time.strftime("%Y%m", time.localtime())
+        conn = sqlite3.connect(fcst_databse_name)
+        df_fcst.to_sql(name=table_name, con=conn, index=False, if_exists='replace')
+        print("=== %s Updated ===" % table_name)
+
     # write into database
-    def export_to_database(self, lst_data):
+    def export_to_database_old(self, lst_data):
         # get month list
         month_list = lst_data.pop(0)
         month_list.pop(0)
@@ -351,42 +393,20 @@ class GetStatisticalForecast:
         conn.close()
         print("=== Statistical Forecast Updated %s ===" % db_statis_fcst_fullname)
 
-    # 对于IMS最后一个月数据补足
-    def fulfill_last_month_ims(self, lst_sales_data):
-        sales_sum = 0
-        for item in lst_sales_data:
-            sales_sum += item[-1]
-        # 如果最后一个月数据不存在，则取六个月平均
-        if sales_sum == 0:
-            for lst_code_sales in lst_sales_data:
-                six_month_sales = 0
-                for index in range(-2, -8, -1):
-                    six_month_sales += lst_code_sales[index]
-                lst_code_sales[-1] = int(six_month_sales / 6)
-            print("==Last month IMS has been fulfilled==")
-            return lst_sales_data
-        # 如果存在则返回原值
-        else:
-            return lst_sales_data
-
     # fcst程序入口
     def get_forecast_entrance(self):
         # 打印标题
         print("====== < Dragon - Statistical Forecast Generator > ======")
         print("===== !Warning! Make sure you've updated sales data and release your PC capacity! =====")
         trigger = input(">>>> Ready to Go? (Y / N) : ")
-        if trigger != "Y" and trigger != "y":
+        if trigger.upper() != "Y":
             return
         inv_type = input("Choose your baseline for calculation (1 - LP Sales, 2 - IMS) : ")
-        if inv_type != '1' and inv_type != "2":
+        if inv_type not in ['1', '2']:
             print("!Error! Please input 1 or 2 only. Retry!")
             return
-        elif inv_type == "1":
-            data_type = "LPSales"
-            self.__class__.base_year = 2
-        else:
-            data_type = "IMS"
-            self.__class__.base_year = 3
+        data_type = 'LPSales' if inv_type == '1' else 'IMS'
+        self.__class__.base_year = 2 if inv_type == '1' else 3
         # Set Parameter of X_Square
         x_square_input = input("Input Parameter for X_Square (Data Type: Float, Default: 0): ")
         try:
@@ -399,11 +419,8 @@ class GetStatisticalForecast:
         active_code_list = get_code_list.get_active_codes('Normal', 'Forecast')
         # 获取历史销量数据
         historical_sales_qty = self.get_historical_sales_qty(active_code_list, data_type)
-        # 对于IMS的最后一个月进行判断补足
-        # if inv_type == "2":
-        #     historical_sales_qty = self.fulfill_last_month_ims(historical_sales_qty)
         # 获取月份列表
-        lst_month = self.get_month_list("all")
+        # lst_month = self.get_month_list("all")
         # 月份星期数统计
         lst_week_in_month = self.week_in_month(self.get_current_month())
         # 春节索引表
@@ -424,23 +441,23 @@ class GetStatisticalForecast:
                 bar()
         print("====== Simulation Done, Start Writing Data to System ======")
         # 数据整合
-        final_result = []
-        # 制作表头
-        list_head = lst_month.copy()
-        list_head.insert(0, "Material")
-        final_result.append(list_head)
+        # Make table head with Material title and future 24 month calendar
+        lst_title = ['Material'] + self.get_month_list("future")
+        for i in range(len(active_code_list)):
+            fcst_result[i].insert(0, active_code_list[i])
+        fcst_result.insert(0, lst_title)
         # 导入数据
-        k = 0
-        for item in active_code_list:
-            final_item = list([item],)
-            final_item.extend(fcst_result[k])
-            final_result.append(final_item)
-            k += 1
+        # k = 0
+        # for item in active_code_list:
+        #     final_item = list([item],)
+        #     final_item.extend(fcst_result[k])
+        #     final_result.append(final_item)
+        #     k += 1
         # 打印头十行
         # for j in range(0, 10):
         #     print(final_result[j])
-        self.export_to_excel(final_result, data_type)
-        self.export_to_database(final_result)
+        self.export_to_excel(fcst_result, data_type)
+        self.export_to_database(fcst_result)
         stop_time = datetime.now()
         print("====Simulation Complete. Time: %s seconds. " % (stop_time - start_time).seconds)
 
@@ -448,3 +465,5 @@ class GetStatisticalForecast:
 if __name__ == '__main__':
     new_fcst = GetStatisticalForecast('TU')
     new_fcst.get_forecast_entrance()
+    # lst_test = [['Material', '2020-10', '2020-11', '2020-12'], ['440.834', 2, 3.3, 4], ['440.834S', 34, 5.2, 70], ['VLP', 3.7, 56, 8]]
+    # new_fcst.export_to_database_v2(lst_test)
