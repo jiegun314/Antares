@@ -148,7 +148,7 @@ class MonthlyUpdate:
         conn.close()
         print("===== <LP Inventory Import Successfully!> =====")
 
-    def update_jnj_inv_new(self):
+    def update_jnj_inv_with_pandas(self):
         print("==JNJ Inventory Import==")
         import_date = input("Please input the date your want to import (YYYYMMDD): ")
         # Get inventory month
@@ -175,8 +175,44 @@ class MonthlyUpdate:
         df_jnj_inv['Month'] = str_month
         col_month = df_jnj_inv.pop('Month')
         df_jnj_inv.insert(0, 'Month', col_month)
-        print(df_jnj_inv.info())
-        pass
+        # read master data
+        master_database = self.__class__.db_path + self.__class__.bu_name + '_Master_Data.db'
+        master_table_name = self.__class__.bu_name + '_Master_Data'
+        conn = sqlite3.connect(master_database)
+        sql_cmd = 'SELECT Material, Hierarchy_4, Hierarchy_5, Standard_Cost, SAP_Price, PM, Instrument, ' \
+                  'Phoenix_Status as Phoenix FROM ' + master_table_name
+        df_master_data = pd.read_sql(con=conn, sql=sql_cmd, index_col='Material')
+        df_master_data.fillna(0, inplace=True)
+        # join the dataframe
+        df_jnj_inv = df_jnj_inv.join(df_master_data)
+        # calculate inventory value
+        df_jnj_inv['Value_Standard_Cost'] = df_jnj_inv['Available_Stock'] * df_jnj_inv['Standard_Cost']
+        df_jnj_inv['Value_SAP_Price'] = df_jnj_inv['Available_Stock'] * df_jnj_inv['SAP_Price']
+        df_jnj_inv['Pending_NB_Std_Cost'] = df_jnj_inv['Pending_Inventory_NonB_Total_Qty'] * df_jnj_inv[
+            'Standard_Cost']
+        df_jnj_inv['Pending_NB_SAP_Price'] = df_jnj_inv['Pending_Inventory_NonB_Total_Qty'] * df_jnj_inv[
+            'SAP_Price']
+        df_jnj_inv['Pending_B_Std_Cost'] = df_jnj_inv['Pending_Inventory_Bonded_Total_Qty'] * df_jnj_inv[
+            'Standard_Cost']
+        df_jnj_inv['Pending_B_SAP_Price'] = df_jnj_inv['Pending_Inventory_Bonded_Total_Qty'] * df_jnj_inv[
+            'SAP_Price']
+        df_jnj_inv['Total_Inventory'] = df_jnj_inv['Available_Stock'] + df_jnj_inv[
+            'Pending_Inventory_Bonded_Total_Qty'] + df_jnj_inv['Pending_Inventory_NonB_Total_Qty']
+        df_jnj_inv['Total_Inventroy_Std_Cost'] = df_jnj_inv['Total_Inventory'] * df_jnj_inv['Standard_Cost']
+        df_jnj_inv['Total_Inventory_SAP_Price'] = df_jnj_inv['Total_Inventory'] * df_jnj_inv['SAP_Price']
+        # remove price
+        df_jnj_inv.drop(columns=['Standard_Cost', 'SAP_Price'], inplace=True)
+        # reset index
+        df_jnj_inv.reset_index(inplace=True)
+        # add Suzhou
+        df_jnj_inv['Suzhou'] = 'N'
+        df_jnj_inv.loc[df_jnj_inv['Material'].str.contains('CN'), 'Suzhou'] = 'Y'
+        # write back to database
+        inventory_database = self.__class__.db_path + self.__class__.bu_name + '_JNJ_INV.db'
+        inventory_table = self.__class__.bu_name + '_JNJ_INV'
+        conn = sqlite3.connect(inventory_database)
+        df_jnj_inv.to_sql(name=inventory_table, con=conn, index=False, if_exists='append')
+        print("===== <JNJ Inventory Import Successfully!> =====")
 
     def update_jnj_inv(self):
         print("==JNJ Inventory Import==")
@@ -364,7 +400,7 @@ class MonthlyUpdate:
         elif cmd == "903":
             self.update_sales_with_pandas("IMS")
         elif cmd == '905':
-            self.update_jnj_inv()
+            self.update_jnj_inv_with_pandas()
         elif cmd == "906":
             self.update_lp_inv()
         elif cmd == "908":
@@ -872,7 +908,7 @@ class MasterDataUpdate:
 
 if __name__ == "__main__":
     DataUpdate = MonthlyUpdate('TU')
-    DataUpdate.update_jnj_inv_new()
+    DataUpdate.update_jnj_with_pandas()
     # DataUpdate.master_data_update_entrance()
     # print(DataUpdate.mapping_rag(["440.834", "440.831S"]))
     # dataupdate = MonthlyUpdate('TU')
