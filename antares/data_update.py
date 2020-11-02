@@ -148,6 +148,36 @@ class MonthlyUpdate:
         conn.close()
         print("===== <LP Inventory Import Successfully!> =====")
 
+    def update_jnj_inv_new(self):
+        print("==JNJ Inventory Import==")
+        import_date = input("Please input the date your want to import (YYYYMMDD): ")
+        # Get inventory month
+        str_month = import_date[0:4] + "-" + import_date[4:6]
+        import_tbl_name = "INV" + import_date
+        db_fullname = self.__class__.db_path + "TU_CRT_INV.db"
+        # check if this date is available in list
+        conn = sqlite3.connect(db_fullname)
+        c = conn.cursor()
+        sql_cmd = "SELECT count(*) FROM sqlite_master where type = \'table\' and name = \'" + import_tbl_name + "\'"
+        c.execute(sql_cmd)
+        tbl_result = c.fetchone()[0]
+        if tbl_result == 0:
+            print("!Error. Wrong date input, please re-input. ")
+            return
+        # read raw data
+        sql_cmd = "SELECT Material, Inventory_OnHand, Available_Stock, Pending_Inventory_Bonded_Total_Qty, " \
+                  "Pending_Inventory_Bonded_Q_Hold_Qty, Pending_Inventory_NonB_Total_Qty, SS as Safety_Stock FROM " \
+                  + import_tbl_name + " Order by Available_Stock DESC"
+        df_jnj_inv = pd.read_sql(sql=sql_cmd, con=conn, index_col='Material')
+        df_jnj_inv.fillna(0, inplace=True)
+        df_jnj_inv = df_jnj_inv.astype('int')
+        # insert month
+        df_jnj_inv['Month'] = str_month
+        col_month = df_jnj_inv.pop('Month')
+        df_jnj_inv.insert(0, 'Month', col_month)
+        print(df_jnj_inv.info())
+        pass
+
     def update_jnj_inv(self):
         print("==JNJ Inventory Import==")
         import_date = input("Please input the date your want to import (YYYYMMDD): ")
@@ -842,7 +872,7 @@ class MasterDataUpdate:
 
 if __name__ == "__main__":
     DataUpdate = MonthlyUpdate('TU')
-    DataUpdate.update_sales_with_pandas('LPSales')
+    DataUpdate.update_jnj_inv_new()
     # DataUpdate.master_data_update_entrance()
     # print(DataUpdate.mapping_rag(["440.834", "440.831S"]))
     # dataupdate = MonthlyUpdate('TU')
