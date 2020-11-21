@@ -4,6 +4,7 @@ import sqlite3
 import pandas as pd
 import calculation as cclt
 import time
+import os
 # import math
 # import data_import as dtimp
 import numpy as np
@@ -796,7 +797,8 @@ class MasterDataUpdate:
         if cmd_code == "1":
             data_type = "PM_List"
         elif cmd_code == "2":
-            data_type = "SAP_Price"
+            self.import_sap_price()
+            return
         elif cmd_code == "3":
             data_type = "Phoenix_List"
         elif cmd_code == "4":
@@ -813,9 +815,7 @@ class MasterDataUpdate:
         db_fullname = self.__class__.db_path + self.__class__.bu_name + "_Master_Data.db"
         print("~ Start to read the data file %s" % file_name)
         start_time = datetime.now()
-        if data_type == "SAP_Price":
-            df = pd.read_excel(file_fullname, na_values="0", dtype={'Price': np.float64})
-        elif data_type == "ROP_Setting":
+        if data_type == "ROP_Setting":
             df = pd.read_excel(file_fullname, na_values="0", dtype={'Reorder Point': np.int32})
         else:
             df = pd.read_excel(file_fullname, na_values="0")
@@ -826,6 +826,25 @@ class MasterDataUpdate:
         conn = sqlite3.connect(db_fullname)
         df.to_sql(name=file_name, con=conn, if_exists='replace', index=False)
         print("%s is imported" % data_type)
+
+    # import SAP_Price in separate txt format
+    def import_sap_price(self):
+        str_directory = self.file_path + 'TU_SAP_Price/'
+        table_name = self.bu_name + '_SAP_Price'
+        db_fullname = self.__class__.db_path + self.__class__.bu_name + "_Master_Data.db"
+        lst_file = os.listdir(str_directory)
+        for filename in lst_file:
+            df = pd.read_csv(str_directory + filename, skiprows=5, skipfooter=1, sep='|', skipinitialspace=True,
+                             header=None, thousands=',', encoding='latin1')
+            column_list = df.columns.values.tolist()
+            df.drop(columns=[column_list[0], column_list[-1]], inplace=True)
+            df_total_price = df.copy() if lst_file.index(filename) == 0 else pd.concat([df_total_price, df])
+        df_total_price.columns = ['CnTy', 'DChl', 'Material', 'Description', 'Price', 'Unit', 'per', 'UoM',
+                                  'Valid From', 'Valid to']
+        df_total_price['Material'] = df_total_price['Material'].str.strip()
+        conn = sqlite3.connect(db_fullname)
+        df_total_price.to_sql(name=table_name, con=conn, if_exists='replace', index=False)
+        print("SAP_Price is imported")
 
     def import_public_master_data(self):
         # print title
@@ -907,8 +926,8 @@ class MasterDataUpdate:
 
 
 if __name__ == "__main__":
-    DataUpdate = MonthlyUpdate('TU')
-    DataUpdate.update_jnj_with_pandas()
+    DataUpdate = MasterDataUpdate('TU')
+    DataUpdate.import_sap_price()
     # DataUpdate.master_data_update_entrance()
     # print(DataUpdate.mapping_rag(["440.834", "440.831S"]))
     # dataupdate = MonthlyUpdate('TU')
