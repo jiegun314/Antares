@@ -322,7 +322,7 @@ class InfoCheck:
         return [month_list, forecast_result]
 
     # get forecast of one hierarchy, set fcst_type as Statistical or Final
-    def get_h5_forecast(self, h5_name, fcst_type, month_quantity):
+    def get_h5_forecast_old(self, h5_name, fcst_type, month_quantity):
         # Get future month list
         current_month = time.strftime("%Y-%m", time.localtime())
         month_list = self.get_time_list(current_month, month_quantity)
@@ -349,6 +349,31 @@ class InfoCheck:
         conn.commit()
         conn.close()
         return forecast_result
+
+    # get forecast of one hierarchy with pandas, set forecast_type as Statistical or Final
+    def get_h5_forecast(self, h5_name, forecast_type, month_quantity):
+        # Get future month list
+        current_month = time.strftime("%Y-%m", time.localtime())
+        month_list = self.get_time_list(current_month, month_quantity)
+        df_forecast_result = pd.DataFrame(index=month_list, data=None)
+        # get forecast data
+        db_fullname = self.__class__.db_path + self.__class__.bu_name + "_" + forecast_type + "_Forecast.db"
+        conn = sqlite3.connect(db_fullname)
+        sql_cmd = 'SELECT name from sqlite_master where type = \"table\" ORDER by name DESC LIMIT 1'
+        df_table_list = pd.read_sql(sql=sql_cmd, con=conn)
+        table_name = df_table_list.values.tolist().pop().pop()
+        # get newest table
+        if h5_name.upper() == "ALL":
+            sql_cmd = 'SELECT Month, sum(Value_SAP_Price) FROM ' + table_name + ' GROUP by Month Order by Month'
+        else:
+            sql_cmd = 'SELECT Month, sum(Value_SAP_Price) FROM ' + table_name + ' WHERE Hierarchy_5 = \"' + h5_name \
+                      + '\" GROUP by Month Order by Month'
+        df_forecast = pd.read_sql(sql=sql_cmd, con=conn, index_col='Month')
+        # get value and change to float
+        df_forecast_result = df_forecast_result.join(df_forecast)
+        df_forecast_result.fillna(0, inplace=True)
+        list_forecast_result = [item[0] * 1.0 for item in df_forecast_result.values.tolist()]
+        return list_forecast_result
 
     # get eso result for one code or one hierarchy_5
     def get_material_eso(self, material_name, eso_type="code"):
@@ -406,7 +431,7 @@ if __name__ == "__main__":
     info_check = InfoCheck("TU")
     # info_check.generate_abc_ranking()
     # info_check.get_code_phoenix_result("689.893")
-    info_check.get_eso_result('ALL', eso_type='Hierarchy_5')
+    info_check.get_h5_forecast_new('PFNA', 'Final', 12)
 
 
 
