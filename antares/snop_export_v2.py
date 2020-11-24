@@ -289,8 +289,9 @@ class SNOPSummaryExport:
         df_sales_last_year['Hierarchy_5'] = df_sales_last_year['Hierarchy_5'].str.upper()
         df_sales_last_year = df_sales_last_year.set_index('Hierarchy_5')
         df_sales = df_sales.join(df_sales_last_year).join(self.get_pm())
-        # return top
-        return df_sales.head(num)
+        # return top or total while num=-1
+        df_final = df_sales if num == -1 else df_sales.head(num)
+        return df_final
 
     def get_top_inv_v2(self, inv_type, num=20):
         # link to db
@@ -321,6 +322,19 @@ class SNOPSummaryExport:
         # sort and return top
         df_inv = df_inv.join(df_inv_last_year).join(self.get_pm()).sort_values([crt_title], ascending=False)
         return df_inv.head(num)
+
+    # get top inventory with mapping sales volume
+    def get_top_inv_with_sales(self, inv_type, sales_type, num=20):
+        df_inv = self.get_top_inv_v2(inv_type, num)
+        df_inv.drop(columns=['PM', ], inplace=True)
+        # get total sales
+        df_sales = self. get_top_sales_v2(sales_type, num=-1)
+        # get ratio part only
+        df_sales_ratio = df_sales.loc[:, ['Ratio', 'PM']]
+        # rename
+        df_sales_ratio.rename(columns={'Ratio': sales_type + '_Ratio'}, inplace=True)
+        df_inv = df_inv.join(df_sales_ratio)
+        return df_inv
 
     # get dataframe for PM list
     def get_pm(self):
@@ -517,7 +531,7 @@ class SNOPSummaryExport:
 
         # export top 20 inv products
         print('Export TOP Inventory')
-        df_top_jnj_inv = self.get_top_inv_v2('JNJ_INV')
+        df_top_jnj_inv = self.get_top_inv_with_sales('JNJ_INV', 'IMS')
         # df_top_jnj_inv.to_excel(writer, sheet_name="SNOP_Summary", index=True, startrow=1, startcol=16)
         list_snop_summary.append([df_top_jnj_inv, (1, 16)])
 
@@ -525,7 +539,7 @@ class SNOPSummaryExport:
         print('Export TOP ESO - Instrument')
         df_top_instrument_eso = self.get_top_eso_v2('Instrument')
         # df_top_instrument_eso.to_excel(writer, sheet_name="SNOP_Summary", index=True, startrow=1, startcol=22)
-        list_snop_summary.append([df_top_instrument_eso, (1, 22)])
+        list_snop_summary.append([df_top_instrument_eso, (1, 23)])
 
         # export top 20 eso - Implant
         print('Export TOP ESO - Implant')
@@ -843,6 +857,6 @@ class SNOPExportEntrance:
 
 
 if __name__ == '__main__':
-    test_module = SNOPHierarchy5Export('TU')
-    print(test_module.generate_ytm_sales_mapping('GTS'))
+    test_module = SNOPSummaryExport('TU')
+    test_module.get_top_inv_with_sales('JNJ_INV', 'IMS')
 
