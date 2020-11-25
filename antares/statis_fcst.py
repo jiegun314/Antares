@@ -463,7 +463,6 @@ class GetStatisticalForecast:
 
 
 if __name__ == '__main__':
-    new_fcst = GetStatisticalForecast('TU')
+    bu_name = input('Please input BU name: ')
+    new_fcst = GetStatisticalForecast(bu_name)
     new_fcst.get_forecast_entrance()
-    # lst_test = [['Material', '2020-10', '2020-11', '2020-12'], ['440.834', 2, 3.3, 4], ['440.834S', 34, 5.2, 70], ['VLP', 3.7, 56, 8]]
-    # new_fcst.export_to_database_v2(lst_test)

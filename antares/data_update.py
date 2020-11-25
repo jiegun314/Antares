@@ -791,8 +791,8 @@ class MasterDataUpdate:
     def import_master_data(self):
         # for TU. data_type = {"Master_Data", "SAP_Price", "Phoenix_List"}
         print("==Import Master Data for %s==" % self.__class__.bu_name)
-        print("Please Choose Master Data Type (1 - PM_List, 2 - SAP_Price, "
-              "3 - Phoenix_List, 4 - ROP_Setting, 5 - ABC Ranking)")
+        print("Please Choose Master Data Type (1 - PM_List, 2 - SAP_Price, 3 - Phoenix_List, 4 - ROP_Setting, "
+              "5 - ABC Ranking, 6 - NPI List)")
         cmd_code = input("cmd >> master_data >> ")
         if cmd_code == "1":
             data_type = "PM_List"
@@ -807,6 +807,8 @@ class MasterDataUpdate:
             self.generate_abc_ranking()
             print('ABC Ranking Template Done.~')
             return
+        elif cmd_code == '6':
+            data_type = 'NPI_List'
         else:
             print("!!Wrong code, please try again!")
             return
