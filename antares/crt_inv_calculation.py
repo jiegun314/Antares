@@ -78,11 +78,11 @@ class CurrentInventoryCalculation:
         conn.close()
 
     # import oneclick inventory data into database
-    def oneclick_inventory_import(self, str_date):
+    def import_oneclick_inventory(self, str_date):
         data_file_fullname = self.oneclick_path + str_date + "\\OneClick_Inventory_Projection_Report _" \
                              + str_date + ".csv"
         try:
-            df = pd.read_csv(data_file_fullname, sep='|', encoding='gb18030')
+            df = pd.read_csv(data_file_fullname, sep='|', encoding='latin1')
         except FileNotFoundError:
             return -1
         # combine dps spine and synthes spine
@@ -678,7 +678,7 @@ class CurrentInventoryCalculation:
         # 导入新的数据
         for item in lst_folder_sharepoint:
             if (item not in lst_current_database) and (item not in lst_xcpt):
-                import_result = self.oneclick_inventory_import(item)
+                import_result = self.import_oneclick_inventory(item)
                 if import_result == 1:
                     import_success_count += 1
                 else:

@@ -118,32 +118,6 @@ class GetStatisticalForecast:
         # 转换为元组
         return tuple(cny_index)
 
-    # 获取历史销量
-    def get_sale_list(self, code_list, data_type):
-        # 打印标题
-        print("====== Read %s Historical Data======" % data_type)
-        sales_qty_result = []
-        # 计数变量
-        counter = 0
-        list_length = len(code_list)
-        list_show = []
-        gap_show = int(list_length / 20)
-        for i in range(1, 21):
-            list_show.append(i * gap_show)
-        num = 5
-        for code in code_list:
-            get_sales_qty = calculation.InfoCheck(self.__class__.bu_name)
-            sales_code_result = get_sales_qty.get_code_sales(data_type, code, self.__class__.base_year * 12)
-            sales_qty_result.append(sales_code_result)
-            # 显示计数
-            counter += 1
-            if counter in list_show:
-                print(" -->", num, "%", end="", flush=True)
-                num += 5
-        print("\n")
-        print("====== Read %s Codes for Calculation======" % len(code_list))
-        return sales_qty_result
-
     # get sales quantity
     def get_historical_sales_qty(self, code_list, sales_type):
         print("====== Read %s Historical Data======" % sales_type)
@@ -158,9 +132,9 @@ class GetStatisticalForecast:
                 str_mth_list = str_mth_list + '\"' + mth_list[i] + '\")'
         sales_qty_result = []
         # connect to database
-        databse_fullname = self.__class__.db_path + self.__class__.bu_name + '_' + sales_type + '.db'
+        database_fullname = self.__class__.db_path + self.__class__.bu_name + '_' + sales_type + '.db'
         table_name = self.__class__.bu_name + '_' + sales_type
-        conn = sqlite3.connect(databse_fullname)
+        conn = sqlite3.connect(database_fullname)
         sql_cmd = 'SELECT Material, Month, Quantity FROM ' + table_name + ' WHERE Month in ' + str_mth_list
         df_qty = pd.read_sql(con=conn, sql=sql_cmd)
         df_pivot = pd.pivot_table(df_qty, index='Material', columns='Month', values='Quantity')
@@ -463,7 +437,6 @@ class GetStatisticalForecast:
 
 
 if __name__ == '__main__':
-    new_fcst = GetStatisticalForecast('TU')
+    bu_name = input('Please input BU name: ')
+    new_fcst = GetStatisticalForecast(bu_name)
     new_fcst.get_forecast_entrance()
-    # lst_test = [['Material', '2020-10', '2020-11', '2020-12'], ['440.834', 2, 3.3, 4], ['440.834S', 34, 5.2, 70], ['VLP', 3.7, 56, 8]]
-    # new_fcst.export_to_database_v2(lst_test)
