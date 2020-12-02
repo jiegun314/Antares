@@ -376,7 +376,7 @@ class InfoCheck:
         return list_forecast_result
 
     # get eso result for one code or one hierarchy_5
-    def get_material_eso(self, material_name, eso_type="code"):
+    def get_material_eso(self, material_name, eso_type="code", show_cycle=8):
         print("==== < ESO Trend of %s > ====" % material_name)
         filename = self.__class__.bu_name + "_ESO"
         db_fullname = self.__class__.db_path + filename + ".db"
@@ -385,15 +385,15 @@ class InfoCheck:
         if eso_type == "code":
             sql_cmd = "SELECT Month, Excess_Quantity, Slow_Moving_Quantity, Obsolete_Quantity, Total_ESO_Quantity, " \
                   "Total_ESO_Value FROM " + filename + " WHERE Material = \'" + \
-                  material_name + "\' ORDER BY Month"
+                  material_name + "\' ORDER BY Month LIMIT " + str(show_cycle)
         else:
             if material_name.upper() != "ALL":
                 sql_cmd = "SELECT Month, sum(NPI_Reverse_Value), sum(Total_ESO_Value) FROM " + filename + \
                       " WHERE Hierarchy_5 = \'" + material_name + "\' COLLATE NOCASE GROUP by Month, Hierarchy_5 " \
-                                                                  "ORDER BY Month"
+                                                                  "ORDER BY Month LIMIT " + str(show_cycle)
             else:
                 sql_cmd = "SELECT Month, sum(NPI_Reverse_Value), sum(Total_ESO_Value) FROM " + filename + \
-                          " GROUP by Month ORDER BY Month"
+                          " GROUP by Month ORDER BY Month LIMIT " + str(show_cycle)
         try:
             c.execute(sql_cmd)
         except sqlite3.OperationalError:
