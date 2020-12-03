@@ -104,7 +104,7 @@ class CurrentInventoryDisplay:
         # set exception list with abnormal backorder information
         exception_list = pb_func.get_exception_list(self.__class__.bu_name, "Aging_Backorder")
         CodeCalculation = CIC(self.__class__.bu_name)
-        [aging_backorder_list, mapping_days] = CodeCalculation.calculate_aging_backorder(exception_list)
+        [aging_backorder_list, mapping_days] = CodeCalculation.generate_aging_backorder_list(exception_list)
         print("---Aging Backorder List within %s days---" % mapping_days)
         print(tabulate(aging_backorder_list, headers="firstrow", tablefmt="psql"))
 
