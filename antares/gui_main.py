@@ -176,7 +176,7 @@ class DragonGUI(DragonFrame):
         exception_list = pb_func.get_exception_list(self.__class__.bu_name, "Aging_Backorder")
         self.txtLog.Clear()
         self.txtLog.write("Calculation ongoing, please wait a moment...")
-        [inventory_result, mapping_days] = CodeCalculation.calculate_aging_backorder(exception_list)
+        [inventory_result, mapping_days] = CodeCalculation.generate_aging_backorder_list(exception_list)
         data_trigger_point = 6
         self.show_list(inventory_result, data_trigger_point)
         self.StatusBar.SetStatusText("Total Mapping %s days" % ("{:,.0f}".format(mapping_days)), 1)
