@@ -13,7 +13,7 @@ class InfoCheck:
         self.__class__.bu_name = bu
 
     # get all master data of single code
-    def get_single_code_all_master_data(self, code, master_data_item_list):
+    def get_single_code_all_master_data(self, material_code, master_data_item_list):
         str_master_data = ""
         for item in master_data_item_list:
             str_master_data += item + ","
@@ -22,7 +22,7 @@ class InfoCheck:
         datasheet_name = self.__class__.bu_name + "_Master_Data"
         conn = sqlite3.connect(database_fullname)
         c = conn.cursor()
-        sql_cmd = 'SELECT ' + str_master_data + ' FROM ' + datasheet_name + ' WHERE Material = \"' + code + '\"'
+        sql_cmd = 'SELECT %s FROM %s WHERE Material=\"%s\"' % (str_master_data, datasheet_name, material_code)
         c.execute(sql_cmd)
         result = c.fetchall()
         if result:
@@ -61,26 +61,26 @@ class InfoCheck:
         conn.close()
         return list(row)
 
-    # get master data for code list
-    def get_master_data_for_list(self, code_list, master_data_name):
-        file_name = self.__class__.bu_name + "_Master_Data" if master_data_name == "SAP_Price" else "Master_Data"
-        db_fullname = self.__class__.db_path + file_name + ".db"
-        table_name = self.__class__.bu_name + "_SAP_Price" if master_data_name == "SAP_Price" else "MATERIAL_MASTER"
-        master_data_result = []
-        conn = sqlite3.connect(db_fullname)
-        c = conn.cursor()
-        for code_name in code_list:
-            if master_data_name == "SAP_Price":
-                sql_cmd = "SELECT Price FROM " + table_name + " WHERE Material = \'" + code_name + "\'"
-            else:
-                sql_cmd = "SELECT " + master_data_name + " FROM " + table_name + " WHERE Material = \'" + code_name + "\'"
-            c.execute(sql_cmd)
-            master_data_output = c.fetchall()
-            if master_data_output:
-                master_data_result.append(master_data_output[0][0])
-            else:
-                master_data_result.append(0)
-        return master_data_result
+    # get master data for code list, phase out
+    # def get_master_data_for_list(self, code_list, master_data_name):
+    #     file_name = self.__class__.bu_name + "_Master_Data" if master_data_name == "SAP_Price" else "Master_Data"
+    #     db_fullname = self.__class__.db_path + file_name + ".db"
+    #     table_name = self.__class__.bu_name + "_SAP_Price" if master_data_name == "SAP_Price" else "MATERIAL_MASTER"
+    #     master_data_result = []
+    #     conn = sqlite3.connect(db_fullname)
+    #     c = conn.cursor()
+    #     for code_name in code_list:
+    #         if master_data_name == "SAP_Price":
+    #             sql_cmd = "SELECT Price FROM " + table_name + " WHERE Material = \'" + code_name + "\'"
+    #         else:
+    #             sql_cmd = "SELECT " + master_data_name + " FROM " + table_name + " WHERE Material = \'" + code_name + "\'"
+    #         c.execute(sql_cmd)
+    #         master_data_output = c.fetchall()
+    #         if master_data_output:
+    #             master_data_result.append(master_data_output[0][0])
+    #         else:
+    #             master_data_result.append(0)
+    #     return master_data_result
 
     # get single column from bu master data
     def get_bu_master_data(self, code, column_name):
@@ -88,7 +88,7 @@ class InfoCheck:
         db_fullname = self.__class__.db_path + file_name + ".db"
         conn = sqlite3.connect(db_fullname)
         c = conn.cursor()
-        sql_cmd = "SELECT " + column_name + " FROM " + file_name + " WHERE Material = \'" + code + "\'"
+        sql_cmd = 'SELECT %s FROM %s WHERE Material = \"%s\"' % (column_name, file_name, code)
         c.execute(sql_cmd)
         md_result = c.fetchall()
         if md_result:
@@ -131,10 +131,10 @@ class InfoCheck:
         conn = sqlite3.connect(db_fullname)
         c = conn.cursor()
         if h5_name == "ALL":
-            str_cmd = "SELECT month, SUM(Value_" + price_type + ") from " + tbl_name + " GROUP BY month "
+            str_cmd = "SELECT month, SUM(Value_%s) from %s GROUP BY month" % (price_type, tbl_name)
         else:
-            str_cmd = "SELECT month, SUM(Value_" + price_type + ") from " + tbl_name + " WHERE Hierarchy_5 = \'" \
-                  + h5_name + "\' COLLATE NOCASE GROUP BY month "
+            str_cmd = "SELECT month, SUM(Value_%s) from %s WHERE Hierarchy_5 = \"%s\" COLLATE NOCASE " \
+                      "GROUP BY month " % (price_type, tbl_name, h5_name)
         c.execute(str_cmd)
         h5_inv_result = self.data_mapping(c.fetchall(), pb_fnc.get_current_month(), 0 - month_number)
         return h5_inv_result
@@ -209,51 +209,12 @@ class InfoCheck:
         db_fullname = self.__class__.db_path + tbl_name + ".db"
         conn = sqlite3.connect(db_fullname)
         c = conn.cursor()
-        if inventory_type == "JNJ":
-            str_cmd = "SELECT month, SUM(Available_Stock) from " + tbl_name + " WHERE Material = \'" + material_code \
-                      + "\' GROUP BY month ORDER BY month"
-        elif inventory_type == "LP":
-            str_cmd = "SELECT month, SUM(quantity) from " + tbl_name + " WHERE Material = \'" + material_code \
-                      + "\' GROUP BY month ORDER BY month"
-        else:
-            pass
-        c.execute(str_cmd)
+        stock_column_name = 'Available_Stock' if inventory_type == 'JNJ' else 'quantity'
+        sql_cmd = 'SELECT month, SUM(%s) FROM %s WHERE Material = \"%s\" GROUP BY month ' \
+                  'ORDER BY month' % (stock_column_name, tbl_name, material_code)
+        c.execute(sql_cmd)
         inventory_result = self.data_mapping(c.fetchall(), pb_fnc.get_current_month(), 0 - month_number)
         return inventory_result
-
-    # 获取单个代码的LP库存
-    def get_code_lp_inv(self, code):
-        # 文件名，无后缀
-        file_name = self.__class__.bu_name + "_LP_INV"
-        # 数据库完整路径加名称
-        db_fullname = self.__class__.db_path + file_name + ".db"
-        # 表格名称，等于文件名称
-        tbl_name = file_name
-        conn = sqlite3.connect(db_fullname)
-        c = conn.cursor()
-        str_cmd = "SELECT month, SUM(quantity) from " + tbl_name + " WHERE Material = \'" + code \
-                  + "\' GROUP BY month ORDER BY month"
-        c.execute(str_cmd)
-        result = c.fetchall()
-        conn.close()
-        return result
-
-    # 获取单个代码的JNJ库存
-    def get_code_jnj_inv(self, code):
-        # 文件名，无后缀
-        file_name = self.__class__.bu_name + "_JNJ_INV"
-        # 数据库完整路径加名称
-        db_fullname = self.__class__.db_path + file_name + ".db"
-        # 表格名称，等于文件名称
-        tbl_name = file_name
-        conn = sqlite3.connect(db_fullname)
-        c = conn.cursor()
-        str_cmd = "SELECT month, SUM(Available_Stock) from " + tbl_name + " WHERE Material = \'" + code \
-                  + "\' GROUP BY month ORDER BY month"
-        c.execute(str_cmd)
-        result = c.fetchall()
-        conn.close()
-        return result
 
     # calculate inventory month
     @staticmethod
@@ -300,55 +261,25 @@ class InfoCheck:
 
     # get forecast of single code, set fcst_type as Statistical or Final
     def get_code_forecast(self, code_name, fcst_type, month_quantity):
-        # filename = self.__class__.db_path + self.__class__.bu_name + "_Statistical_Forecast"
         db_fullname = self.__class__.db_path + self.__class__.bu_name + "_" + fcst_type + "_Forecast.db"
-        # get month list
+        # get month list and generate blank dataframe
         current_month = time.strftime("%Y-%m", time.localtime())
         month_list = self.get_time_list(current_month, month_quantity)
+        df_forecast_final = pd.DataFrame(index=month_list)
+        # connect to forecast database
         conn = sqlite3.connect(db_fullname)
         c = conn.cursor()
-        # 获取所有列表中最新的一个
+        # get the newest table
         c.execute("SELECT name from sqlite_master where type = \"table\" ORDER by name DESC")
         tbl_name = c.fetchone()[0]
-        forecast_result = []
-        for month_item in month_list:
-            sql_cmd = "SELECT Quantity FROM " + tbl_name + " WHERE Material = \'" + code_name + \
-                      "\' AND Month = \'" + month_item + "\'"
-            c.execute(sql_cmd)
-            try:
-                forecast_result.append(c.fetchall()[0][0])
-            except IndexError:
-                forecast_result.append(0)
-        return [month_list, forecast_result]
-
-    # get forecast of one hierarchy, set fcst_type as Statistical or Final
-    def get_h5_forecast_old(self, h5_name, fcst_type, month_quantity):
-        # Get future month list
-        current_month = time.strftime("%Y-%m", time.localtime())
-        month_list = self.get_time_list(current_month, month_quantity)
-        # get forecast data
-        db_fullname = self.__class__.db_path + self.__class__.bu_name + "_" + fcst_type + "_Forecast.db"
-        conn = sqlite3.connect(db_fullname)
-        c = conn.cursor()
-        # Get the newest table
-        c.execute("SELECT name from sqlite_master where type = \"table\" ORDER by name DESC")
-        tbl_name = c.fetchone()[0]
-        forecast_result = []
-        for month_item in month_list:
-            if h5_name.upper() == "ALL":
-                sql_cmd = "SELECT sum(Value_SAP_Price) FROM " + tbl_name + " WHERE Month = \'" + month_item + "\'"
-            else:
-                sql_cmd = "SELECT sum(Value_SAP_Price) FROM " + tbl_name + " WHERE Hierarchy_5 = \'" + h5_name + \
-                      "\' COLLATE NOCASE AND Month = \'" + month_item + "\'"
-            c.execute(sql_cmd)
-            # if not setting, make value 0
-            result = c.fetchall()
-            forecast_output = result[0][0] if result[0][0] else 0
-            # change format from integer to float
-            forecast_result.append(forecast_output * 1.0)
-        conn.commit()
-        conn.close()
-        return forecast_result
+        # get pivot table of forecast
+        sql_cmd = 'SELECT Month, Quantity FROM %s WHERE Material =\"%s\"' % (tbl_name, code_name)
+        df_forecast = pd.read_sql(con=conn, sql=sql_cmd, index_col='Month')
+        # join the two dataframe to mapping
+        df_forecast_final = df_forecast_final.join(df_forecast)
+        df_forecast_final.fillna(0, inplace=True)
+        output = [item[0] for item in df_forecast_final.values.tolist()]
+        return [month_list, output]
 
     # get forecast of one hierarchy with pandas, set forecast_type as Statistical or Final
     def get_h5_forecast(self, h5_name, forecast_type, month_quantity):
@@ -364,10 +295,10 @@ class InfoCheck:
         table_name = df_table_list.values.tolist().pop().pop()
         # get newest table
         if h5_name.upper() == "ALL":
-            sql_cmd = 'SELECT Month, sum(Value_SAP_Price) FROM ' + table_name + ' GROUP by Month Order by Month'
+            sql_cmd = 'SELECT Month, sum(Value_SAP_Price) FROM %s GROUP by Month Order by Month' % (table_name, )
         else:
-            sql_cmd = 'SELECT Month, sum(Value_SAP_Price) FROM ' + table_name + ' WHERE Hierarchy_5 = \"' + h5_name \
-                      + '\" GROUP by Month Order by Month'
+            sql_cmd = 'SELECT Month, sum(Value_SAP_Price) FROM %s WHERE Hierarchy_5 = \"%s\" ' \
+                      'GROUP by Month Order by Month' % (table_name, h5_name)
         df_forecast = pd.read_sql(sql=sql_cmd, con=conn, index_col='Month')
         # get value and change to float
         df_forecast_result = df_forecast_result.join(df_forecast)
@@ -402,36 +333,12 @@ class InfoCheck:
         eso_result = c.fetchall()
         return eso_result
 
-    # get eso result with pandas
-    def get_eso_result(self, material_name, eso_type="code"):
-        filename = self.__class__.bu_name + "_ESO"
-        db_fullname = self.__class__.db_path + filename + ".db"
-        conn = sqlite3.connect(db_fullname)
-        if eso_type == "code":
-            pass
-        else:
-            if material_name.upper() != "ALL":
-                sql_cmd = 'SELECT * FROM ' + filename + \
-                          ' WHERE Hierarchy_5 = \"' + material_name + '\" COLLATE NOCASE'
-            else:
-                sql_cmd = 'SELECT * FROM ' + filename + ' WHERE Total_ESO_Value>0'
-            df_eso = pd.read_sql(sql=sql_cmd, con=conn)
-            df_eso['ESO_Neat_Total'] = df_eso['Excess_Value'] + df_eso['Slow_Moving_Value'] + \
-                                       df_eso['Obsolete_Value']
-            df_eso_result = pd.pivot_table(df_eso, columns=['Phoenix_Status', 'Suzhou'],
-                                           values=['NPI_Reverse_Value', 'ESO_Neat_Total'],
-                                           index='Month', aggfunc=[np.sum], fill_value=0)
-            df_eso_result = df_eso_result[-5:]
-            print(df_eso_result.head(), df_eso_result.info())
-
-        pass
-
 
 if __name__ == "__main__":
     info_check = InfoCheck("TU")
     # info_check.generate_abc_ranking()
     # info_check.get_code_phoenix_result("689.893")
-    info_check.get_h5_forecast_new('PFNA', 'Final', 12)
+    info_check.get_code_forecast('440.834', 'Final', 12)
 
 
 

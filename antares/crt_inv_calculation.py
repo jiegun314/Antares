@@ -1,5 +1,4 @@
 import sqlite3
-# import pandas as pd
 import numpy as np
 from tabulate import tabulate
 import draw_chart as chart
@@ -59,8 +58,8 @@ class CurrentInventoryCalculation:
         table_name = "Material_Master"
         conn = sqlite3.connect(self.__class__.db_path + "Master_Data.db")
         c = conn.cursor()
-        sql_cmd = "SELECT count(Material) from " + table_name + " WHERE Business_Unit = \'" + self.__class__.bu_name \
-                  + "\' AND Material = \'" + material_code + "\'"
+        sql_cmd = 'SELECT count(Material) FROM %s WHERE Business_Unit=\"%s\" ' \
+                  'AND Material = \"%s\"' % (table_name, self.__class__.bu_name, material_code)
         c.execute(sql_cmd)
         result = c.fetchall()[0][0]
         trigger = False if result == 0 else True
