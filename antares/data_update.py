@@ -9,6 +9,7 @@ import os
 # import data_import as dtimp
 import numpy as np
 from datetime import datetime
+from alive_progress import alive_bar
 
 
 class MonthlyUpdate:
@@ -413,215 +414,6 @@ class MonthlyUpdate:
 
 
 class MasterDataConsolidation:
-    db_path = "../data/_DB/"
-
-    def __init__(self):
-        pass
-
-    @property
-    def bu_name(self):
-        return self._bu_name
-
-    @bu_name.setter
-    def bu_name(self, value):
-        self._bu_name = value
-
-    def master_data_update_entrance(self, model='Normal'):
-        print("==Start to refresh master data for %s==" % self._bu_name)
-        # read master data
-        df_master_data = self.import_material_master(model)
-        # get code list
-        print('--1. Getting Material Master--')
-        code_list = df_master_data["Material"].tolist()
-        hierarchy_5_list = df_master_data["Hierarchy_5"].tolist()
-        # get sap price
-        print('--2. Getting SAP Price--')
-        df_master_data['SAP_Price'] = self.mapping_sap_price(code_list)
-        # get ranking
-        print('--3. Getting Ranking--')
-        df_master_data['Ranking'] = self.mapping_abc_ranking(code_list)
-        # get ROP setting
-        print('--4. Getting MRP Type--')
-        [mrp_type, reorder_point] = self.mapping_rop_setting(code_list)
-        df_master_data['MRP_Type'] = mrp_type
-        df_master_data['Reorder_Point'] = reorder_point
-        # get phoenix status
-        print('--5. Getting Phoenix Status--')
-        [phoenix_status, target_sku, discontinuation_date, obsolescence_date] = self.mapping_phoenix_setting(code_list)
-        df_master_data['Phoenix_Status'] = phoenix_status
-        df_master_data['Phoenix_Target_SKU'] = target_sku
-        df_master_data['Phoenix_Discontinuation_Date'] = discontinuation_date
-        df_master_data['Phoenix_Obsolescence_Date'] = obsolescence_date
-        # get GTIN
-        print('--6. Getting GTIN--')
-        df_master_data['GTIN'] = self.mapping_gtin(code_list)
-        # get RAG
-        print('--7. Getting RAG--')
-        df_master_data['RAG'] = self.mapping_rag(code_list)
-        # get PM
-        print('--8. Getting PM List--')
-        df_master_data['PM'] = self.mapping_pm(hierarchy_5_list)
-        # update instrument PM
-        df_master_data.loc[
-            (~df_master_data['Material'].str.slice(stop=1).isin(['2', '4', '7'])) &
-            (~df_master_data['Material'].str.slice(stop=2).isin(['02', '04', '07'])) &
-            (df_master_data['Material'].str.slice(stop=3) != 'CNB'), 'PM'] = 'Instrument'
-        # write back to database
-        # print(df_master_data.head())
-        self.finalize_master_data(df_master_data, model)
-
-    def finalize_master_data(self, df, model):
-        database_file = self.__class__.db_path + self._bu_name + "_Master_Data.db"
-        if model == 'Normal':
-            data_sheet = self._bu_name + '_Master_Data'
-        else:
-            data_sheet = self._bu_name + '_Master_Data_Demo'
-        conn = sqlite3.connect(database_file)
-        df.to_sql(data_sheet, con=conn, index=False, if_exists='replace')
-        print('--Done--')
-
-    def import_material_master(self, model):
-        database_file = self.__class__.db_path + "Master_Data.db"
-        conn = sqlite3.connect(database_file)
-        if model == 'Normal':
-            sql_cmd = 'SELECT * FROM MATERIAL_MASTER WHERE Business_Unit = \"' + self._bu_name + '\"'
-        else:
-            sql_cmd = 'SELECT * FROM MATERIAL_MASTER WHERE Business_Unit = \"' + self._bu_name + '\" LIMIT 100'
-        df = pd.read_sql(sql=sql_cmd, con=conn)
-        return df
-
-    def mapping_sap_price(self, code_list):
-        database_file = self.__class__.db_path + self._bu_name + "_Master_Data.db"
-        data_sheet = self._bu_name + '_SAP_Price'
-        lst_sap_price = []
-        conn = sqlite3.connect(database_file)
-        c = conn.cursor()
-        for code_item in code_list:
-            sql_cmd = 'SELECT Price FROM ' + data_sheet + ' WHERE Material = \"' + code_item + '\"'
-            c.execute(sql_cmd)
-            result = c.fetchall()
-            if result:
-                lst_sap_price.append(result[0][0])
-            else:
-                lst_sap_price.append(0.0)
-        return lst_sap_price
-
-    def mapping_abc_ranking(self, code_list):
-        database_file = self.__class__.db_path + self._bu_name + "_Master_Data.db"
-        data_sheet = 'Ranking'
-        lst_ranking = []
-        conn = sqlite3.connect(database_file)
-        c = conn.cursor()
-        for code_item in code_list:
-            sql_cmd = 'SELECT Ranking FROM ' + data_sheet + ' WHERE Material = \"' + code_item + '\"'
-            c.execute(sql_cmd)
-            result = c.fetchall()
-            if result:
-                lst_ranking.append(result[0][0])
-            else:
-                lst_ranking.append("C")
-        return lst_ranking
-
-    def mapping_rop_setting(self, code_list):
-        database_file = self.__class__.db_path + self._bu_name + "_Master_Data.db"
-        data_sheet = self._bu_name + '_ROP_Setting'
-        lst_rop_setting = [[], []]
-        conn = sqlite3.connect(database_file)
-        c = conn.cursor()
-        for code_item in code_list:
-            sql_cmd = 'SELECT [MRP Type], [Reorder Point] FROM ' + data_sheet + ' WHERE Material = \"' + \
-                      code_item + '\"'
-            c.execute(sql_cmd)
-            result = c.fetchall()
-            if result:
-                lst_rop_setting[0].append(result[0][0])
-                lst_rop_setting[1].append(result[0][1])
-            else:
-                lst_rop_setting[0].append("ND")
-                lst_rop_setting[1].append(0)
-        return lst_rop_setting
-
-    def mapping_phoenix_setting(self, code_list):
-        database_file = self.__class__.db_path + self._bu_name + "_Master_Data.db"
-        data_sheet = self._bu_name + '_Phoenix_List'
-        lst_phoenix = [[], [], [], []]
-        conn = sqlite3.connect(database_file)
-        c = conn.cursor()
-        for code_item in code_list:
-            sql_cmd = 'SELECT [Target SKU], [Discontinuation Date], [Obsolescence Date] FROM ' + data_sheet \
-                      + ' WHERE [Exit SKU] = \"' + code_item + '\"'
-            c.execute(sql_cmd)
-            result = c.fetchall()
-            if result:
-                lst_phoenix[0].append("Y")
-                lst_phoenix[1].append(result[0][0])
-                lst_phoenix[2].append(result[0][1])
-                lst_phoenix[3].append(result[0][2])
-            else:
-                lst_phoenix[0].append("N")
-                lst_phoenix[1].append(None)
-                lst_phoenix[2].append(None)
-                lst_phoenix[3].append(None)
-        return lst_phoenix
-
-    def mapping_gtin(self, code_list):
-        lst_gtin = []
-        database_file = self.__class__.db_path + "Master_Data.db"
-        conn = sqlite3.connect(database_file)
-        c = conn.cursor()
-        for code_item in code_list:
-            sql_cmd = 'SELECT Barcode FROM GTIN WHERE [Material code] = \"' + code_item + '\"'
-            c.execute(sql_cmd)
-            result = c.fetchall()
-            if result:
-                lst_gtin.append(result[0][0])
-            else:
-                lst_gtin.append(0)
-        return lst_gtin
-
-    def mapping_rag(self, code_list):
-        lst_rag = []
-        conn = sqlite3.connect(self.__class__.db_path + "Master_Data.db")
-        c = conn.cursor()
-        for code_item in code_list:
-            sql_cmd = 'SELECT REGLICNO, REGAPDATE, REGEXDATE, LIFEYEAR FROM RAG_Report WHERE MATNR = \"' + \
-                      code_item + '\" ORDER BY REGAPDATE'
-            c.execute(sql_cmd)
-            result = c.fetchall()
-            if result:
-                dict_rag = {}
-                for i in range(len(result)):
-                    dict_element_rag = {}
-                    for j in range(len(result[i])):
-                        dict_element_rag["REGLICNO"] = result[i][0]
-                        dict_element_rag["REGAPDATE"] = result[i][1]
-                        dict_element_rag["REGEXDATE"] = result[i][2]
-                        dict_element_rag["LIFEYEAR"] = result[i][3]
-                    dict_rag[str(i + 1)] = dict_element_rag
-                lst_rag.append(json.dumps(dict_rag))
-                # lst_rag.append(str(result))
-            else:
-                lst_rag.append(None)
-        return lst_rag
-
-    def mapping_pm(self, h5_list):
-        lst_pm = []
-        database_file = self.__class__.db_path + self._bu_name + "_Master_Data.db"
-        data_sheet = self._bu_name + '_PM_List'
-        conn = sqlite3.connect(database_file)
-        c = conn.cursor()
-        for h5_code in h5_list:
-            sql_cmd = 'SELECT PM FROM ' + data_sheet + ' WHERE Hierarchy_5 = \"' + h5_code + '\"'
-            c.execute(sql_cmd)
-            result = c.fetchall()
-            if result:
-                lst_pm.append(result[0][0])
-            else:
-                lst_pm.append('NA')
-        return lst_pm
-
-
-class MasterDataConsolidationV2:
     db_path = '../data/_DB/'
     bu_name = ''
 
@@ -686,23 +478,26 @@ class MasterDataConsolidationV2:
     def import_rag_data(self, material_list):
         database_file = self.__class__.db_path + 'Master_Data.db'
         conn = sqlite3.connect(database_file)
-        sql_cmd = 'SELECT MATNR as Material, REGLICNO, REGAPDATE, REGEXDATE, LIFEYEAR FROM RAG_Report ORDER BY REGAPDATE'
+        sql_cmd = 'SELECT MATNR as Material, REGLICNO, REGAPDATE, REGEXDATE, LIFEYEAR FROM RAG_Report ' \
+                  'ORDER BY REGAPDATE'
         df_rag = pd.read_sql(con=conn, sql=sql_cmd)
         dict_rag = {}
-        for material_item in material_list:
-            df_rag_result = df_rag.loc[df_rag['Material'] == material_item,
-                                         ['REGLICNO', 'REGAPDATE', 'REGEXDATE', 'LIFEYEAR']]
-            list_rag_result = df_rag_result.values.tolist()
-            dict_rag_item = {}
-            for i in range(len(list_rag_result)):
-                dict_element_rag = {}
-                for j in range(len(list_rag_result[i])):
-                    dict_element_rag["REGLICNO"] = list_rag_result[i][0]
-                    dict_element_rag["REGAPDATE"] = list_rag_result[i][1]
-                    dict_element_rag["REGEXDATE"] = list_rag_result[i][2]
-                    dict_element_rag["LIFEYEAR"] = list_rag_result[i][3]
-                dict_rag_item[str(i + 1)] = dict_element_rag
-            dict_rag[material_item] = json.dumps(dict_rag_item)
+        with alive_bar(len(material_list), bar='blocks') as bar:
+            for material_item in material_list:
+                df_rag_result = df_rag.loc[df_rag['Material'] == material_item,
+                                             ['REGLICNO', 'REGAPDATE', 'REGEXDATE', 'LIFEYEAR']]
+                list_rag_result = df_rag_result.values.tolist()
+                dict_rag_item = {}
+                for i in range(len(list_rag_result)):
+                    dict_element_rag = {}
+                    for j in range(len(list_rag_result[i])):
+                        dict_element_rag["REGLICNO"] = list_rag_result[i][0]
+                        dict_element_rag["REGAPDATE"] = list_rag_result[i][1]
+                        dict_element_rag["REGEXDATE"] = list_rag_result[i][2]
+                        dict_element_rag["LIFEYEAR"] = list_rag_result[i][3]
+                    dict_rag_item[str(i + 1)] = dict_element_rag
+                dict_rag[material_item] = json.dumps(dict_rag_item)
+                bar()
         df_rag_return = pd.DataFrame.from_dict(dict_rag, orient='index', columns=['RAG'])
         return df_rag_return
 
@@ -752,11 +547,6 @@ class MasterDataConsolidationV2:
         df_master_data = df_master_data.reset_index()
         df_master_data.rename(columns={"index": "Material"}, inplace=True)
         # test judgement of implant and instrument
-        # df_master_data['Product_Type'] = 'Instrument'
-        # df_master_data.loc[df_master_data['Material'].str.slice(stop=1).isin(['2', '4', '7']), 'Product_Type'] = 'Implant'
-        # df_master_data.loc[
-        #     df_master_data['Material'].str.slice(stop=2).isin(['02', '04', '07']), 'Product_Type'] = 'Implant'
-        # df_master_data.loc[df_master_data['Material'].str.slice(stop=3) == 'CNB', 'Product_Type'] = 'Implant'
         df_master_data.loc[
             (~df_master_data['Material'].str.slice(stop=1).isin(['2', '4', '7'])) &
             (~df_master_data['Material'].str.slice(stop=2).isin(['02', '04', '07'])) &
@@ -804,7 +594,7 @@ class MasterDataUpdate:
         elif cmd_code == "4":
             data_type = "ROP_Setting"
         elif cmd_code == '5':
-            self.generate_abc_ranking()
+            self.generate_tu_abc_ranking()
             print('ABC Ranking Template Done.~')
             return
         elif cmd_code == '6':
@@ -917,6 +707,63 @@ class MasterDataUpdate:
         print('Ranking updated')
         conn.close()
 
+    # generate new Trauma ranking by considering LPSales and GTS
+    def generate_tu_abc_ranking(self, month_qty=12):
+        master_data_db_fullname = self.__class__.db_path + self.__class__.bu_name + '_Master_Data.db'
+        # get IMS, LPSales, GTS result
+        df_ims = self._generate_historical_sales('IMS', 'Value_SAP_Price', month_qty)
+        df_lpsales = self._generate_historical_sales('LPSales', 'Quantity', month_qty)
+        df_gts = self._generate_historical_sales('GTS', 'Quantity', month_qty)
+        # ranking in IMS
+        # get accumulate IMS data and ranking
+        ims_total = df_ims['IMS_Value_SAP_Price'].sum()
+        df_ims['Ratio'] = df_ims['IMS_Value_SAP_Price'] / ims_total
+        df_ims['Cum_Ratio'] = df_ims['Ratio'].cumsum()
+        df_ims['Ranking'] = df_ims['Cum_Ratio'].apply(lambda x: 'A' if x < 0.8 else ('B' if x < 0.95 else 'C'))
+        # mapping with GTS and lpsales
+        df_ims = df_ims.join(df_lpsales)
+        df_ims = df_ims.join(df_gts)
+        df_ims.fillna(0, inplace=True)
+        df_ims['GTS_and_LPSales'] = df_ims['GTS_Quantity'] + df_ims['LPSales_Quantity']
+        # set ranking C and sum(IMS, GTS, LPSales) = 0  to rank D
+        df_ims.loc[(df_ims['IMS_Value_SAP_Price'] == 0) & (df_ims['GTS_and_LPSales'] == 0), 'Ranking'] = 'D'
+        # set ranking C and sum(GTS, LPSales) > 3 to rank B
+        df_ims.loc[(df_ims['Ranking'] == 'C') & (df_ims['GTS_and_LPSales'] > 3), 'Ranking'] = 'B'
+        # get phoenix list
+        df_phoenix_list = self.get_phoenix_products_list()
+        df_ims = df_ims.join(df_phoenix_list)
+        # change all phoenix products to Ranking D
+        df_ims.loc[~df_ims['Target SKU'].isnull(), 'Ranking'] = 'D'
+        # get the result
+        df_ims.reset_index(inplace=True)
+        df_ranking_result = df_ims[['Material', 'IMS_Value_SAP_Price', 'Ranking']]
+        # write back to database
+        conn = sqlite3.connect(master_data_db_fullname)
+        df_ranking_result.to_sql(name="Ranking", con=conn, if_exists='replace', index=False)
+        print('Ranking updated')
+
+    # a internal function to get sales summary result
+    # sales_type: GTS, LPSales, IMS
+    # value_type: Quantity, Value_Standard_Cost, Value_SAP_Price
+    # month_qty: int > 0
+    def _generate_historical_sales(self, sales_type, value_type, month_qty) -> pd.DataFrame:
+        item_name = '%s_%s' % (sales_type, value_type)
+        table_name = '%s_%s' % (self.__class__.bu_name, sales_type)
+        database_fullname = '%s%s.db' % (self.__class__.db_path, table_name)
+        conn = sqlite3.connect(database_fullname)
+        c = conn.cursor()
+        sql_cmd = 'SELECT DISTINCT month FROM %s ORDER BY month DESC LIMIT %s' % (table_name, str(month_qty))
+        c.execute(sql_cmd)
+        result = c.fetchall()
+        lst_month = [item[0] for item in result]
+        # change the month list to string of scope
+        str_month_list = '\"' + '\",\"'.join(lst_month) + '\"'
+        # get the sales data
+        sql_cmd = 'SELECT Material, sum(%s) as %s FROM %s WHERE Month in (%s) GROUP by Material ' \
+                  'ORDER by %s DESC' % (value_type, item_name, table_name, str_month_list, item_name)
+        df_inv = pd.read_sql(sql=sql_cmd, con=conn, index_col='Material')
+        return df_inv
+
     # get phoenix products list
     def get_phoenix_products_list(self):
         database_file = self.__class__.db_path + self.bu_name + "_Master_Data.db"
@@ -929,7 +776,7 @@ class MasterDataUpdate:
 
 if __name__ == "__main__":
     DataUpdate = MasterDataUpdate('TU')
-    DataUpdate.import_sap_price()
+    DataUpdate.generate_tu_abc_ranking()
     # DataUpdate.master_data_update_entrance()
     # print(DataUpdate.mapping_rag(["440.834", "440.831S"]))
     # dataupdate = MonthlyUpdate('TU')
