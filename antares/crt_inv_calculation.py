@@ -527,7 +527,7 @@ class CurrentInventoryCalculation:
         return [table_title + result, total_inv_value]
 
     # display alert for those key codes with low stock
-    def get_low_inventory_alert(self, alert_month=1):
+    def get_low_inventory_alert(self, alert_month=1, inv_month=12):
         # get ranking A, B code list
         master_data_db_fullname = self.__class__.db_path + self.__class__.bu_name + '_Master_Data.db'
         master_data_table_name = self.__class__.bu_name + '_Master_Data'
@@ -538,7 +538,7 @@ class CurrentInventoryCalculation:
                   ' WHERE Ranking in (\"A\", \"B\") '
         df_ab_list = pd.read_sql(sql=sql_cmd, con=conn, index_col='Material')
         # get IMS quantity list
-        sql_cmd = 'SELECT Material, (IMS_Quantity / 6) as AVG_IMS FROM Ranking WHERE Ranking in (\"A\", \"B\") '
+        sql_cmd = 'SELECT Material, (IMS_Quantity / %s) as AVG_IMS FROM Ranking WHERE Ranking in (\"A\", \"B\")' % inv_month
         df_ims_list = pd.read_sql(sql=sql_cmd, con=conn, index_col='Material')
         df_ab_list = df_ab_list.join(df_ims_list)
         # get current update inventory list

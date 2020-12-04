@@ -714,6 +714,9 @@ class MasterDataUpdate:
         df_ims = self._generate_historical_sales('IMS', 'Value_SAP_Price', month_qty)
         df_lpsales = self._generate_historical_sales('LPSales', 'Quantity', month_qty)
         df_gts = self._generate_historical_sales('GTS', 'Quantity', month_qty)
+        # get and combine quantity
+        df_ims_qty = self._generate_historical_sales('IMS', 'Quantity', month_qty)
+        df_ims = df_ims.join(df_ims_qty)
         # ranking in IMS
         # get accumulate IMS data and ranking
         ims_total = df_ims['IMS_Value_SAP_Price'].sum()
@@ -737,7 +740,7 @@ class MasterDataUpdate:
         df_ims.loc[~df_ims['Target SKU'].isnull(), 'Ranking'] = 'D'
         # get the result
         df_ims.reset_index(inplace=True)
-        df_ranking_result = df_ims[['Material', 'IMS_Value_SAP_Price', 'Ranking']]
+        df_ranking_result = df_ims[['Material', 'IMS_Quantity', 'IMS_Value_SAP_Price', 'Ranking']]
         # write back to database
         conn = sqlite3.connect(master_data_db_fullname)
         df_ranking_result.to_sql(name="Ranking", con=conn, if_exists='replace', index=False)
