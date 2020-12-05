@@ -96,14 +96,14 @@ class DragonGUI(DragonFrame):
         # clean the column
         self.clear_frame_content()
         calculation_type = self.rdbxCalculationType.GetStringSelection()
-        if calculation_type == "by Code":
+        if calculation_type == "Code":
             self.display_code_mapping_inventory()
         else:
             self.list_h5_name()
 
     def display_h5_inventory(self, event):
         self.clear_frame_content()
-        if self.rdbxCalculationType.GetStringSelection() == "by Code":
+        if self.rdbxCalculationType.GetStringSelection() == "Code":
             return
         h5_name = self.lstbxCodeSelection.GetStringSelection()
         [inventory_list, inventory_total] = self.calculation_module.get_h5_inv_detail(h5_name, self.table_to_use)
