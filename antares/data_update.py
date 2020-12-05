@@ -730,9 +730,9 @@ class MasterDataUpdate:
         df_ims['GTS_and_LPSales'] = df_ims['GTS_Quantity'] + df_ims['LPSales_Quantity']
         # set ranking C and sum(IMS, GTS, LPSales) = 0  to rank D
         df_ims.loc[(df_ims['IMS_Value_SAP_Price'] == 0) & (df_ims['GTS_and_LPSales'] == 0), 'Ranking'] = 'D'
-        # set ranking C and sum(GTS, LPSales) > 3 to rank B
-        df_ims.loc[(df_ims['Ranking'] == 'C') & ((df_ims['GTS_Quantity'] > 3) | (df_ims['GTS_and_LPSales'] > 3)),
-                   'Ranking'] = 'New_B'
+        # set ranking C and sum(GTS, LPSales) > 3 to rank B. Currently not used
+        # df_ims.loc[(df_ims['Ranking'] == 'C') & ((df_ims['GTS_Quantity'] > 3) | (df_ims['GTS_and_LPSales'] > 3)),
+        #            'Ranking'] = 'New_B'
         # get phoenix list
         df_phoenix_list = self.get_phoenix_products_list()
         df_ims = df_ims.join(df_phoenix_list)
