@@ -1,6 +1,7 @@
 from gui_design import DragonFrame, dlgAbout
 import wx
 from crt_inv_calculation import CurrentInventoryCalculation as CIC
+from crt_inv_calculation import TraumaCurrentInventoryCalculation as TU_CIC
 import public_function as pb_func
 import pandas as pd
 import os
@@ -14,6 +15,7 @@ class DragonGUI(DragonFrame):
         DragonFrame.__init__(self, parent)
         # set TU as default BU
         self.__class__.bu_name = "TU"
+        self._set_calculation_module()
         self.display_bu_update()
         # set ICON
         self.icon = wx.Icon(u'.icon/logo.png', wx.BITMAP_TYPE_PNG)
@@ -23,44 +25,45 @@ class DragonGUI(DragonFrame):
         self.dtpkDate.Disable()
         self.set_db_table("newest")
 
+    # choose the right class to load
+    def _set_calculation_module(self):
+        if self.__class__.bu_name == 'TU':
+            self.calculation_module = TU_CIC()
+        else:
+            self.calculation_module = CIC(self.__class__.bu_name)
+
     def set_bu_name(self, bu_name):
         self.__class__.bu_name = bu_name
 
-    def select_bu_CMFT(self, event):
-        self.__class__.bu_name = "CMF"
+    def _reset_bu(self):
+        self._set_calculation_module()
         self.display_bu_update()
         # update current date to CMF
         self.set_db_table("newest")
 
+    def select_bu_CMFT(self, event):
+        self.__class__.bu_name = "CMF"
+        self._reset_bu()
+
     def select_bu_TU(self, event):
         self.__class__.bu_name = "TU"
-        self.display_bu_update()
-        # update current date to TU
-        self.set_db_table("newest")
+        self._reset_bu()
 
     def select_bu_PT(self, event):
         self.__class__.bu_name = "PT"
-        self.display_bu_update()
-        # update current date to PT
-        self.set_db_table("newest")
+        self._reset_bu()
 
     def select_bu_JT(self, event):
         self.__class__.bu_name = "JT"
-        self.display_bu_update()
-        # update current date to JT
-        self.set_db_table("newest")
+        self._reset_bu()
 
     def select_bu_MT(self, event):
         self.__class__.bu_name = "MT"
-        self.display_bu_update()
-        # update current date to MT
-        self.set_db_table("newest")
+        self._reset_bu()
 
     def select_bu_SP(self, event):
         self.__class__.bu_name = "Spine"
-        self.display_bu_update()
-        # update current date to MT
-        self.set_db_table("newest")
+        self._reset_bu()
 
     def display_bu_update(self):
         self.txtLog.Clear()
@@ -86,8 +89,7 @@ class DragonGUI(DragonFrame):
 
     # define the table for calculation in datepicker
     def set_db_table(self, date):
-        CodeCalculation = CIC(self.__class__.bu_name)
-        self.table_to_use = CodeCalculation.get_newest_date() if date == "newest" else "INV" + date
+        self.table_to_use = self.calculation_module.get_newest_date() if date == "newest" else "INV" + date
 
     # Virtual event handlers, override them in your derived class
     def codeSubmit(self, event):
@@ -104,8 +106,7 @@ class DragonGUI(DragonFrame):
         if self.rdbxCalculationType.GetStringSelection() == "by Code":
             return
         h5_name = self.lstbxCodeSelection.GetStringSelection()
-        CodeCalculation = CIC(self.__class__.bu_name)
-        [inventory_list, inventory_total] = CodeCalculation.get_h5_inv_detail(h5_name, self.table_to_use)
+        [inventory_list, inventory_total] = self.calculation_module.get_h5_inv_detail(h5_name, self.table_to_use)
         self.show_list(inventory_list, 3)
         self.StatusBar.SetStatusText("Total Inventory: %s" % ("{:,.0f}".format(inventory_total)), 1)
         self.txtLog.Clear()
@@ -121,11 +122,10 @@ class DragonGUI(DragonFrame):
         self.lstbxCodeSelection.Clear()
         for code_item in code_name_list:
             self.lstbxCodeSelection.Append(code_item)
-        CodeCalculation = CIC(self.__class__.bu_name)
         if self.__class__.bu_name == 'TU':
-            inventory_result = CodeCalculation.inventory_mapping_with_ned_inv(code_name_list, self.table_to_use)
+            inventory_result = self.calculation_module.inventory_mapping_with_ned_inv(code_name_list, self.table_to_use)
         else:
-            inventory_result = CodeCalculation.inventory_mapping(code_name_list, self.table_to_use)
+            inventory_result = self.calculation_module.inventory_mapping(code_name_list, self.table_to_use)
         data_trigger_point = 4
         self.show_list(inventory_result, data_trigger_point)
         self.txtLog.write("Done, with data of %s." % self.table_to_use)
@@ -141,8 +141,7 @@ class DragonGUI(DragonFrame):
     def get_current_inventory_list(self, event):
         self.clear_frame_content()
         data_trigger_point = 1
-        CodeCalculation = CIC(self.__class__.bu_name)
-        [inventory_result, total_inventory] = CodeCalculation.get_current_inventory(self.table_to_use)
+        [inventory_result, total_inventory] = self.calculation_module.get_current_inventory(self.table_to_use)
         self.show_list(inventory_result, data_trigger_point)
         self.StatusBar.SetStatusText("Total Available Stock: %s, Total Useful Stock: %s."
                                      % ("{:,.0f}".format(total_inventory[0]), "{:,.0f}".format(total_inventory[1])), 1)
@@ -152,8 +151,7 @@ class DragonGUI(DragonFrame):
     def get_current_bo_list(self, event):
         self.clear_frame_content()
         data_trigger_point = 4
-        CodeCalculation = CIC(self.__class__.bu_name)
-        inventory_result = CodeCalculation.get_current_bo(self.table_to_use)
+        inventory_result = self.calculation_module.get_current_bo(self.table_to_use)
         [backorder_total_qty, backorder_total_value] = inventory_result[-1][4:6]
         self.show_list(inventory_result, data_trigger_point)
         self.txtLog.write("Current Backorder List done, with data of %s." % self.table_to_use)
@@ -163,20 +161,18 @@ class DragonGUI(DragonFrame):
 
     def display_backorder_trend(self, event):
         self.clear_frame_content()
-        CodeCalculation = CIC(self.__class__.bu_name)
         self.txtLog.write("Generating backorder trend. Please wait~")
-        CodeCalculation.generate_backorder_trend()
+        self.calculation_module.generate_backorder_trend()
         self.txtLog.Clear()
         self.txtLog.write("Done. The chart would be opened in your web browser.")
 
     def display_aging_backorder(self, event):
         self.clear_frame_content()
-        CodeCalculation = CIC(self.__class__.bu_name)
         # set exception list with abnormal backorder information
         exception_list = pb_func.get_exception_list(self.__class__.bu_name, "Aging_Backorder")
         self.txtLog.Clear()
         self.txtLog.write("Calculation ongoing, please wait a moment...")
-        [inventory_result, mapping_days] = CodeCalculation.generate_aging_backorder_list(exception_list)
+        [inventory_result, mapping_days] = self.calculation_module.generate_aging_backorder_list(exception_list)
         data_trigger_point = 6
         self.show_list(inventory_result, data_trigger_point)
         self.StatusBar.SetStatusText("Total Mapping %s days" % ("{:,.0f}".format(mapping_days)), 1)
@@ -203,7 +199,6 @@ class DragonGUI(DragonFrame):
 
     def click_item_in_list(self, event):
         self.txtLog.Clear()
-        CodeCalculation = CIC(self.__class__.bu_name)
         selected_row = self.listCtrlOutput.GetFocusedItem()
         column_length = self.listCtrlOutput.GetColumnCount()
         lst_column_name = []
@@ -214,14 +209,14 @@ class DragonGUI(DragonFrame):
             material_code_index = lst_column_name.index('Material')
             selected_code = self.listCtrlOutput.GetItem(selected_row, material_code_index).Text
             self.txtLog.write("Inventory Trend of %s is under generating. Please wait~" % selected_code)
-            CodeCalculation.generate_code_inv_trend(selected_code)
+            self.calculation_module.generate_code_inv_trend(selected_code)
             self.txtLog.Clear()
             self.txtLog.write("Done. The chart for %s would be opened in your web browser." % selected_code)
         elif 'Hierarchy_5' in lst_column_name:
             material_code_index = lst_column_name.index('Hierarchy_5')
             selected_code = self.listCtrlOutput.GetItem(selected_row, material_code_index).Text
             self.txtLog.write("Inventory Trend of %s is under generating. Please wait~" % selected_code)
-            CodeCalculation.generate_h5_inventory_trend_two_dimension(selected_code)
+            self.calculation_module.generate_h5_inventory_trend_two_dimension(selected_code)
             self.txtLog.Clear()
             self.txtLog.write("Done. The chart for %s would be opened in your web browser." % selected_code)
         else:
@@ -265,8 +260,7 @@ class DragonGUI(DragonFrame):
         lst_xcpt = []
         self.clear_frame_content()
         self.txtLog.write("Start to sync. Please wait~")
-        CodeCalculation = CIC(self.__class__.bu_name)
-        sync_result = CodeCalculation.inv_data_sync(90, lst_xcpt)
+        sync_result = self.calculation_module.inv_data_sync(90, lst_xcpt)
         if sync_result == "ERROR":
             self.txtLog.Clear()
             self.txtLog.write("Sync failure. Please make sure you've connected to JNJ network")
@@ -276,14 +270,13 @@ class DragonGUI(DragonFrame):
                               (sync_result[0], sync_result[1], sync_result[2]))
         # refresh the current date value
         if self.chkbxToday.GetValue():
-            self.table_to_use = CodeCalculation.get_newest_date()
+            self.table_to_use = self.calculation_module.get_newest_date()
 
     # export one-day JNJ inventory detail list
     def export_inventory(self, event):
         self.clear_frame_content()
         self.txtLog.write("Start to export. Please wait~")
-        CodeCalculation = CIC(self.__class__.bu_name)
-        df = CodeCalculation.export_inventory_data(self.table_to_use)
+        df = self.calculation_module.export_inventory_data(self.table_to_use)
         self.clear_frame_content()
         default_file_name = self.__class__.bu_name + '_Inventory_' + self.table_to_use[3:] + '.xlsx'
         if isinstance(df, pd.DataFrame):
@@ -305,8 +298,7 @@ class DragonGUI(DragonFrame):
     def export_backorder(self, event):
         self.clear_frame_content()
         self.txtLog.write("Start to export. Please wait~")
-        CodeCalculation = CIC(self.__class__.bu_name)
-        df = CodeCalculation.export_backorder_data(self.table_to_use)
+        df = self.calculation_module.export_backorder_data(self.table_to_use)
         self.clear_frame_content()
         default_file_name = self.__class__.bu_name + '_Backorder_' + self.table_to_use[3:] + '.xlsx'
         if isinstance(df, pd.DataFrame):
@@ -328,15 +320,14 @@ class DragonGUI(DragonFrame):
     def display_inventory_trend(self, event):
         self.clear_frame_content()
         selected_name = self.lstbxCodeSelection.GetStringSelection()
-        CodeCalculation = CIC(self.__class__.bu_name)
         if selected_name != '':
             h5_fulllist = pb_func.get_full_h5_list(self.__class__.bu_name)
             self.txtLog.write("Inventory Trend of %s is under generating. Please wait~" % selected_name)
             # if h5 name is selected
             if selected_name in h5_fulllist or selected_name == 'ALL':
-                CodeCalculation.generate_h5_inventory_trend_two_dimension(selected_name)
+                self.calculation_module.generate_h5_inventory_trend_two_dimension(selected_name)
             else:
-                CodeCalculation.generate_code_inv_trend(selected_name)
+                self.calculation_module.generate_code_inv_trend(selected_name)
             self.clear_frame_content()
             self.txtLog.write("Done. The chart would be opened in your web browser.")
         else:
@@ -358,9 +349,8 @@ class DragonGUI(DragonFrame):
     # display pending inventory
     def display_pending_inventory(self, event):
         self.clear_frame_content()
-        CodeCalculation = CIC(self.__class__.bu_name)
         self.txtLog.write("Generating pending inventory trend. Please wait~")
-        CodeCalculation.generate_pending_trend()
+        self.calculation_module.generate_pending_trend()
         self.txtLog.Clear()
         self.txtLog.write("Done. The chart would be opened in your web browser.")
 
@@ -370,8 +360,7 @@ class DragonGUI(DragonFrame):
         if self.__class__.bu_name != 'TU':
             self.txtLog.write("Sorry, this function is not open for %s yet." % self.__class__.bu_name)
         else:
-            CodeCalculation = CIC(self.__class__.bu_name)
-            df_low_inventory = CodeCalculation.get_low_inventory_alert()
+            df_low_inventory = self.calculation_module.get_low_inventory_alert()
             lst_low_inventory = [['Material'] + df_low_inventory.columns.values.tolist()] + df_low_inventory.reset_index().values.tolist()
             self.show_list(lst_low_inventory, 4)
 

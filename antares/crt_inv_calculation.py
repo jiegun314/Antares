@@ -568,7 +568,7 @@ class CurrentInventoryCalculation:
         return df_low_inventory
 
     # get lp inventory
-    def _get_lp_inventory_quantity_list(self, month='newest'):
+    def _get_lp_inventory_quantity_list(self, month='newest') -> pd.DataFrame:
         lp_inventory_db_fullname = self.__class__.db_path + self.__class__.bu_name + '_LP_CRT_INV.db'
         conn = sqlite3.connect(lp_inventory_db_fullname)
         c = conn.cursor()
@@ -724,7 +724,62 @@ class CurrentInventoryCalculation:
         print(file_name, ' Imported')
 
 
+# calculation module for Trauma
+class TraumaCurrentInventoryCalculation(CurrentInventoryCalculation):
+
+    def __init__(self):
+        CurrentInventoryCalculation.__init__(self, 'TU')
+        pass
+
+    # get the backorder list of backorder information
+    def get_current_bo(self, table_name) -> list:
+        lst_title = ['Material', 'Description', 'Hierarchy_5', 'CSC', 'Qty', 'Value', 'GIT_1', 'GIT_2',
+                     'GIT_3', 'GIT_4', 'Open_PO', 'NED_INV']
+        db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
+        conn = sqlite3.connect(db_name)
+        sql_cmd = 'SELECT Material, Description, Hierarchy_5, CSC, Current_Backorder_Qty as Qty, ' \
+                  'GIT_1_Week as GIT_1, GIT_2_Week as GIT_2, ' \
+                  'GIT_3_Week as GIT_3, GIT_4_Week as GIT_4, Open_PO from %s WHERE Qty > 0 ' \
+                  'ORDER by CSC DESC' % table_name
+        df_backorder = pd.read_sql(sql=sql_cmd, con=conn, index_col='Material')
+        # get sap price
+        master_data_db_name = self.__class__.db_path + self.__class__.bu_name + "_Master_Data.db"
+        master_data_table_name = self.__class__.bu_name + "_SAP_Price"
+        conn = sqlite3.connect(master_data_db_name)
+        sql_cmd = 'SELECT Material, Price FROM %s' % master_data_table_name
+        df_sap_price = pd.read_sql(sql=sql_cmd, con=conn, index_col='Material')
+        # combine and calculate the price
+        df_backorder = df_backorder.join(df_sap_price)
+        df_backorder.fillna(0, inplace=True)
+        df_backorder['Value'] = df_backorder['Qty'] * df_backorder['Price']
+        # combine with NED inventory
+        df_lp_inv_quantity = self._get_lp_inventory_quantity_list()
+        df_lp_inv_quantity.rename(columns={'Quantity': 'NED_INV'}, inplace=True)
+        df_backorder = df_backorder.join(df_lp_inv_quantity)
+        df_backorder.fillna(0, inplace=True)
+        # calculate the GIT value
+        # get fulfill Qty
+        df_backorder['GIT1_Fill'] = df_backorder[['GIT_1', 'Qty']].min(axis=1)
+        df_backorder['Qty_Remain'] = df_backorder['Qty'] - df_backorder['GIT1_Fill']
+        df_backorder['GIT2_Fill'] = df_backorder[['GIT_2', 'Qty_Remain']].min(axis=1)
+        df_backorder['Qty_Remain'] = df_backorder['Qty_Remain'] - df_backorder['GIT2_Fill']
+        df_backorder['GIT3_Fill'] = df_backorder[['GIT_3', 'Qty_Remain']].min(axis=1)
+        df_backorder['Qty_Remain'] = df_backorder['Qty_Remain'] - df_backorder['GIT3_Fill']
+        df_backorder['GIT4_Fill'] = df_backorder[['GIT_4', 'Qty_Remain']].min(axis=1)
+        df_backorder['Qty_Remain'] = df_backorder['Qty_Remain'] - df_backorder['GIT4_Fill']
+        df_backorder['Open_PO_Fill'] = df_backorder[['Open_PO', 'Qty_Remain']].min(axis=1)
+        # generate summary line
+        lst_summary = ["-", "-", "-", "Total", df_backorder['Qty'].sum(), df_backorder['Value'].sum()]
+        lst_git_title = ['GIT1_Fill', 'GIT2_Fill', 'GIT3_Fill', 'GIT4_Fill', 'Open_PO_Fill']
+        for git_item in lst_git_title:
+            lst_summary.append((df_backorder['Price'] * df_backorder[git_item]).sum())
+        # choose the output with selected columns
+        df_backorder.reset_index(inplace=True)
+        df_backorder_output = df_backorder[lst_title]
+        return [lst_title, ] + df_backorder_output.values.tolist() + [lst_summary, ]
+
+
 if __name__ == "__main__":
-    test = CurrentInventoryCalculation("TU")
-    test.generate_aging_backorder_list()
+    test = TraumaCurrentInventoryCalculation()
+    test.get_current_bo('INV20201201')
     # test.inv_data_sync(50)

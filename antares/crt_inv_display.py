@@ -1,4 +1,5 @@
 from crt_inv_calculation import CurrentInventoryCalculation as CIC
+from crt_inv_calculation import TraumaCurrentInventoryCalculation as TU_CIC
 from tabulate import tabulate
 import public_function as pb_func
 import pandas as pd
@@ -313,6 +314,18 @@ class TraumaCurrentInventoryDisplay(CurrentInventoryDisplay):
         print(tabulate(inventory_result, headers="firstrow", tablefmt="github",
                        showindex=range(1, len(inventory_result))))
 
+    def display_current_backorder(self):
+        code_calculation = TU_CIC()
+        # code_calculation = CIC('TU')
+        print("===Current Backorder List===")
+        # 获取日期
+        inventory_date = input("Inventory Data (YYYYMMDD, Press Enter to get newest) : ")
+        table_name = code_calculation.get_newest_date() if inventory_date == "" else "INV" + inventory_date
+        print("===== <Result of %s> =====" % table_name.lstrip("INV"))
+        backorder_result = code_calculation.get_current_bo(table_name)
+        print(tabulate(backorder_result, headers="firstrow", tablefmt="github",
+                       showindex=range(1, len(backorder_result)), floatfmt=",.0f"))
+
 
 class PowerToolCurrentInventoryDisplay(CurrentInventoryDisplay):
     def __init__(self):
@@ -361,5 +374,5 @@ class SpineCurrentInventoryDisplay(CurrentInventoryDisplay):
 
 if __name__ == "__main__":
     test = TraumaCurrentInventoryDisplay()
-    test.display_code_status()
+    test.display_current_backorder()
     # test.inv_data_sync(50)
