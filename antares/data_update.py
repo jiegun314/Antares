@@ -20,7 +20,7 @@ class MonthlyUpdate:
     def __init__(self, bu):
         self.__class__.bu_name = bu
 
-    def update_sales_with_pandas(self, inv_type):
+    def update_sales(self, inv_type):
         print("==" + inv_type + " Import==")
         # 输入Y确认进行导入
         print("--*Warning* - Please make sure data is correctly named and put in _Update folder.")
@@ -51,53 +51,6 @@ class MonthlyUpdate:
         db_fullname = self.__class__.db_path + file_name + ".db"
         conn = sqlite3.connect(db_fullname)
         df_sales.to_sql(name=file_name, con=conn, index=False, if_exists='append')
-        print("===== <%s Import Successfully!> =====" % inv_type)
-        pass
-
-    def update_sales(self, inv_type):
-        print("==" + inv_type + " Import==")
-        # 输入Y确认进行导入
-        print("--*Warning* - Please make sure data is correctly named and put in _Update folder.")
-        cmd_key = input("Ready to continue? (Y/N): ")
-        if cmd_key.upper() != "Y":
-            return
-        # read excel file
-        print("==Start to read the data==")
-        file_name = self.__class__.update_path + "Update_" + self.__class__.bu_name + "_" + inv_type + ".xlsx"
-        df = pd.read_excel(file_name, dtype={'Month': object})
-        lst_material = np.array(df).tolist()
-        print("==Reading complete, start to map master data==")
-        # 实例化一个查询对象
-        info_check = cclt.InfoCheck(self.__class__.bu_name)
-        # 数据整合
-        for material_item in lst_material:
-            # get master data
-            material_code = material_item[0]
-            master_data_list = ['Standard_Cost', 'Hierarchy_4', 'Hierarchy_5', 'SAP_Price']
-            master_data_result = info_check.get_single_code_all_master_data(material_code, master_data_list)
-            [md_standard_cost, md_h4_name, md_h5_name, md_sap_price] = master_data_result
-            # 插入std cost价格
-            if not md_standard_cost:
-                material_item.append(0)
-            else:
-                material_item.append(md_standard_cost * material_item[2])
-            # 插入sap价格
-            if not md_sap_price:
-                material_item.append(0)
-            else:
-                material_item.append(md_sap_price * material_item[2])
-            # Insert BU name, h4 and h5 name
-            material_item.append(self.__class__.bu_name)
-            material_item.append(md_h4_name)
-            material_item.append(md_h5_name)
-        # 插入数据库
-        print("==Mapping complete, start to import to database==")
-        file_name = self.__class__.bu_name + "_" + inv_type
-        db_fullname = self.__class__.db_path + file_name + ".db"
-        conn = sqlite3.connect(db_fullname)
-        conn.executemany("INSERT INTO " + file_name + " values (?,?,?,?,?,?,?,?)", lst_material)
-        conn.commit()
-        conn.close()
         print("===== <%s Import Successfully!> =====" % inv_type)
 
     def update_lp_inv(self):
@@ -150,7 +103,7 @@ class MonthlyUpdate:
         conn.close()
         print("===== <LP Inventory Import Successfully!> =====")
 
-    def update_jnj_inv_with_pandas(self):
+    def update_jnj_inventory(self):
         print("==JNJ Inventory Import==")
         import_date = input("Please input the date your want to import (YYYYMMDD): ")
         # Get inventory month
@@ -214,97 +167,6 @@ class MonthlyUpdate:
         inventory_table = self.__class__.bu_name + '_JNJ_INV'
         conn = sqlite3.connect(inventory_database)
         df_jnj_inv.to_sql(name=inventory_table, con=conn, index=False, if_exists='append')
-        print("===== <JNJ Inventory Import Successfully!> =====")
-
-    def update_jnj_inv(self):
-        print("==JNJ Inventory Import==")
-        import_date = input("Please input the date your want to import (YYYYMMDD): ")
-        # 获取月份
-        str_month = import_date[0:4] + "-" + import_date[4:6]
-        import_tbl_name = "INV" + import_date
-        db_fullname = self.__class__.db_path + "TU_CRT_INV.db"
-        # 读取Oneclick数据
-        conn = sqlite3.connect(db_fullname)
-        c = conn.cursor()
-        sql_cmd = "SELECT count(*) FROM sqlite_master where type = \'table\' and name = \'" + import_tbl_name + "\'"
-        c.execute(sql_cmd)
-        tbl_result = c.fetchone()[0]
-        if tbl_result == 0:
-            print("!Error. Wrong date input, please re-input. ")
-            return
-        sql_cmd = "SELECT Material, Inventory_OnHand, Available_Stock, Pending_Inventory_Bonded_Total_Qty, " \
-                  "Pending_Inventory_Bonded_Q_Hold_Qty, Pending_Inventory_NonB_Total_Qty, SS FROM " \
-                  + import_tbl_name + " Order by Available_Stock DESC"
-        c.execute(sql_cmd)
-        lst_jnj_inv = []
-        inv_output = c.fetchall()
-        # 转成列表，插入月份
-        for material_item in inv_output:
-            item_jnj_inv = list(material_item)
-            item_jnj_inv.insert(0, str_month)
-            lst_jnj_inv.append(item_jnj_inv)
-        # 实例化一个查询对象
-        info_check = cclt.InfoCheck(self.__class__.bu_name)
-        # 计数变量
-        counter, num = 0, 5
-        list_show = list(range(int(len(lst_jnj_inv) / 20), len(lst_jnj_inv) + 1, int(len(lst_jnj_inv) / 20)))
-        # 数据整合
-        for material_item in lst_jnj_inv:
-            # get master data
-            material_code = material_item[1]
-            # master_data_result = info_check.get_master_data(material_code)[1]
-            # md_standard_cost = master_data_result[6]
-            # md_h4_name = master_data_result[2]
-            # md_h5_name = master_data_result[3]
-            # md_phoenix_status = "Y" if info_check.get_code_phoenix_result(material_code)[0] == "Phoenix Product" else "N"
-            # md_suzhou_status = "Y" if material_code[-2:] == "CN" else "N"
-            # md_instrument_status = info_check.get_bu_master_data(material_code, "Instrument")
-            # md_pm_status = info_check.get_bu_master_data(material_code, "PM")
-            # # get sap price
-            # md_sap_price = info_check.get_code_sap_price(material_code)
-            master_data_list = ['Standard_Cost', 'Hierarchy_4', 'Hierarchy_5', 'Phoenix_Status', 'SAP_Price', 'PM']
-            master_data_result = info_check.get_single_code_all_master_data(material_code, master_data_list)
-            [md_standard_cost, md_h4_name, md_h5_name, md_phoenix_status, md_sap_price, md_pm] = master_data_result
-            # change blank PM to "N/A"
-            md_pm = "N/A" if md_pm is None else md_pm
-            md_suzhou_status = "Y" if material_code[-2:] == "CN" else "N"
-            md_instrument_status = 'N' if material_code[0:1] in ['2', '4'] or material_code[0:2] in ['02', '04']\
-                                          or material_code[0:3] == 'CNB' else 'Y'
-            # 设定价格
-            item_std_cost = md_standard_cost if md_standard_cost else 0
-            item_sap_price = md_sap_price if md_sap_price else 0
-            # 插入Value_Standard_Cost
-            material_item.append(item_std_cost * material_item[3])
-            # 插入Value_SAP_Price
-            material_item.append(item_sap_price * material_item[3])
-            # 插入Pending_NB_Std_Cost
-            material_item.append(item_std_cost * material_item[6])
-            # 插入Pending_NB_SAP_Price
-            material_item.append(item_sap_price * material_item[6])
-            # 插入Pending_B_Std_Cost
-            material_item.append(item_std_cost * material_item[4])
-            # 插入Pending_B_SAP_Price
-            material_item.append(item_sap_price * material_item[4])
-            # 插入 Total_Inventory, Total_Inventory_Std_Cost, Total_Inventory_SAP_Price
-            total_inv_qty = material_item[3] + material_item[4] + material_item[6]
-            material_item.extend([total_inv_qty, total_inv_qty * item_std_cost, total_inv_qty * item_sap_price])
-            # 插入 h4, h5, pm, instrument, suzhou, phoenix六个特殊属性
-            material_item.extend([md_h4_name, md_h5_name, md_pm, md_instrument_status,
-                                  md_suzhou_status, md_phoenix_status])
-            counter += 1
-            if counter in list_show:
-                print(" -->", num, "%", end="", flush=True)
-                num += 5
-        # 插入数据库
-        print(" ")
-        print("==Reading complete, start importing to database==")
-        tbl_name = self.__class__.bu_name + "_JNJ_INV"
-        db_fullname = self.__class__.db_path + tbl_name + ".db"
-        conn = sqlite3.connect(db_fullname)
-        conn.executemany("INSERT INTO " + tbl_name + " values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                         lst_jnj_inv)
-        conn.commit()
-        conn.close()
         print("===== <JNJ Inventory Import Successfully!> =====")
 
     def update_eso(self):
@@ -393,24 +255,6 @@ class MonthlyUpdate:
         conn.commit()
         conn.close()
         print("Final forecast updated!~")
-
-    def data_update_entrance(self, cmd):
-        if cmd == "901":
-            self.update_sales_with_pandas("GTS")
-        elif cmd == "902":
-            self.update_sales_with_pandas("LPSales")
-        elif cmd == "903":
-            self.update_sales_with_pandas("IMS")
-        elif cmd == '905':
-            self.update_jnj_inv_with_pandas()
-        elif cmd == "906":
-            self.update_lp_inv()
-        elif cmd == "908":
-            self.update_final_forecast()
-        elif cmd == "909":
-            self.update_eso()
-        else:
-            print("!!Error: wrong user name, please restart the program.")
 
 
 class MasterDataConsolidation:
@@ -577,31 +421,8 @@ class MasterDataUpdate:
     def __init__(self, bu_name_input):
         self.__class__.bu_name = bu_name_input
 
-    # import BU base master data
-    def import_master_data(self):
-        # for TU. data_type = {"Master_Data", "SAP_Price", "Phoenix_List"}
-        print("==Import Master Data for %s==" % self.__class__.bu_name)
-        print("Please Choose Master Data Type (1 - PM_List, 2 - SAP_Price, 3 - Phoenix_List, 4 - ROP_Setting, "
-              "5 - ABC Ranking, 6 - NPI List)")
-        cmd_code = input("cmd >> master_data >> ")
-        if cmd_code == "1":
-            data_type = "PM_List"
-        elif cmd_code == "2":
-            self.import_sap_price()
-            return
-        elif cmd_code == "3":
-            data_type = "Phoenix_List"
-        elif cmd_code == "4":
-            data_type = "ROP_Setting"
-        elif cmd_code == '5':
-            self.generate_tu_abc_ranking()
-            print('ABC Ranking Template Done.~')
-            return
-        elif cmd_code == '6':
-            data_type = 'NPI_List'
-        else:
-            print("!!Wrong code, please try again!")
-            return
+    # import bu level master data
+    def import_bu_master_data(self, data_type):
         file_name = self.__class__.bu_name + "_" + data_type
         file_fullname = self.__class__.file_path + file_name + ".xlsx"
         db_fullname = self.__class__.db_path + self.__class__.bu_name + "_Master_Data.db"
@@ -613,7 +434,7 @@ class MasterDataUpdate:
             df = pd.read_excel(file_fullname, na_values="0")
         # data = df.values
         stop_time = datetime.now()
-        print("~ File reading complete with time of %s seconds" % (stop_time-start_time).seconds)
+        print("~ File reading complete with time of %s seconds" % (stop_time - start_time).seconds)
         # 写入数据库
         conn = sqlite3.connect(db_fullname)
         df.to_sql(name=file_name, con=conn, if_exists='replace', index=False)
@@ -636,33 +457,18 @@ class MasterDataUpdate:
         df_total_price['Material'] = df_total_price['Material'].str.strip()
         conn = sqlite3.connect(db_fullname)
         df_total_price.to_sql(name=table_name, con=conn, if_exists='replace', index=False)
-        print("SAP_Price is imported")
 
-    def import_public_master_data(self):
-        # print title
-        print("==Import General Master Data==")
-        print("Please Choose Master Data Type (1 - Material Master, 2 - RAG Report, 3 - GTIN)")
-        # define source data route
+    def import_public_master_data(self, master_data_filename):
         master_data_path = self.__class__.update_path + "Public/"
-        # define file name list
-        master_data_filename_list = ["", "MATERIAL_MASTER", "RAG_Report", "GTIN"]
-        cmd_code = input("cmd >> master_data >> ")
-        if cmd_code == "exit":
-            return
-        if cmd_code not in ["1", "2", "3"]:
-            print("Wrong Code. Please Try Again.")
-            return
-        master_data_filename = master_data_filename_list[int(cmd_code)]
         master_data_file = master_data_path + master_data_filename + ".xlsx"
         print("!Make sure you have put file %s in %s" % (master_data_filename, master_data_path))
         # start to read file
         print("Start to read data file.")
-        if cmd_code == '3':
+        if master_data_filename == 'GTIN':
             df = pd.read_excel(master_data_file,  dtype={'Barcode': str})
             # print(df.info())
-        elif cmd_code == "2":
-            df = pd.read_excel(master_data_file, dtype={'REGAPDATE': str, 'REGEXDATE': str},
-                               skiprows=[1, ])
+        elif master_data_filename == "RAG_Report":
+            df = pd.read_excel(master_data_file, dtype={'REGAPDATE': str, 'REGEXDATE': str}, skiprows=[1, ])
         else:
             df = pd.read_excel(master_data_file)
         print("Start to import into database.")

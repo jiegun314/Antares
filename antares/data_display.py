@@ -85,10 +85,10 @@ class DataDisplay:
         return pb_func.add_table_index(inventory_output, inventory_title)
 
     # 显示单个代码全部信息
-    def show_code_all_info(self, month_number=12):
+    def show_code_all_info(self, code_input='', month_number=12):
         # 打印标题
         print("---- Overall Information for Single Code---")
-        material_code = input("Material code: ").strip().upper()
+        material_code = code_input if code_input else input("Material code: ").strip().upper()
         infocheck = calculation.InfoCheck(self.__class__.bu_name)
         master_data_list = ['Description', 'Chinese_Description', 'Hierarchy_4', 'Hierarchy_5', 'Sales_Status',
                             'Purchase_Status', 'Standard_Cost', 'SAP_Price', 'Ranking', 'MRP_Type', 'Reorder_Point',
@@ -208,18 +208,6 @@ class DataDisplay:
         self.format_output(forecast_output)
         pass
 
-    # Show all information of one Hierarchy_5
-    def show_h5_all_info(self, month_number=12, forecast_month=12):
-        h5_name = self.get_h5_name()
-        if h5_name != "NULL":
-            self.get_h5_sales_data(h5_name, month_number)
-            self.get_h5_inventory(h5_name, month_number)
-            self.show_h5_forecast(h5_name, "Statistical", forecast_month)
-            self.show_h5_forecast(h5_name, "Final", forecast_month)
-            self.display_material_eso(h5_name, "h5")
-        else:
-            print("!!Error, Wrong Hierarchy_5 Name, Please Check!")
-
     # 显示单个代码的ESO
     def show_code_eso(self):
         code_name = input("Input Material Code: ").upper()
@@ -260,32 +248,6 @@ class DataDisplay:
         historical_inv = [historical_jnj_inv, historical_lp_inv]
         self.draw_sales_inv_fcst_chart(material_code, sales_output, historical_inv, code_forecast, 12, "code")
 
-    # 显示H5的综合图表
-    def show_h5_chart(self):
-        # 打印标题
-        print("==Hierarchy_5 General Chart==")
-        h5_name = self.get_h5_name()
-        if h5_name == "NULL":
-            return
-        h5_info_check = calculation.InfoCheck(self.__class__.bu_name)
-        # 读取数据
-        # 读取历史销量
-        sales_type = ("GTS", "LPSales", "IMS")
-        h5_sales_result = []
-        for sales_item in sales_type:
-            h5_sales_result.append(h5_info_check.get_h5_sales_data(sales_item, "SAP_Price", h5_name, 24))
-        # 读取库存量
-        inv_type = ("JNJ", "LP")
-        h5_inv_result = []
-        for inv_item in inv_type:
-            h5_inv_result.append(h5_info_check.get_h5_inventory_data(inv_item, "SAP_Price", h5_name, 24))
-        # 读取final forecast
-        h5_forecast = h5_info_check.get_h5_forecast(h5_name, "Final", 12)
-        # Generate the chart with 12 months forecast
-        chart_name = self.__class__.bu_name if h5_name == 'ALL' else h5_name
-        self.draw_sales_inv_fcst_chart(chart_name, h5_sales_result, h5_inv_result, h5_forecast, 12, "h5")
-        pass
-
     # 画综合图
     def draw_sales_inv_fcst_chart(self, name, sales_data, inv_data, fcst_data, fcst_month, data_type):
         # get integer format of all sales data
@@ -320,6 +282,79 @@ class DataDisplay:
         chart.all_in_one_echart(name, final_month_list, jnj_inv_month, lp_inv_month, sales_gts, sales_lpsales,
                                 sales_ims, final_fcst_data, data_type)
         print("--The chart is generated, you can also find it under ../data/_Charter --")
+
+
+class CodeDataDisplay(DataDisplay):
+
+    def __init__(self, bu_input, name_input):
+        super(CodeDataDisplay, self).__init__(bu_input, name_input)
+
+    # 显示单个代码的综合图表
+    def show_code_chart(self, code_input=''):
+        print("-- The chart would be opened in your browser --")
+        material_code = code_input if code_input else input("Material code: ").upper()
+        # 验证代码是否存在
+        if not pb_func.check_code_availability(self.__class__.bu_name, material_code):
+            print("!! This code does no exist, please try again.")
+            return
+        # 读取销量数据
+        infocheck = calculation.InfoCheck(self.__class__.bu_name)
+        sales_list = ("GTS", "LPSales", "IMS")
+        sales_output = []
+        for index in range(0, 3):
+            sales_output.append(infocheck.get_code_sales(sales_list[index], material_code, 24))
+        # 读取final forecast
+        code_forecast = infocheck.get_code_forecast(material_code, "Final", 12)[1]
+        # 读取库存数据
+        historical_jnj_inv = infocheck.get_code_inventory(material_code, "JNJ", 24)
+        historical_lp_inv = infocheck.get_code_inventory(material_code, "LP", 24)
+        historical_inv = [historical_jnj_inv, historical_lp_inv]
+        self.draw_sales_inv_fcst_chart(material_code, sales_output, historical_inv, code_forecast, 12, "code")
+
+
+class HierarchyDataDisplay(DataDisplay):
+
+    def __init__(self, bu_input, name_input):
+        super(HierarchyDataDisplay, self).__init__(bu_input, name_input)
+
+    # Show all information of one Hierarchy_5
+    def show_h5_all_info(self, h5_name_input='', month_number=12, forecast_month=12):
+        h5_name = "ALL" if h5_name_input.upper() == "ALL" \
+            else pb_func.get_available_h5_name(h5_name_input, self.__class__.bu_name)
+        if h5_name != "NULL":
+            self.get_h5_sales_data(h5_name, month_number)
+            self.get_h5_inventory(h5_name, month_number)
+            self.show_h5_forecast(h5_name, "Statistical", forecast_month)
+            self.show_h5_forecast(h5_name, "Final", forecast_month)
+            self.display_material_eso(h5_name, "h5")
+        else:
+            print("!!Error, Wrong Hierarchy_5 Name, Please Check!")
+
+    # draw chart of h5 all information
+    def show_h5_chart(self, h5_name_input=''):
+        # 打印标题
+        print("-- The chart would be displayed in your browser --")
+        h5_name = "ALL" if h5_name_input.upper() == "ALL" \
+            else pb_func.get_available_h5_name(h5_name_input, self.__class__.bu_name)
+        if h5_name == "NULL":
+            return
+        h5_info_check = calculation.InfoCheck(self.__class__.bu_name)
+        # 读取数据
+        # 读取历史销量
+        sales_type = ("GTS", "LPSales", "IMS")
+        h5_sales_result = []
+        for sales_item in sales_type:
+            h5_sales_result.append(h5_info_check.get_h5_sales_data(sales_item, "SAP_Price", h5_name, 24))
+        # 读取库存量
+        inv_type = ("JNJ", "LP")
+        h5_inv_result = []
+        for inv_item in inv_type:
+            h5_inv_result.append(h5_info_check.get_h5_inventory_data(inv_item, "SAP_Price", h5_name, 24))
+        # 读取final forecast
+        h5_forecast = h5_info_check.get_h5_forecast(h5_name, "Final", 12)
+        # Generate the chart with 12 months forecast
+        chart_name = self.__class__.bu_name if h5_name == 'ALL' else h5_name
+        self.draw_sales_inv_fcst_chart(chart_name, h5_sales_result, h5_inv_result, h5_forecast, 12, "h5")
 
 
 if __name__ == "__main__":
