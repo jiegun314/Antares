@@ -19,6 +19,13 @@ class DataDisplay:
         return time.strftime("%Y-%m", time.localtime())
 
     @staticmethod
+    # Add Index column to a 2 dimension table
+    def add_table_index(lst_data, lst_index):
+        for i in range(len(lst_data)):
+            lst_data[i].insert(0, lst_index[i])
+        return lst_data
+
+    @staticmethod
     def show_command_list():
         pb_func.display_command_list("public_command")
 
@@ -135,75 +142,12 @@ class DataDisplay:
         h5_name = "ALL" if h5_input.upper() == "ALL" else pb_func.get_available_h5_name(h5_input, self.__class__.bu_name)
         return h5_name
 
-    # get sales data for one Hierarchy_5
-    def get_h5_sales_data(self, h5_name, month_number):
-        h5_info_check = calculation.InfoCheck(self.__class__.bu_name)
-        print("====================================================================")
-        print("--24 Month Historical Sales Data for %s--" % h5_name)
-        price_type = ("Standard_Cost", "SAP_Price")
-        sales_type = ("GTS", "LPSales", "IMS")
-        for price_item in price_type:
-            # Print price title
-            print("-With %s-" % price_item)
-            # Add Month list
-            sales_title = ["Month", "GTS", "LPSales", "IMS"]
-            h5_sales_result = [h5_info_check.get_time_list(self.get_current_month(), 0 - month_number)]
-            # get data
-            for sales_item in sales_type:
-                h5_sales_result.append(h5_info_check.get_h5_sales_data(sales_item, price_item, h5_name, month_number))
-            self.format_output(pb_func.add_table_index(h5_sales_result, sales_title))
-
-    # show sales data for one Hierarchy_5
-    def show_h5_sales_data(self, month_number=12):
-        h5_name = self.get_h5_name()
-        if h5_name != "NULL":
-            self.get_h5_sales_data(h5_name, month_number)
-        else:
-            print("!!Error, Wrong Hierarchy_5 Name, Please Check!")
-
-    # get inventory data for one Hierarchy_5:
-    def get_h5_inventory(self, h5_name, month_number):
-        h5_info_check = calculation.InfoCheck(self.__class__.bu_name)
-        # Print title
-        print("====================================================================")
-        print("--%s Month Historical Inventory for %s (RMB)--" % (month_number, h5_name))
-        # price_type = ("Standard_Cost", "SAP_Price")
-        inv_type = ("JNJ", "LP")
-        inv_std_cost_title = ["Month", "JNJ", "LP"]
-        inv_sap_price_title = ["Month", "JNJ", "JNJ_Mth", "LP", "LP_Mth"]
-        # print with Standard Cost
-        print("-With Standard_Cost-")
-        h5_inv_result = [h5_info_check.get_time_list(self.get_current_month(), 0 - month_number)]
-        for inv_item in inv_type:
-            h5_inv_result.append(h5_info_check.get_h5_inventory_data(inv_item, "Standard_Cost", h5_name, month_number))
-        self.format_output(pb_func.add_table_index(h5_inv_result, inv_std_cost_title))
-        # print with SAP Price
-        print("-With SAP Price-")
-        h5_inv_result = [h5_info_check.get_time_list(self.get_current_month(), 0 - month_number)]
-        inv_parameter = [["JNJ", "GTS"], ["LP", "LPSales"]]
-        for para_item in inv_parameter:
-            [inv_type, sale_type] = para_item
-            # get sales data
-            h5_sales_result = h5_info_check.get_h5_sales_data(sale_type, "SAP_Price", h5_name, month_number)
-            # generate inventory value and inventory month
-            h5_inv_output = h5_info_check.get_h5_inventory_data(inv_type, "SAP_Price", h5_name, month_number)
-            h5_inv_month = h5_info_check.get_inventory_month(h5_inv_output, h5_sales_result, month_number)
-            h5_inv_result.extend([h5_inv_output, h5_inv_month])
-        self.format_output(pb_func.add_table_index(h5_inv_result, inv_sap_price_title))
-
-    def show_h5_inventory(self, month_number=12):
-        h5_name = self.get_h5_name()
-        if h5_name != "NULL":
-            self.get_h5_inventory(h5_name, month_number)
-        else:
-            print("!!Error, Wrong Hierarchy_5 Name, Please Check!")
-
     # display forecast for one Hierarchy_5
-    def show_h5_forecast(self, h5_name, fcst_type, month_quntity=12):
+    def show_h5_forecast(self, h5_name, fcst_type, month_quantity=12):
         print("== %s Forecast for %s ==" % (fcst_type, h5_name))
         forecast_calculation = calculation.InfoCheck(self.__class__.bu_name)
-        month_list = forecast_calculation.get_time_list(self.get_current_month(), month_quntity)
-        forecast_result = forecast_calculation.get_h5_forecast(h5_name, fcst_type, month_quntity)
+        month_list = forecast_calculation.get_time_list(self.get_current_month(), month_quantity)
+        forecast_result = forecast_calculation.get_h5_forecast(h5_name, fcst_type, month_quantity)
         forecast_output = pb_func.add_table_index([month_list, forecast_result], ["Month", "Value (SAP Price)"])
         self.format_output(forecast_output)
         pass
@@ -225,28 +169,6 @@ class DataDisplay:
             for index in range(0, len(eso_output)):
                 eso_output[index].append(item[index])
         self.format_output(eso_output)
-
-    # 显示单个代码的综合图表
-    def show_code_chart(self):
-        print("==Single Code General Chart==")
-        material_code = input("Material code: ").upper()
-        # 验证代码是否存在
-        if not pb_func.check_code_availability(self.__class__.bu_name, material_code):
-            print("!! This code does no exist, please try again.")
-            return
-        # 读取销量数据
-        infocheck = calculation.InfoCheck(self.__class__.bu_name)
-        sales_list = ("GTS", "LPSales", "IMS")
-        sales_output = []
-        for index in range(0, 3):
-            sales_output.append(infocheck.get_code_sales(sales_list[index], material_code, 24))
-        # 读取final forecast
-        code_forecast = infocheck.get_code_forecast(material_code, "Final", 12)[1]
-        # 读取库存数据
-        historical_jnj_inv = infocheck.get_code_inventory(material_code, "JNJ", 24)
-        historical_lp_inv = infocheck.get_code_inventory(material_code, "LP", 24)
-        historical_inv = [historical_jnj_inv, historical_lp_inv]
-        self.draw_sales_inv_fcst_chart(material_code, sales_output, historical_inv, code_forecast, 12, "code")
 
     # 画综合图
     def draw_sales_inv_fcst_chart(self, name, sales_data, inv_data, fcst_data, fcst_month, data_type):
@@ -289,7 +211,7 @@ class CodeDataDisplay(DataDisplay):
     def __init__(self, bu_input, name_input):
         super(CodeDataDisplay, self).__init__(bu_input, name_input)
 
-    # 显示单个代码的综合图表
+    # show All-in-One chart for code level
     def show_code_chart(self, code_input=''):
         print("-- The chart would be opened in your browser --")
         material_code = code_input if code_input else input("Material code: ").upper()
@@ -322,11 +244,68 @@ class HierarchyDataDisplay(DataDisplay):
         h5_name = "ALL" if h5_name_input.upper() == "ALL" \
             else pb_func.get_available_h5_name(h5_name_input, self.__class__.bu_name)
         if h5_name != "NULL":
-            self.get_h5_sales_data(h5_name, month_number)
-            self.get_h5_inventory(h5_name, month_number)
+            self.show_h5_sales_data(h5_name, month_number)
+            self.show_h5_inventory(h5_name, month_number)
             self.show_h5_forecast(h5_name, "Statistical", forecast_month)
             self.show_h5_forecast(h5_name, "Final", forecast_month)
             self.display_material_eso(h5_name, "h5")
+        else:
+            print("!!Error, Wrong Hierarchy_5 Name, Please Check!")
+
+    # show sales data for one Hierarchy_5
+    def show_h5_sales_data(self, h5_name_input='', month_number=12):
+        h5_name = h5_name_input if h5_name_input else self.get_h5_name()
+        if h5_name != "NULL":
+            print("====================================================================")
+            print("-- %s Month Historical Sales Data for %s --" % (month_number, h5_name))
+            sales_title = ["Month", "GTS", "LPSales", "IMS"]
+            sales_result = self.get_h5_sales_data(h5_name, month_number)
+            self.format_output(self.add_table_index(sales_result, sales_title))
+        else:
+            print("!!Error, Wrong Hierarchy_5 Name, Please Check!")
+
+    # get sales data for one Hierarchy_5
+    def get_h5_sales_data(self, h5_name, month_number) -> list:
+        h5_info_check = calculation.InfoCheck(self.__class__.bu_name)
+        price_type = ("Standard_Cost", "SAP_Price")
+        sales_type = ("GTS", "LPSales", "IMS")
+        for price_item in price_type:
+            # Print price title
+            print("-With %s-" % price_item)
+            # Add Month list
+            h5_sales_result = [h5_info_check.get_time_list(self.get_current_month(), 0 - month_number)]
+            # get data
+            for sales_item in sales_type:
+                h5_sales_result.append(h5_info_check.get_h5_sales_data(sales_item, price_item, h5_name, month_number))
+            return h5_sales_result
+
+    # get inventory data for one Hierarchy_5:
+    def get_h5_inventory(self, h5_name, month_number, price_type) -> list:
+        h5_info_check = calculation.InfoCheck(self.__class__.bu_name)
+        print("- With %s -" % price_type)
+        h5_inv_result = [h5_info_check.get_time_list(self.get_current_month(), 0 - month_number)]
+        inv_parameter = [["JNJ", "GTS"], ["LP", "LPSales"]]
+        for para_item in inv_parameter:
+            [inv_type, sale_type] = para_item
+            # get sales data
+            h5_sales_result = h5_info_check.get_h5_sales_data(sale_type, price_type, h5_name, month_number)
+            # generate inventory value and inventory month
+            h5_inv_output = h5_info_check.get_h5_inventory_data(inv_type, price_type, h5_name, month_number)
+            h5_inv_month = h5_info_check.get_inventory_month(h5_inv_output, h5_sales_result, month_number)
+            h5_inv_result.extend([h5_inv_output, h5_inv_month])
+        return h5_inv_result
+
+    def show_h5_inventory(self, h5_name_input='', month_number=12):
+        h5_name = h5_name_input if h5_name_input else self.get_h5_name()
+        if h5_name != "NULL":
+            # Print title
+            print("====================================================================")
+            print("--%s Month Historical Inventory for %s (RMB)--" % (month_number, h5_name))
+            lst_price_type = ['Standard_Cost', 'SAP_Price']
+            inv_title = ["Month", "JNJ", "JNJ_Mth", "LP", "LP_Mth"]
+            for price_type in lst_price_type:
+                h5_inv_result = self.get_h5_inventory(h5_name, month_number, price_type)
+                self.format_output(self.add_table_index(h5_inv_result, inv_title))
         else:
             print("!!Error, Wrong Hierarchy_5 Name, Please Check!")
 
