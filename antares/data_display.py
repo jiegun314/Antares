@@ -15,7 +15,8 @@ class DataDisplay:
         self.__class__.bu_name = bu
         self.__class__.user_name = name
 
-    def get_current_month(self):
+    @staticmethod
+    def get_current_month():
         return time.strftime("%Y-%m", time.localtime())
 
     @staticmethod
@@ -29,8 +30,8 @@ class DataDisplay:
     def show_command_list():
         pb_func.display_command_list("public_command")
 
-    # 数据的表格化输出
-    def format_output(self, data):
+    @staticmethod
+    def format_output(data):
         print(tabulate(data, tablefmt="psql", headers="firstrow", floatfmt=",.0f"))
 
     # 显示单个代码销量数据
@@ -256,33 +257,31 @@ class HierarchyDataDisplay(DataDisplay):
     def show_h5_sales_data(self, h5_name_input='', month_number=12):
         h5_name = h5_name_input if h5_name_input else self.get_h5_name()
         if h5_name != "NULL":
-            print("====================================================================")
-            print("-- %s Month Historical Sales Data for %s --" % (month_number, h5_name))
+            print("== %s Month Historical Sales Data for %s ==" % (month_number, h5_name))
             sales_title = ["Month", "GTS", "LPSales", "IMS"]
-            sales_result = self.get_h5_sales_data(h5_name, month_number)
-            self.format_output(self.add_table_index(sales_result, sales_title))
+            price_type = ['Standard_Cost', 'SAP_Price']
+            for price_item in price_type:
+                # Print price title
+                print("-With %s-" % price_item)
+                sales_result = self.get_h5_sales_data(h5_name, month_number, price_item)
+                self.format_output(self.add_table_index(sales_result, sales_title))
         else:
             print("!!Error, Wrong Hierarchy_5 Name, Please Check!")
 
     # get sales data for one Hierarchy_5
-    def get_h5_sales_data(self, h5_name, month_number) -> list:
+    def get_h5_sales_data(self, h5_name, month_number, price_item) -> list:
         h5_info_check = calculation.InfoCheck(self.__class__.bu_name)
-        price_type = ("Standard_Cost", "SAP_Price")
-        sales_type = ("GTS", "LPSales", "IMS")
-        for price_item in price_type:
-            # Print price title
-            print("-With %s-" % price_item)
-            # Add Month list
-            h5_sales_result = [h5_info_check.get_time_list(self.get_current_month(), 0 - month_number)]
-            # get data
-            for sales_item in sales_type:
-                h5_sales_result.append(h5_info_check.get_h5_sales_data(sales_item, price_item, h5_name, month_number))
-            return h5_sales_result
+        sales_type = ["GTS", "LPSales", "IMS"]
+        # Add Month list
+        h5_sales_result = [h5_info_check.get_time_list(self.get_current_month(), 0 - month_number)]
+        # get data
+        for sales_item in sales_type:
+            h5_sales_result.append(h5_info_check.get_h5_sales_data(sales_item, price_item, h5_name, month_number))
+        return h5_sales_result
 
     # get inventory data for one Hierarchy_5:
     def get_h5_inventory(self, h5_name, month_number, price_type) -> list:
         h5_info_check = calculation.InfoCheck(self.__class__.bu_name)
-        print("- With %s -" % price_type)
         h5_inv_result = [h5_info_check.get_time_list(self.get_current_month(), 0 - month_number)]
         inv_parameter = [["JNJ", "GTS"], ["LP", "LPSales"]]
         for para_item in inv_parameter:
@@ -299,11 +298,11 @@ class HierarchyDataDisplay(DataDisplay):
         h5_name = h5_name_input if h5_name_input else self.get_h5_name()
         if h5_name != "NULL":
             # Print title
-            print("====================================================================")
-            print("--%s Month Historical Inventory for %s (RMB)--" % (month_number, h5_name))
+            print("== %s Month Historical Inventory for %s (RMB) ==" % (month_number, h5_name))
             lst_price_type = ['Standard_Cost', 'SAP_Price']
             inv_title = ["Month", "JNJ", "JNJ_Mth", "LP", "LP_Mth"]
             for price_type in lst_price_type:
+                print("- With %s -" % price_type)
                 h5_inv_result = self.get_h5_inventory(h5_name, month_number, price_type)
                 self.format_output(self.add_table_index(h5_inv_result, inv_title))
         else:
