@@ -14,10 +14,7 @@ class InfoCheck:
 
     # get all master data of single code
     def get_single_code_all_master_data(self, material_code, master_data_item_list):
-        str_master_data = ""
-        for item in master_data_item_list:
-            str_master_data += item + ","
-        str_master_data = str_master_data.rstrip(",")
+        str_master_data = ','.join(master_data_item_list)
         database_fullname = self.__class__.db_path + self.__class__.bu_name + "_Master_Data.db"
         datasheet_name = self.__class__.bu_name + "_Master_Data"
         conn = sqlite3.connect(database_fullname)
@@ -26,7 +23,7 @@ class InfoCheck:
         c.execute(sql_cmd)
         result = c.fetchall()
         if result:
-            return result[0]
+            return list(result[0])
         else:
             return 0
 
