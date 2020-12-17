@@ -703,7 +703,8 @@ class CurrentInventoryCalculation:
         master_data_table_name = self.bu_name + '_Master_Data'
         master_data_database_name = self.__class__.db_path + self.bu_name + '_Master_Data.db'
         data_filename = file_name + '.xlsx'
-        df_lp_inv = pd.read_excel(source_file_path + data_filename).rename(columns={'型号': 'Material', '数量': 'Quantity'})
+        df_lp_inv = pd.read_excel(source_file_path + data_filename, engine='openpyxl').rename(columns={'型号': 'Material', '数量': 'Quantity'})
+        df_lp_inv.dropna(inplace=True)
         df_lp_inv.set_index('Material', inplace=True)
         # mapping with master data
         conn = sqlite3.connect(master_data_database_name)

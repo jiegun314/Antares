@@ -69,7 +69,7 @@ class SystemIndex:
                 add_mi.mi_start()
             elif cmd_code in ["111", 'HELP']:
                 cmd_info_index.show_command_list()
-            elif cmd_code == 'CODE':
+            elif cmd_code in ['CODE', 'C']:
                 self._display_code_command_mode()
             elif cmd_code in ['H5', 'HIERARCHY', 'GROUP', 'H']:
                 self._display_h5_command_mode()

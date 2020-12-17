@@ -30,7 +30,9 @@ class MonthlyUpdate:
         # read excel file
         print("==Start to read the data==")
         file_name = self.__class__.update_path + "Update_" + self.__class__.bu_name + "_" + inv_type + ".xlsx"
-        df_qty = pd.read_excel(file_name, dtype={'Month': object}, index_col='Material')
+        df_qty = pd.read_excel(file_name, dtype={'Month': object}, index_col='Material', engine='openpyxl')
+        # remove blank line
+        df_qty.dropna(inplace=True)
         print("==Reading complete, start to map master data==")
         # read master data
         master_data_fullname = self.__class__.db_path + self.__class__.bu_name + "_Master_Data.db"
@@ -62,7 +64,8 @@ class MonthlyUpdate:
             return
         print("==Start to read the data==")
         file_name = self.__class__.update_path + "Update_" + self.__class__.bu_name + "_LP_INV.xlsx"
-        df = pd.read_excel(file_name, dtype={'Month': object})
+        df = pd.read_excel(file_name, dtype={'Month': object}, engine='openpyxl')
+        df.dropna(inplace=True)
         lst_lp_inv = np.array(df).tolist()
         print("==Reading complete, start to map master data==")
         # 实例化一个查询对象
@@ -177,7 +180,8 @@ class MonthlyUpdate:
         master_data_sheetname = self.__class__.bu_name + '_Master_Data'
         # read excel
         print("Start to read the Excel file")
-        df_eso = pd.read_excel(file_fullname, index_col='Material')
+        df_eso = pd.read_excel(file_fullname, index_col='Material', engine='openpyxl')
+        df_eso.dropna(inplace=True)
         df_eso['Total_ESO_Quantity'] = df_eso['Excess_Quantity'] + df_eso['Obsolete_Quantity'] + df_eso['Slow_Moving_Quantity']
         # print(df_eso.head(), df_eso.info())
         # read master data
@@ -204,7 +208,9 @@ class MonthlyUpdate:
         if input("Ready to proceed? (Y/N): ").upper() != 'Y':
             return
         print("Start to read forecast file")
-        df_forecast = pd.read_excel(file_fullname, index_col='Material').fillna(0)
+        df_forecast = pd.read_excel(file_fullname, index_col='Material', engine='openpyxl')
+        df_forecast.dropna(inplace=True, how='all')
+        df_forecast.fillna(0, inplace=True)
         # get month list
         month_list = df_forecast.columns.values.tolist()
         month_length = len(month_list)
@@ -429,9 +435,9 @@ class MasterDataUpdate:
         print("~ Start to read the data file %s" % file_name)
         start_time = datetime.now()
         if data_type == "ROP_Setting":
-            df = pd.read_excel(file_fullname, na_values="0", dtype={'Reorder Point': np.int32})
+            df = pd.read_excel(file_fullname, na_values="0", dtype={'Reorder Point': np.int32}, engine='openpyxl')
         else:
-            df = pd.read_excel(file_fullname, na_values="0")
+            df = pd.read_excel(file_fullname, na_values="0", engine='openpyxl')
         # data = df.values
         stop_time = datetime.now()
         print("~ File reading complete with time of %s seconds" % (stop_time - start_time).seconds)
@@ -465,12 +471,13 @@ class MasterDataUpdate:
         # start to read file
         print("Start to read data file.")
         if master_data_filename == 'GTIN':
-            df = pd.read_excel(master_data_file,  dtype={'Barcode': str})
+            df = pd.read_excel(master_data_file,  dtype={'Barcode': str}, engine='openpyxl')
             # print(df.info())
         elif master_data_filename == "RAG_Report":
-            df = pd.read_excel(master_data_file, dtype={'REGAPDATE': str, 'REGEXDATE': str}, skiprows=[1, ])
+            df = pd.read_excel(master_data_file, dtype={'REGAPDATE': str, 'REGEXDATE': str}, skiprows=[1, ],
+                               engine='openpyxl')
         else:
-            df = pd.read_excel(master_data_file)
+            df = pd.read_excel(master_data_file, engine='openpyxl')
         print("Start to import into database.")
         database_name = self.__class__.db_path + "Master_Data.db"
         conn = sqlite3.connect(database_name)
@@ -585,8 +592,8 @@ class MasterDataUpdate:
 
 
 if __name__ == "__main__":
-    DataUpdate = MasterDataUpdate('TU')
-    DataUpdate.generate_tu_abc_ranking()
+    DataUpdate = MonthlyUpdate('TU')
+    DataUpdate.update_sales('IMS')
     # DataUpdate.master_data_update_entrance()
     # print(DataUpdate.mapping_rag(["440.834", "440.831S"]))
     # dataupdate = MonthlyUpdate('TU')
