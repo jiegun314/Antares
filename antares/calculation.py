@@ -322,7 +322,7 @@ class InfoCheck:
             if material_name.upper() != "ALL":
                 sql_cmd = "SELECT Month, sum(NPI_Reverse_Value), sum(Total_ESO_Value) FROM %s " \
                           "WHERE Hierarchy_5 = \'%s\' COLLATE NOCASE GROUP by Month, Hierarchy_5 ORDER BY Month " \
-                          "LIMIT %S OFFSET %s" % (eso_file, material_name, str(cycle_qty), str(offset_value))
+                          "LIMIT %s OFFSET %s" % (eso_file, material_name, str(cycle_qty), str(offset_value))
             else:
                 sql_cmd = "SELECT Month, sum(NPI_Reverse_Value), sum(Total_ESO_Value) FROM %s GROUP by Month " \
                           "ORDER BY Month LIMIT %s OFFSET %s" % (eso_file, str(cycle_qty), str(offset_value))
@@ -339,7 +339,7 @@ if __name__ == "__main__":
     info_check = InfoCheck("TU")
     # info_check.generate_abc_ranking()
     # info_check.get_code_phoenix_result("689.893")
-    info_check.get_material_eso(material_name='ALL', eso_type='h5')
+    info_check.get_material_eso(material_name='PFNA-II', eso_type='h5')
 
 
 
