@@ -310,18 +310,22 @@ class InfoCheck:
         db_fullname = self.__class__.db_path + eso_file + ".db"
         conn = sqlite3.connect(db_fullname)
         c = conn.cursor()
+        # get month count
+        c.execute('SELECT count(distinct(Month)) FROM TU_ESO')
+        offset_value = c.fetchall()[0][0] - cycle_qty
+        # get eso list
         if eso_type == "code":
             sql_cmd = "SELECT Month, Excess_Quantity, Slow_Moving_Quantity, Obsolete_Quantity, Total_ESO_Quantity, " \
-                      "Total_ESO_Value FROM %s  WHERE Material = \'%s\' ORDER BY Month LIMIT %s" \
-                      % (eso_file, material_name, str(cycle_qty))
+                      "Total_ESO_Value FROM %s  WHERE Material = \'%s\' ORDER BY Month LIMIT %s OFFSET %s" \
+                      % (eso_file, material_name, str(cycle_qty), str(offset_value))
         else:
             if material_name.upper() != "ALL":
                 sql_cmd = "SELECT Month, sum(NPI_Reverse_Value), sum(Total_ESO_Value) FROM %s " \
                           "WHERE Hierarchy_5 = \'%s\' COLLATE NOCASE GROUP by Month, Hierarchy_5 ORDER BY Month " \
-                          "LIMIT %s" % (eso_file, material_name, str(cycle_qty))
+                          "LIMIT %S OFFSET %s" % (eso_file, material_name, str(cycle_qty), str(offset_value))
             else:
                 sql_cmd = "SELECT Month, sum(NPI_Reverse_Value), sum(Total_ESO_Value) FROM %s GROUP by Month " \
-                          "ORDER BY Month LIMIT %s" % (eso_file, str(cycle_qty))
+                          "ORDER BY Month LIMIT %s OFFSET %s" % (eso_file, str(cycle_qty), str(offset_value))
         try:
             c.execute(sql_cmd)
         except sqlite3.OperationalError:
@@ -335,7 +339,7 @@ if __name__ == "__main__":
     info_check = InfoCheck("TU")
     # info_check.generate_abc_ranking()
     # info_check.get_code_phoenix_result("689.893")
-    info_check.get_code_forecast('440.834', 'Final', 12)
+    info_check.get_material_eso(material_name='ALL', eso_type='h5')
 
 
 
