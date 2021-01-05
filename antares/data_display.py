@@ -93,20 +93,17 @@ class DataDisplay:
     # 显示单个代码的ESO
     def show_code_eso(self):
         code_name = input("Input Material Code: ").upper()
-        self.display_material_eso(code_name, eso_type="code")
+        self.display_material_eso(code_name)
 
     # display eso for single code or hierarchy
-    def display_material_eso(self, material_code, eso_type):
+    def display_material_eso(self, material_code):
         info_check = calculation.InfoCheck(self.__class__.bu_name)
-        eso_result = info_check.get_material_eso(material_code, eso_type)
-        if eso_type == "code":
-            eso_output = [["Cycle", ], ["E_Qty", ], ["SM_Qty", ], ["O_Qty", ], ["ESO_Qty", ], ["Total_ESO_Value", ]]
+        eso_result = info_check.get_material_eso(material_code)
+        if eso_result:
+            print("==  ESO Trend of %s  ==" % material_code)
+            self.format_output(eso_result)
         else:
-            eso_output = [["Cycle", ], ["NPI_Reverse_ESO", ], ["Total_ESO_Value", ]]
-        for item in eso_result:
-            for index in range(0, len(eso_output)):
-                eso_output[index].append(item[index])
-        self.format_output(eso_output)
+            pass
 
     # 画综合图
     def draw_sales_inv_fcst_chart(self, name, sales_data, inv_data, fcst_data, fcst_month, data_type):
@@ -187,7 +184,7 @@ class CodeDataDisplay(DataDisplay):
             if forecast_quantity != "Fail":
                 self.format_output(forecast_quantity)
             # 显示ESO
-            self.display_material_eso(material_code, "code")
+            self.display_material_eso(material_code)
             print("-----------END-----------")
         else:
             print("!! Error. This code does not exist.")
@@ -256,9 +253,16 @@ class HierarchyDataDisplay(DataDisplay):
             self.show_h5_inventory(h5_name, month_number)
             self.show_h5_forecast(h5_name, "Statistical", forecast_month)
             self.show_h5_forecast(h5_name, "Final", forecast_month)
-            self.display_material_eso(h5_name, "h5")
+            self.display_hierarchy_level_eso(h5_name)
         else:
             print("!!Error, Wrong Hierarchy_5 Name, Please Check!")
+
+    # show eso result in hierarchy level
+    def display_hierarchy_level_eso(self, h5_name):
+        print("==  ESO Trend of %s  ==" % h5_name)
+        info_check = calculation.InfoCheck(self.__class__.bu_name)
+        eso_result = info_check.get_hierarchy_eso_value(h5_name, cycle_qty=8)
+        self.format_output(eso_result)
 
     # show sales data for one Hierarchy_5
     def show_h5_sales_data(self, h5_name_input='', month_number=12):

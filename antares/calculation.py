@@ -304,42 +304,65 @@ class InfoCheck:
         return list_forecast_result
 
     # get eso result for one code or one hierarchy_5
-    def get_material_eso(self, material_name, eso_type="code", cycle_qty=8):
-        print("==  ESO Trend of %s  ==" % material_name)
+    def get_material_eso(self, material_name, cycle_qty=8):
         eso_file = self.__class__.bu_name + "_ESO"
         db_fullname = self.__class__.db_path + eso_file + ".db"
         conn = sqlite3.connect(db_fullname)
         c = conn.cursor()
         # get month count
-        c.execute('SELECT count(distinct(Month)) FROM TU_ESO')
-        offset_value = c.fetchall()[0][0] - cycle_qty
+        c.execute('SELECT count(distinct(Month)) FROM TU_ESO WHERE Material = \"%s\"' % material_name)
+        offset_value = max(c.fetchall()[0][0] - cycle_qty, 0)
         # get eso list
-        if eso_type == "code":
-            sql_cmd = "SELECT Month, Excess_Quantity, Slow_Moving_Quantity, Obsolete_Quantity, Total_ESO_Quantity, " \
-                      "Total_ESO_Value FROM %s  WHERE Material = \'%s\' ORDER BY Month LIMIT %s OFFSET %s" \
-                      % (eso_file, material_name, str(cycle_qty), str(offset_value))
-        else:
-            if material_name.upper() != "ALL":
-                sql_cmd = "SELECT Month, sum(NPI_Reverse_Value), sum(Total_ESO_Value) FROM %s " \
-                          "WHERE Hierarchy_5 = \'%s\' COLLATE NOCASE GROUP by Month, Hierarchy_5 ORDER BY Month " \
-                          "LIMIT %s OFFSET %s" % (eso_file, material_name, str(cycle_qty), str(offset_value))
-            else:
-                sql_cmd = "SELECT Month, sum(NPI_Reverse_Value), sum(Total_ESO_Value) FROM %s GROUP by Month " \
-                          "ORDER BY Month LIMIT %s OFFSET %s" % (eso_file, str(cycle_qty), str(offset_value))
+        sql_cmd = "SELECT Month, Excess_Quantity, Slow_Moving_Quantity, Obsolete_Quantity, Total_ESO_Quantity, " \
+                  "Total_ESO_Value FROM %s  WHERE Material = \'%s\' ORDER BY Month LIMIT %s OFFSET %s" \
+                  % (eso_file, material_name, str(cycle_qty), str(offset_value))
         try:
             c.execute(sql_cmd)
         except sqlite3.OperationalError:
             print("!!Error! No such code, please check your input!")
+            return 0
+        eso_result = c.fetchall()
+        eso_output = [["Cycle", ], ["E_Qty", ], ["SM_Qty", ], ["O_Qty", ], ["ESO_Qty", ], ["Total_ESO_Value", ]]
+        for item in eso_result:
+            for index in range(0, len(eso_output)):
+                eso_output[index].append(item[index])
+        return eso_output
+
+    # get eso result in hierarchy level
+    def get_hierarchy_eso_value(self, hierarchy_name, cycle_qty=8):
+        eso_file = self.__class__.bu_name + "_ESO"
+        db_fullname = self.__class__.db_path + eso_file + ".db"
+        conn = sqlite3.connect(db_fullname)
+        c = conn.cursor()
+        # get the number of value
+        sql_cmd = 'SELECT count(distinct(Month)) FROM TU_ESO WHERE 1 = 1'
+        sql_cmd_ext = '' if hierarchy_name.upper() == 'ALL' else ' AND Hierarchy_5 = \"' + hierarchy_name + '\" COLLATE NOCASE'
+        c.execute(sql_cmd + sql_cmd_ext)
+        offset_value = max(c.fetchall()[0][0] - cycle_qty, 0)
+        # get data
+        sql_cmd = 'SELECT Month, sum(NPI_Reverse_Value), sum(Excess_Value), sum(Slow_Moving_Value), ' \
+                  'sum(Obsolete_Value), sum(Total_ESO_Value) FROM %s WHERE 1 = 1 %s GROUP by Month ' \
+                  'ORDER BY Month LIMIT %s OFFSET %s'
+        sql_cmd_final = sql_cmd % (eso_file, sql_cmd_ext, str(cycle_qty), str(offset_value))
+        try:
+            c.execute(sql_cmd_final)
+        except sqlite3.OperationalError:
+            print("!!Error! No such code, please check your input!")
             return
         eso_result = c.fetchall()
-        return eso_result
+        eso_output = [["Cycle", ], ["NPI_Reverse_ESO", ], ["Excess_Value", ], ["Slow_Moving_Value", ],
+                      ["Obsolete_Value", ], ["Total_ESO_Value", ]]
+        for item in eso_result:
+            for index in range(0, len(eso_output)):
+                eso_output[index].append(item[index])
+        return eso_output
 
 
 if __name__ == "__main__":
     info_check = InfoCheck("TU")
     # info_check.generate_abc_ranking()
     # info_check.get_code_phoenix_result("689.893")
-    info_check.get_material_eso(material_name='PFNA-II', eso_type='h5')
+    info_check.get_hierarchy_eso_value('VA ANKLE')
 
 
 
