@@ -1,33 +1,14 @@
-#ignore these files
-# Compiled source #
-###################
-*.com
-*.class
-*.dll
-*.exe
-*.o
-*.so
+venv/
 
-# Packages #
-############
-# it's better to unpack these files and commit the raw source
-# git has its own built in compression methods
-*.7z
-*.dmg
-*.gz
-*.iso
-*.jar
-*.rar
-*.tar
-*.zip
+*.pyc
+__pycache__/
 
-# Data file #
-*.xlsx
-*.csv
-*.html
+instance/
 
-# Folder
-Data
-data
-venv
-venv2
+.pytest_cache/
+.coverage
+htmlcov/
+
+dist/
+build/
+*.egg-info/

@@ -90,21 +90,6 @@ class DataDisplay:
         self.format_output(forecast_output)
         pass
 
-    # 显示单个代码的ESO
-    def show_code_eso(self):
-        code_name = input("Input Material Code: ").upper()
-        self.display_material_eso(code_name)
-
-    # display eso for single code or hierarchy
-    def display_material_eso(self, material_code):
-        info_check = calculation.InfoCheck(self.__class__.bu_name)
-        eso_result = info_check.get_material_eso(material_code)
-        if eso_result:
-            print("==  ESO Trend of %s  ==" % material_code)
-            self.format_output(eso_result)
-        else:
-            pass
-
     # 画综合图
     def draw_sales_inv_fcst_chart(self, name, sales_data, inv_data, fcst_data, fcst_month, data_type):
         # get integer format of all sales data
@@ -184,7 +169,13 @@ class CodeDataDisplay(DataDisplay):
             if forecast_quantity != "Fail":
                 self.format_output(forecast_quantity)
             # 显示ESO
-            self.display_material_eso(material_code)
+            print("==  ESO Trend of %s  ==" % material_code)
+            eso_result = infocheck.get_material_eso(material_code)
+            if eso_result:
+                self.format_output(eso_result)
+            else:
+                pass
+            # print EOF
             print("-----------END-----------")
         else:
             print("!! Error. This code does not exist.")
