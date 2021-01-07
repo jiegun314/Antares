@@ -165,8 +165,6 @@ class DragonGUI(DragonFrame):
         self.calculation_module.generate_backorder_trend()
         self.txtLog.Clear()
         self.txtLog.write("Done. The chart would be opened in your web browser.")
-        str_chart_file = 'file:/home/jeffrey/PycharmProjects/Antares/data/_Charter/TU_Backorder_trend.html'
-        self.m_html_chart.LoadURL(str_chart_file)
 
     def display_aging_backorder(self, event):
         self.clear_frame_content()
