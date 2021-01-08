@@ -30,78 +30,6 @@ class DragonFrame ( wx.Frame ):
 
         bSizer16 = wx.BoxSizer( wx.VERTICAL )
 
-        bSizer19 = wx.BoxSizer( wx.VERTICAL )
-
-        bSizer21 = wx.BoxSizer( wx.HORIZONTAL )
-
-        bSizer21.SetMinSize( wx.Size( -1,5 ) )
-        self.txtLog = wx.TextCtrl( self.pnlOneclick, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 315,-1 ), wx.TE_CENTER|wx.TE_READONLY|wx.BORDER_SUNKEN )
-        self.txtLog.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_CAPTIONTEXT ) )
-        self.txtLog.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_INFOBK ) )
-
-        bSizer21.Add( self.txtLog, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
-
-
-        bSizer19.Add( bSizer21, 1, wx.EXPAND, 5 )
-
-        self.m_staticline4 = wx.StaticLine( self.pnlOneclick, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LI_HORIZONTAL )
-        bSizer19.Add( self.m_staticline4, 0, wx.EXPAND |wx.ALL, 5 )
-
-        bSizer18 = wx.BoxSizer( wx.HORIZONTAL )
-
-
-        bSizer18.Add( ( 2, 0), 1, wx.EXPAND, 5 )
-
-        rdbxCalculationTypeChoices = [ u"Code", u"H5" ]
-        self.rdbxCalculationType = wx.RadioBox( self.pnlOneclick, wx.ID_ANY, u"Data Type", wx.DefaultPosition, wx.Size( 80,-1 ), rdbxCalculationTypeChoices, 1, wx.RA_SPECIFY_COLS|wx.RA_SPECIFY_ROWS|wx.BORDER_SUNKEN )
-        self.rdbxCalculationType.SetSelection( 1 )
-        bSizer18.Add( self.rdbxCalculationType, 0, wx.ALIGN_CENTER, 5 )
-
-
-        bSizer18.Add( ( 2, 0), 1, wx.EXPAND, 5 )
-
-        self.txtMaterialCode = wx.TextCtrl( self.pnlOneclick, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 220,240 ), wx.TE_MULTILINE )
-        bSizer18.Add( self.txtMaterialCode, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 5 )
-
-
-        bSizer18.Add( ( 2, 0), 1, wx.EXPAND, 5 )
-
-
-        bSizer19.Add( bSizer18, 1, wx.EXPAND, 5 )
-
-        bSizer101 = wx.BoxSizer( wx.VERTICAL )
-
-        bSizer20 = wx.BoxSizer( wx.HORIZONTAL )
-
-        self.m_staticText2 = wx.StaticText( self.pnlOneclick, wx.ID_ANY, u"Code / H5 Name: ", wx.DefaultPosition, wx.Size( -1,-1 ), wx.ALIGN_CENTER_HORIZONTAL )
-        self.m_staticText2.Wrap( -1 )
-
-        bSizer20.Add( self.m_staticText2, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
-
-
-        bSizer20.Add( ( 0, 0), 1, wx.EXPAND, 5 )
-
-        self.chkbxWholeBU = wx.CheckBox( self.pnlOneclick, wx.ID_ANY, u"BU Level", wx.DefaultPosition, wx.DefaultSize, 0 )
-        bSizer20.Add( self.chkbxWholeBU, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
-
-
-        bSizer101.Add( bSizer20, 1, wx.EXPAND, 5 )
-
-        bSizer11 = wx.BoxSizer( wx.HORIZONTAL )
-
-        lstbxCodeSelectionChoices = []
-        self.lstbxCodeSelection = wx.ListBox( self.pnlOneclick, wx.ID_ANY, wx.DefaultPosition, wx.Size( 310,170 ), lstbxCodeSelectionChoices, wx.LB_NEEDED_SB|wx.LB_SINGLE )
-        bSizer11.Add( self.lstbxCodeSelection, 0, wx.ALL, 5 )
-
-
-        bSizer101.Add( bSizer11, 0, wx.EXPAND, 5 )
-
-
-        bSizer19.Add( bSizer101, 1, wx.EXPAND, 5 )
-
-
-        bSizer16.Add( bSizer19, 1, wx.EXPAND, 5 )
-
         bSizer5 = wx.BoxSizer( wx.VERTICAL )
 
         bSizer9 = wx.BoxSizer( wx.HORIZONTAL )
@@ -130,11 +58,41 @@ class DragonFrame ( wx.Frame ):
         self.m_staticline41 = wx.StaticLine( self.pnlOneclick, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LI_HORIZONTAL )
         bSizer5.Add( self.m_staticline41, 0, wx.EXPAND |wx.ALL, 5 )
 
-        bSizer15 = wx.BoxSizer( wx.HORIZONTAL )
 
-        bSizer15.SetMinSize( wx.Size( 0,0 ) )
+        bSizer16.Add( bSizer5, 0, wx.EXPAND, 5 )
 
-        bSizer15.Add( ( 0, 0), 1, wx.EXPAND, 5 )
+        bSizer19 = wx.BoxSizer( wx.VERTICAL )
+
+        bSizer21 = wx.BoxSizer( wx.HORIZONTAL )
+
+        bSizer21.SetMinSize( wx.Size( -1,5 ) )
+        self.txtLog = wx.TextCtrl( self.pnlOneclick, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 315,-1 ), wx.TE_CENTER|wx.TE_READONLY|wx.BORDER_SUNKEN )
+        self.txtLog.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_CAPTIONTEXT ) )
+        self.txtLog.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_INFOBK ) )
+
+        bSizer21.Add( self.txtLog, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
+
+
+        bSizer19.Add( bSizer21, 1, wx.EXPAND, 5 )
+
+        self.m_staticline4 = wx.StaticLine( self.pnlOneclick, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LI_HORIZONTAL )
+        bSizer19.Add( self.m_staticline4, 0, wx.EXPAND |wx.ALL, 5 )
+
+        bSizer18 = wx.BoxSizer( wx.HORIZONTAL )
+
+        bSizer191 = wx.BoxSizer( wx.VERTICAL )
+
+        bSizer191.SetMinSize( wx.Size( 90,-1 ) )
+
+        bSizer191.Add( ( 0, 0), 1, wx.EXPAND, 5 )
+
+        rdbxCalculationTypeChoices = [ u"Code", u"H5" ]
+        self.rdbxCalculationType = wx.RadioBox( self.pnlOneclick, wx.ID_ANY, u"Data Type", wx.DefaultPosition, wx.Size( 85,-1 ), rdbxCalculationTypeChoices, 1, wx.RA_SPECIFY_COLS )
+        self.rdbxCalculationType.SetSelection( 1 )
+        bSizer191.Add( self.rdbxCalculationType, 0, wx.ALIGN_CENTER, 5 )
+
+
+        bSizer191.Add( ( 0, 0), 1, wx.EXPAND, 5 )
 
         self.btnCodeSubmit = wx.BitmapButton( self.pnlOneclick, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.DefaultSize, wx.BU_AUTODRAW|wx.BORDER_NONE )
 
@@ -143,10 +101,7 @@ class DragonFrame ( wx.Frame ):
         self.btnCodeSubmit.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOW ) )
         self.btnCodeSubmit.SetToolTip( u"Submit" )
 
-        bSizer15.Add( self.btnCodeSubmit, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
-
-
-        bSizer15.Add( ( 50, 5), 0, wx.EXPAND, 5 )
+        bSizer191.Add( self.btnCodeSubmit, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
 
         self.btnReset = wx.BitmapButton( self.pnlOneclick, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.DefaultSize, wx.BU_AUTODRAW|wx.BORDER_NONE )
 
@@ -155,16 +110,52 @@ class DragonFrame ( wx.Frame ):
         self.btnReset.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOW ) )
         self.btnReset.SetToolTip( u"Reset Input" )
 
-        bSizer15.Add( self.btnReset, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
+        bSizer191.Add( self.btnReset, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
 
 
-        bSizer15.Add( ( 0, 0), 1, wx.EXPAND, 5 )
+        bSizer191.Add( ( 0, 0), 1, wx.EXPAND, 5 )
 
 
-        bSizer5.Add( bSizer15, 1, wx.EXPAND, 5 )
+        bSizer18.Add( bSizer191, 1, wx.EXPAND, 5 )
+
+        self.txtMaterialCode = wx.TextCtrl( self.pnlOneclick, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 220,240 ), wx.TE_MULTILINE )
+        bSizer18.Add( self.txtMaterialCode, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 5 )
 
 
-        bSizer16.Add( bSizer5, 0, wx.EXPAND, 5 )
+        bSizer19.Add( bSizer18, 1, wx.EXPAND, 5 )
+
+        bSizer101 = wx.BoxSizer( wx.VERTICAL )
+
+        bSizer20 = wx.BoxSizer( wx.HORIZONTAL )
+
+        self.m_staticText2 = wx.StaticText( self.pnlOneclick, wx.ID_ANY, u"Code / H5 Name: ", wx.DefaultPosition, wx.Size( -1,-1 ), wx.ALIGN_CENTER_HORIZONTAL )
+        self.m_staticText2.Wrap( -1 )
+
+        bSizer20.Add( self.m_staticText2, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
+
+
+        bSizer20.Add( ( 0, 0), 1, wx.EXPAND, 5 )
+
+        self.chkbxWholeBU = wx.CheckBox( self.pnlOneclick, wx.ID_ANY, u"BU Level", wx.DefaultPosition, wx.DefaultSize, 0 )
+        bSizer20.Add( self.chkbxWholeBU, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
+
+
+        bSizer101.Add( bSizer20, 1, wx.EXPAND, 5 )
+
+        bSizer11 = wx.BoxSizer( wx.HORIZONTAL )
+
+        lstbxCodeSelectionChoices = []
+        self.lstbxCodeSelection = wx.ListBox( self.pnlOneclick, wx.ID_ANY, wx.DefaultPosition, wx.Size( 320,250 ), lstbxCodeSelectionChoices, wx.LB_NEEDED_SB|wx.LB_SINGLE )
+        bSizer11.Add( self.lstbxCodeSelection, 0, wx.ALL, 5 )
+
+
+        bSizer101.Add( bSizer11, 0, wx.EXPAND, 5 )
+
+
+        bSizer19.Add( bSizer101, 1, wx.EXPAND, 5 )
+
+
+        bSizer16.Add( bSizer19, 1, wx.EXPAND, 5 )
 
 
         bSizer4.Add( bSizer16, 1, wx.EXPAND, 5 )
@@ -292,12 +283,12 @@ class DragonFrame ( wx.Frame ):
         self.Centre( wx.BOTH )
 
         # Connect Events
-        self.chkbxWholeBU.Bind( wx.EVT_CHECKBOX, self.bu_level_selected )
-        self.lstbxCodeSelection.Bind( wx.EVT_LEFT_DCLICK, self.display_h5_inventory )
         self.dtpkDate.Bind( wx.adv.EVT_DATE_CHANGED, self.set_checking_date )
         self.chkbxToday.Bind( wx.EVT_CHECKBOX, self.set_date_as_today )
         self.btnCodeSubmit.Bind( wx.EVT_BUTTON, self.codeSubmit )
         self.btnReset.Bind( wx.EVT_BUTTON, self.clear_input )
+        self.chkbxWholeBU.Bind( wx.EVT_CHECKBOX, self.bu_level_selected )
+        self.lstbxCodeSelection.Bind( wx.EVT_LEFT_DCLICK, self.display_h5_inventory )
         self.listCtrlOutput.Bind( wx.EVT_LIST_ITEM_ACTIVATED, self.click_item_in_list )
         self.Bind( wx.EVT_MENU, self.exit_dragon, id = self.mExit.GetId() )
         self.Bind( wx.EVT_MENU, self.export_inventory, id = self.mInvExport.GetId() )
@@ -324,12 +315,6 @@ class DragonFrame ( wx.Frame ):
 
 
     # Virtual event handlers, overide them in your derived class
-    def bu_level_selected( self, event ):
-        event.Skip()
-
-    def display_h5_inventory( self, event ):
-        event.Skip()
-
     def set_checking_date( self, event ):
         event.Skip()
 
@@ -340,6 +325,12 @@ class DragonFrame ( wx.Frame ):
         event.Skip()
 
     def clear_input( self, event ):
+        event.Skip()
+
+    def bu_level_selected( self, event ):
+        event.Skip()
+
+    def display_h5_inventory( self, event ):
         event.Skip()
 
     def click_item_in_list( self, event ):
