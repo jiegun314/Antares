@@ -132,7 +132,7 @@ class DragonGUI(DragonFrame):
 
     def list_h5_name(self):
         self.txtLog.write("Display H5 Inventory")
-        h5_name_hint = self.txtMaterialCode.Value
+        h5_name_hint = self.txtMaterialCode.Value.split('\n').pop(0).strip(' ')
         h5_name_list = pb_func.get_available_h5_list(h5_name_hint, self.__class__.bu_name)
         self.lstbxCodeSelection.Clear()
         for item in h5_name_list:
