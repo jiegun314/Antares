@@ -250,31 +250,6 @@ class GetStatisticalForecast:
                           (_week_num[j] * result[k] * _as10_result + _as14_result * _cny_index[j])
             forecast_result.append(max(0, item_result))
         return forecast_result
-        # # 打印历史值
-        # # print(_pre_volume)
-        # # 拟合过去几个月的量
-        # pre_result = []
-        # for j in range(12 * _base_year):
-        #     # print(result[j%12-1])
-        #     # 获得计算值
-        #     value_cclt = (result[12] * (j + 1) ** 2 + result[13] * (j + 1) + result[14]) * (_week_num[j] * result[j % 12] * result[16] + result[15] * cny_index[j])
-        #     pre_result.append(max(0, value_cclt))
-        # # print(pre_result)
-        # # 计算将来24个月的量
-        # fcst_result = []
-        # for j in range(1, 25):
-        #     # print(result[j%12-1])
-        #     if j != 12 and j != 24:
-        #         k = j % 12 - 1
-        #     else:
-        #         k = 11
-        #     value_cclt = (result[12] * (j + 12 * _base_year) ** 2 + result[13] * (j + 12 * _base_year) + result[14]) * \
-        #                  (_week_num[j - 1] * result[k] * result[16] + result[15] * _cny_index[j - 1])
-        #     fcst_result.append(max(0, value_cclt))
-        # # print(fcst_result)
-        # simulation_result = pre_result + fcst_result
-        # # 返回所有今年的模拟值
-        # return simulation_result
 
     # 写入excel报表
     def export_to_excel(self, lst_data, data_type):

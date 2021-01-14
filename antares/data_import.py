@@ -21,6 +21,7 @@ class DataImport:
         file_name = self.__class__.bu_name + '_' + inv_type
         file_full_name = self.__class__.file_path + file_name + ".xlsx"
         df_sales_data = pd.read_excel(file_full_name)
+        df_sales_data.dropna(inplace=True)
         # connect to db
         database_full_name = self.__class__.db_path + file_name + ".db"
         conn = sqlite3.connect(database_full_name)
