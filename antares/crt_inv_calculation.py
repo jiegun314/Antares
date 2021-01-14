@@ -776,6 +776,7 @@ class TraumaCurrentInventoryCalculation(CurrentInventoryCalculation):
             lst_summary.append((df_backorder['Price'] * df_backorder[git_item]).sum())
         # choose the output with selected columns
         df_backorder.reset_index(inplace=True)
+        df_backorder.sort_values(by=['CSC', 'Value'], ascending=False, inplace=True)
         df_backorder_output = df_backorder[lst_title]
         return [lst_title, ] + df_backorder_output.values.tolist() + [lst_summary, ]
 
