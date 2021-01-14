@@ -51,7 +51,7 @@ class SystemIndex:
                 from hospital_sales_calculation import HospitalSalesCalculation
                 hospital_sale_review = HospitalSalesCalculation(self.__class__.bu_name)
                 hospital_sale_review.start_generate_AIO_chart()
-            elif cmd_code in ["000", 'ONECLICK', 'CLICK']:
+            elif cmd_code in ["000", 'ONECLICK', 'CLICK', 'K']:
                 import crt_inv_cmd as crt
                 cmd_crt_inv = crt.CurrentInventoryMenu(self.__class__.bu_name)
                 cmd_crt_inv.crt_inv_entrance()

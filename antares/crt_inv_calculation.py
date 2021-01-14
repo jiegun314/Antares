@@ -294,8 +294,8 @@ class CurrentInventoryCalculation:
             backorder_value_summary[0].append(daily_backorder_total_value['IND'])
             backorder_value_summary[1].append(daily_backorder_total_value['ROP'])
             backorder_value_summary[2].append(daily_backorder_total_value['ND'])
-        # chart.backorder_trend_chart(date_list, backorder_value_summary)
-        chart.backorder_trend_line_chart(date_list, backorder_value_summary, self.__class__.bu_name)
+        return [date_list, backorder_value_summary]
+        # chart.backorder_trend_line_chart(date_list, backorder_value_summary, self.__class__.bu_name)
 
     # generate aging backorder list by pandas
     # return the list of information by row including title and the length of data
@@ -780,8 +780,38 @@ class TraumaCurrentInventoryCalculation(CurrentInventoryCalculation):
         df_backorder_output = df_backorder[lst_title]
         return [lst_title, ] + df_backorder_output.values.tolist() + [lst_summary, ]
 
+    def generate_backorder_trend(self):
+        # get the material price list
+        db_name = self.__class__.db_path + self.__class__.bu_name + "_Master_Data.db"
+        data_table_name = self.__class__.bu_name + "_SAP_Price"
+        conn = sqlite3.connect(db_name)
+        sql_cmd = 'SELECT Material, Price FROM %s' % data_table_name
+        df_sap_price = pd.read_sql(sql=sql_cmd, con=conn, index_col='Material')
+        # get current inventory backorder list
+        # get table list
+        db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
+        conn = sqlite3.connect(db_name)
+        c = conn.cursor()
+        c.execute("SELECT name FROM sqlite_master WHERE type=\"table\" ORDER BY name")
+        table_list = [item[0] for item in c.fetchall()]
+        date_list = [item[-6:] for item in table_list]
+        # generate blank dataframe
+        df_bo_value_summary = pd.DataFrame(index=['IND', 'ROP', 'None'])
+        # get backorder data
+        for table_item in table_list:
+            sql_cmd = "SELECT Material, CSC, Current_Backorder_Qty FROM %s WHERE Current_Backorder_Qty > 0" % table_item
+            df_bo_list = pd.read_sql(sql=sql_cmd, con=conn, index_col='Material')
+            df_bo_list = df_bo_list.join(df_sap_price)
+            df_bo_list['Backorder_Value'] = df_bo_list['Current_Backorder_Qty'] * df_bo_list['Price']
+            df_bo_value = pd.pivot_table(df_bo_list, values='Backorder_Value', index='CSC', aggfunc=np.sum)
+            df_bo_value.rename(columns={'Backorder_Value': table_item[-4:]}, inplace=True)
+            df_bo_value_summary = df_bo_value_summary.join(df_bo_value)
+        df_bo_value_summary.fillna(0, inplace=True)
+        df_bo_value_summary = df_bo_value_summary.astype('int32', copy=True)
+        return [date_list, df_bo_value_summary.values.tolist()]
+
 
 if __name__ == "__main__":
     test = TraumaCurrentInventoryCalculation()
-    test.get_current_bo('INV20201201')
+    test.generate_backorder_trend()
     # test.inv_data_sync(50)

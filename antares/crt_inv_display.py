@@ -2,6 +2,7 @@ from crt_inv_calculation import CurrentInventoryCalculation as CIC
 from crt_inv_calculation import TraumaCurrentInventoryCalculation as TU_CIC
 from tabulate import tabulate
 import public_function as pb_func
+import draw_chart as chart
 import pandas as pd
 
 
@@ -95,7 +96,8 @@ class CurrentInventoryDisplay:
         print("===Display Backorder Trend===")
         print(">> Calculation ongoing, please wait~")
         CodeCalculation = CIC(self.__class__.bu_name)
-        CodeCalculation.generate_backorder_trend()
+        [date_list, backorder_value_summary] = CodeCalculation.generate_backorder_trend()
+        chart.backorder_trend_line_chart(date_list, backorder_value_summary, self.__class__.bu_name)
         print(">> Done, the chart is opened in web browser.")
 
     # display aging backorder list
@@ -325,6 +327,15 @@ class TraumaCurrentInventoryDisplay(CurrentInventoryDisplay):
         backorder_result = code_calculation.get_current_bo(table_name)
         print(tabulate(backorder_result, headers="firstrow", tablefmt="github",
                        showindex=range(1, len(backorder_result)), floatfmt=",.0f"))
+
+    def display_backorder_trend(self):
+        # print title
+        print("===Display Backorder Trend===")
+        print(">> Calculation ongoing, please wait~")
+        CodeCalculation = TU_CIC()
+        [date_list, backorder_value_summary] = CodeCalculation.generate_backorder_trend()
+        chart.backorder_trend_line_chart(date_list, backorder_value_summary, self.__class__.bu_name)
+        print(">> Done, the chart is opened in web browser.")
 
 
 class PowerToolCurrentInventoryDisplay(CurrentInventoryDisplay):
