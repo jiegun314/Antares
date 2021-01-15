@@ -2,6 +2,7 @@ from gui_design import DragonFrame, dlgAbout
 import wx
 from crt_inv_calculation import CurrentInventoryCalculation as CIC
 from crt_inv_calculation import TraumaCurrentInventoryCalculation as TU_CIC
+from crt_inv_display import TraumaCurrentInventoryDisplay as TU_CID
 import public_function as pb_func
 import pandas as pd
 import os
@@ -29,6 +30,7 @@ class DragonGUI(DragonFrame):
     def _set_calculation_module(self):
         if self.__class__.bu_name == 'TU':
             self.calculation_module = TU_CIC()
+            self.display_module = TU_CID()
         else:
             self.calculation_module = CIC(self.__class__.bu_name)
 
@@ -162,7 +164,7 @@ class DragonGUI(DragonFrame):
     def display_backorder_trend(self, event):
         self.clear_frame_content()
         self.txtLog.write("Generating backorder trend. Please wait~")
-        self.calculation_module.generate_backorder_trend()
+        self.display_module.display_backorder_trend()
         self.txtLog.Clear()
         self.txtLog.write("Done. The chart would be opened in your web browser.")
 
