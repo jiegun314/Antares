@@ -96,6 +96,35 @@ class CurrentInventoryCalculation:
         df_single_bu.to_sql("INV" + str_date, con=conn, if_exists="replace", index=False)
         return 1
 
+    # import all dps inventory data to database
+    def import_all_dps_oneclick_inventory(self, str_date):
+        data_file_fullname = self.oneclick_path + str_date + "\\OneClick_Inventory_Projection_Report _" \
+                             + str_date + ".csv"
+        try:
+            df = pd.read_csv(data_file_fullname, sep='|', encoding='latin1', index_col='Material')
+        except FileNotFoundError:
+            return -1
+        # combine dps spine and synthes spine
+        df.loc[df['Business_Unit'] == 'SP', 'Business_Unit'] = 'Spine'
+        df.loc[df['Business_Unit'] == 'SPINE', 'Business_Unit'] = 'Spine'
+        # select dps products
+        df_dps = df.loc[(df['Business_Group'] == 'Orthopedics') & (df['Loc'] == "Total")]
+        # map with JT local Hierarchy
+        database_jt = self.__class__.db_path + 'JT_Master_Data.db'
+        local_hierarchy_datasheet = 'JT_Local_Hierarchy'
+        conn = sqlite3.connect(database_jt)
+        sql_cmd = 'SELECT Material, Local_Hierarchy FROM ' + local_hierarchy_datasheet
+        df_local_hierarchy = pd.read_sql(sql=sql_cmd, con=conn, index_col='Material')
+        df_dps = df_dps.join(df_local_hierarchy)
+        df_dps.loc[df_dps['Local_Hierarchy'].notnull(), 'Hierarchy_5'] = df_dps['Local_Hierarchy']
+        df_dps.drop(columns=['Local_Hierarchy'], inplace=True)
+        df_dps.reset_index(inplace=True)
+        # export to database
+        database_output = self.__class__.db_path + "oneclick_inventory_dps.db"
+        conn = sqlite3.connect(database_output)
+        df_dps.to_sql("INV" + str_date, con=conn, if_exists="replace", index=False)
+        return 1
+
     # mapping local hierarchy
     def map_local_hierarchy(self, df_input):
         # get local hierarchy
@@ -812,6 +841,9 @@ class TraumaCurrentInventoryCalculation(CurrentInventoryCalculation):
 
 
 if __name__ == "__main__":
-    test = TraumaCurrentInventoryCalculation()
-    test.generate_backorder_trend()
+    test = CurrentInventoryCalculation('TU')
+    lst_date = ['20210104', '20210105', '20210106', '20210107', '20210108', '20210112', '20210113', '20210114']
+    for item_date in lst_date:
+        print(test.import_all_dps_oneclick_inventory(item_date))
+        print('%s done' % item_date)
     # test.inv_data_sync(50)
