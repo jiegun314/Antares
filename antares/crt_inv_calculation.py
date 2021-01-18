@@ -101,7 +101,7 @@ class CurrentInventoryCalculation:
         data_file_fullname = self.oneclick_path + str_date + "\\OneClick_Inventory_Projection_Report _" \
                              + str_date + ".csv"
         try:
-            df = pd.read_csv(data_file_fullname, sep='|', encoding='latin1', index_col='Material')
+            df = pd.read_csv(data_file_fullname, sep='|', encoding='gbk', index_col='Material')
         except FileNotFoundError:
             return -1
         # combine dps spine and synthes spine
@@ -842,7 +842,7 @@ class TraumaCurrentInventoryCalculation(CurrentInventoryCalculation):
 
 if __name__ == "__main__":
     test = CurrentInventoryCalculation('TU')
-    lst_date = ['20210104', '20210105', '20210106', '20210107', '20210108', '20210112', '20210113', '20210114']
+    lst_date = ['20210104', '20210105', '20210106', '20210107', '20210108', '20210112', '20210113', '20210114', '20210115', '20210118']
     for item_date in lst_date:
         print(test.import_all_dps_oneclick_inventory(item_date))
         print('%s done' % item_date)
