@@ -320,7 +320,7 @@ class MasterDataConsolidation:
     def import_gtin(self):
         database_file = self.__class__.db_path + 'Master_Data.db'
         conn = sqlite3.connect(database_file)
-        sql_cmd = 'SELECT [Material code] as Material, Barcode as GTIN FROM GTIN'
+        sql_cmd = 'SELECT Material, GTIN FROM GTIN'
         df_gtin = pd.read_sql(con=conn, sql=sql_cmd, index_col='Material')
         df_gtin = df_gtin[~df_gtin.index.duplicated()]
         return df_gtin
@@ -471,7 +471,7 @@ class MasterDataUpdate:
         # start to read file
         print("Start to read data file.")
         if master_data_filename == 'GTIN':
-            df = pd.read_excel(master_data_file,  dtype={'Barcode': str}, engine='openpyxl')
+            df = pd.read_excel(master_data_file,  dtype={'GTIN': str}, engine='openpyxl')
             # print(df.info())
         elif master_data_filename == "RAG_Report":
             df = pd.read_excel(master_data_file, dtype={'REGAPDATE': str, 'REGEXDATE': str}, skiprows=[1, ],
