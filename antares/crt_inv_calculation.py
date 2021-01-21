@@ -664,13 +664,12 @@ class CurrentInventoryCalculation:
 
     # 数据同步
     def inv_data_sync(self, sync_days, lst_xcpt):
-        onclick_path = "L:\\COMPASS\\Oneclick Inventory Report\\Output\\"
         lst_folder_temp = []
         import_success_count, import_fail_count = 0, 0
         # 读取oneclick目录下文件夹清单
         try:
-            for file_name in os.listdir(onclick_path):
-                if os.path.isdir(onclick_path + file_name):
+            for file_name in os.listdir(self.oneclick_path):
+                if os.path.isdir(self.oneclick_path + file_name):
                     lst_folder_temp.append(file_name)
         except FileNotFoundError:
             return "ERROR"
