@@ -13,7 +13,8 @@ class CurrentInventoryCalculation:
     backorder_path = "../data/_Backorder/"
     inventory_path = "../data/_INV_Export/"
     update_file_path = "../data/_Update/"
-    oneclick_path = "L:\\COMPASS\\Oneclick Inventory Report\\Output\\"
+    # oneclick_path = "L:\\COMPASS\\Oneclick Inventory Report\\Output\\"
+    oneclick_path = '//jnjcnckapdfs11.ap.jnj.com/jnjcnmpdfsroot/COMPASS/Oneclick Inventory Report/Output/'
     currency_rate = 7.0842
 
     def __init__(self, bu):
