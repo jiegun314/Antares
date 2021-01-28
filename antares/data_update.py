@@ -182,7 +182,8 @@ class MonthlyUpdate:
         print("Start to read the Excel file")
         df_eso = pd.read_excel(file_fullname, index_col='Material', engine='openpyxl')
         df_eso.dropna(inplace=True)
-        df_eso['Total_ESO_Quantity'] = df_eso['Excess_Quantity'] + df_eso['Obsolete_Quantity'] + df_eso['Slow_Moving_Quantity']
+        df_eso['Total_ESO_Quantity'] = df_eso['Excess_Quantity'] + df_eso['Obsolete_Quantity'] + df_eso[
+            'Slow_Moving_Quantity']
         # print(df_eso.head(), df_eso.info())
         # read master data
         conn = sqlite3.connect(master_data_filename)
@@ -245,8 +246,8 @@ class MonthlyUpdate:
         dict_forecast_upload = {'Material': [item[0] for item in forecast_to_upload],
                                 'Hierarchy_5': [item[1] for item in forecast_to_upload],
                                 'Month': [item[2] for item in forecast_to_upload],
-                                'Quantity': [item[3]*1 for item in forecast_to_upload],
-                                'Value_SAP_Price': [item[4]*1 for item in forecast_to_upload]}
+                                'Quantity': [item[3] * 1 for item in forecast_to_upload],
+                                'Value_SAP_Price': [item[4] * 1 for item in forecast_to_upload]}
         df_forecast_upload = pd.DataFrame(dict_forecast_upload)
         # write to final forecast
         # print(df_forecast_upload.info())
@@ -335,7 +336,7 @@ class MasterDataConsolidation:
         with alive_bar(len(material_list), bar='blocks') as bar:
             for material_item in material_list:
                 df_rag_result = df_rag.loc[df_rag['Material'] == material_item,
-                                             ['REGLICNO', 'REGAPDATE', 'REGEXDATE', 'LIFEYEAR']]
+                                           ['REGLICNO', 'REGAPDATE', 'REGEXDATE', 'LIFEYEAR']]
                 list_rag_result = df_rag_result.values.tolist()
                 dict_rag_item = {}
                 for i in range(len(list_rag_result)):
@@ -471,13 +472,22 @@ class MasterDataUpdate:
         # start to read file
         print("Start to read data file.")
         if master_data_filename == 'GTIN':
-            df = pd.read_excel(master_data_file,  dtype={'GTIN': str}, engine='openpyxl')
+            df = pd.read_excel(master_data_file, dtype={'GTIN': str}, engine='openpyxl')
             # print(df.info())
         elif master_data_filename == "RAG_Report":
             df = pd.read_excel(master_data_file, dtype={'REGAPDATE': str, 'REGEXDATE': str}, skiprows=[1, ],
                                engine='openpyxl')
-        else:
+        elif master_data_filename == 'MATERIAL_MASTER':
             df = pd.read_excel(master_data_file, engine='openpyxl')
+            # update the index column
+            df.columns = ["Description", "EMG_Description", "New_Group", "Hierarchy_1_Code", "Hierarchy_1", "Hierarchy_2_Code",
+                          "Hierarchy_2", "Hierarchy_3_Code", "Hierarchy_3", "Hierarchy_4_Code", "Hierarchy_4",
+                          "Hierarchy_5_Code", "Hierarchy_5", "Business_Group", "Business_Unit", "Base_UoM", "Sales_UoM",
+                          "Purchasing_UoM", "Conversion Rate (Base to Pur)", "Conversion Rate (Base to Sales)",
+                          "Standard_Cost", "Sales_Status", "Purchase_Status", "Chinese_Description",
+                          "Regional APO Flag"]
+        else:
+            pass
         print("Start to import into database.")
         database_name = self.__class__.db_path + "Master_Data.db"
         conn = sqlite3.connect(database_name)
@@ -507,7 +517,8 @@ class MasterDataUpdate:
         ims_total = df_ims_query['IMS_Value'].sum()
         df_ims_query['Ratio'] = df_ims_query['IMS_Value'] / ims_total
         df_ims_query['Cum_Ratio'] = df_ims_query['Ratio'].cumsum()
-        df_ims_query['Ranking'] = df_ims_query['Cum_Ratio'].apply(lambda x: 'A' if x < 0.8 else ('B' if x < 0.95 else 'C'))
+        df_ims_query['Ranking'] = df_ims_query['Cum_Ratio'].apply(
+            lambda x: 'A' if x < 0.8 else ('B' if x < 0.95 else 'C'))
         # get phoenix list
         df_phoenix_list = self.get_phoenix_products_list()
         df_ims_query = df_ims_query.join(df_phoenix_list)
