@@ -478,14 +478,7 @@ class MasterDataUpdate:
             df = pd.read_excel(master_data_file, dtype={'REGAPDATE': str, 'REGEXDATE': str}, skiprows=[1, ],
                                engine='openpyxl')
         elif master_data_filename == 'MATERIAL_MASTER':
-            df = pd.read_excel(master_data_file, engine='openpyxl')
-            # update the index column
-            df.columns = ["Material", "Description", "EMG_Description", "Hierarchy_1_Code", "Hierarchy_1", "Hierarchy_2_Code",
-                          "Hierarchy_2", "Hierarchy_3_Code", "Hierarchy_3", "Hierarchy_4_Code", "Hierarchy_4",
-                          "Hierarchy_5_Code", "Hierarchy_5", "Business_Group", "Business_Unit", "Base_UoM", "Sales_UoM",
-                          "Purchasing_UoM", "Conversion Rate (Base to Pur)", "Conversion Rate (Base to Sales)",
-                          "Standard_Cost", "Sales_Status", "Purchase_Status", "Chinese_Description",
-                          "Regional APO Flag"]
+            df = pd.read_excel(master_data_file, engine='openpyxl', skiprows=[0, ])
         else:
             pass
         print("Start to import into database.")
