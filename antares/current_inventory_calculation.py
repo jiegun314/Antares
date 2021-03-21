@@ -249,6 +249,171 @@ class CurrentInventoryCalculation:
 
         pass
 
+    # Daily pending inventory trend display
+    def generate_pending_trend(self, data_type="value"):
+        _conn = sqlite3.connect(self.oneclick_database)
+        sql_cmd = 'SELECT Date, sum(Pending_Inventory_Bonded_Total_Qty) as Pending_BD_Qty, ' \
+                  'sum(Pending_Inventory_NonB_Total_Qty) as Pending_NB_Qty, ' \
+                  'sum((Standard_Cost * Pending_Inventory_Bonded_Total_Qty)) As Pending_BD_Value, ' \
+                  'sum((Standard_Cost * Pending_Inventory_NonB_Total_Qty)) As Pending_NB_Value FROM oneclick_inventory ' \
+                  'WHERE Business_Unit=\"%s\" GROUP by Date ORDER by Date' % self._bu_name
+        df_pending_detail = pd.read_sql(sql=sql_cmd, con=_conn, index_col='Date').astype('int32')
+        date_list = df_pending_detail.index.tolist()
+        if data_type == "value":
+            lst_pending_value = [df_pending_detail['Pending_BD_Value'].tolist(),
+                                 df_pending_detail['Pending_NB_Value'].tolist()]
+            chart_title = "Pending Inventory Trend of " + self._bu_name + " (Value in RMB)"
+        else:
+            lst_pending_value = [df_pending_detail['Pending_BD_Qty'].tolist(),
+                                 df_pending_detail['Pending_NB_Qty'].tolist()]
+            chart_title = "Pending Inventory Trend of " + self._bu_name + " (by Quantity)"
+        chart.pending_inventory_trend_chart(date_list, lst_pending_value, chart_title)
+        pass
+
+    # check inventory of single code, str_date_input = YYYYMMDD
+    def get_code_inv(self, code_name, str_date_input):
+        str_date_input = self.get_newest_date() if str_date_input == 'newest' else str_date_input
+        # judge if this code exist
+        if not self.check_date_availability(str_date_input):
+            return 0
+        _conn = sqlite3.connect(self.oneclick_database)
+        c = _conn.cursor()
+        sql_cmd = "SELECT Material, Description, Hierarchy_5, Available_Stock, Pending_Inventory_Bonded_Total_Qty, " \
+                  "Pending_Inventory_NonB_Total_Qty, CSC, GIT_1_Week, GIT_2_Week, GIT_3_Week, GIT_4_Week, Open_PO, " \
+                  "Standard_Cost FROM oneclick_inventory WHERE Material = \"%s\" AND Date=\"%s\"" % (code_name, str_date_input)
+        c.execute(sql_cmd)
+        result = c.fetchall()[0]
+        title = ["Material", "Description", "Hierarchy_5", "Available_Stock", "Pending_Qty_BD",
+                 "Pending_Qty_NB", "CSC", "GIT_1_Qty", "GIT_2_Qty", "GIT_3_Qty", "GIT_4_Qty", "Open_PO", "Std Cost"]
+        code_inv_output = [["Item", "Value"]]
+        for i in range(len(result)):
+            if isinstance(result[i], str):
+                code_inv_output.append([title[i], result[i]])
+            elif result[i] is None:
+                code_inv_output.append([title[i], "None"])
+            else:
+                code_inv_output.append([title[i], int(result[i])])
+        return code_inv_output
+
+    # check inventory quantity trend for single code
+    def generate_code_inv_trend(self, code_name):
+        _conn = sqlite3.connect(self.oneclick_database)
+        # get to date list
+        sql_cmd = 'SELECT DISTINCT(Date) FROM oneclick_inventory'
+        c = _conn.cursor()
+        c.execute(sql_cmd)
+        result = c.fetchall()
+        date_list = [item[0] for item in result]
+        df_inventory = pd.DataFrame(index=date_list)
+        # get inventory data
+        sql_cmd = 'SELECT Date, Available_Stock FROM oneclick_inventory WHERE Material=\"%s\"' % code_name
+        df_code_result = pd.read_sql(sql=sql_cmd, con=_conn, index_col='Date').astype('int32')
+        df_inventory = df_inventory.join(df_code_result)
+        df_inventory.fillna(0, inplace=True)
+        chart_title = 'Inventory Trend of %s' % code_name
+        chart.line_chart(code_name, date_list, df_inventory.values.tolist(), "Date", "INV Qty", chart_title)
+        pass
+
+    # display inventory trend by hierarchy_5
+    def generate_h5_inventory_trend(self, h5_input):
+        _conn = sqlite3.connect(self.oneclick_database)
+        # get to date list
+        sql_cmd = 'SELECT DISTINCT(Date) FROM oneclick_inventory'
+        c = _conn.cursor()
+        c.execute(sql_cmd)
+        result = c.fetchall()
+        date_list = [item[0] for item in result]
+        df_inventory = pd.DataFrame(index=date_list)
+        # get inventory data
+        if h5_input.upper() == 'ALL':
+            sql_cmd = 'SELECT Date, sum(Available_Stock* Standard_Cost) as Stock_Value FROM oneclick_inventory ' \
+                      'WHERE Business_Unit = \"%s\" GROUP BY Business_Unit, Date ORDER BY Date' % self._bu_name
+        else:
+            sql_cmd = 'SELECT Date, sum(Available_Stock* Standard_Cost) as Stock_Value FROM oneclick_inventory ' \
+                        'WHERE Hierarchy_5 = \"%s\" GROUP BY Date, Hierarchy_5 ORDER BY Date' % h5_input
+        df_h5_result = pd.read_sql(sql=sql_cmd, con=_conn, index_col='Date').astype('int32')
+        df_inventory = df_inventory.join(df_h5_result)
+        df_inventory.fillna(0, inplace=True)
+        chart_title = 'Inventory Trend of %s' % h5_input
+        chart.line_chart(h5_input, date_list, df_inventory.values.tolist(), "Date", "Value", chart_title)
+
+    # display inventory of h5 of both qty and value
+    def generate_h5_inventory_trend_two_dimension(self, h5_input):
+        _conn = sqlite3.connect(self.oneclick_database)
+        # get to date list
+        sql_cmd = 'SELECT DISTINCT(Date) FROM oneclick_inventory'
+        c = _conn.cursor()
+        c.execute(sql_cmd)
+        result = c.fetchall()
+        date_list = [item[0] for item in result]
+        df_inventory = pd.DataFrame(index=date_list)
+        # get inventory data
+        if h5_input.upper() == 'ALL':
+            sql_cmd = 'SELECT Date, sum(Available_Stock) as Stock_Qty, sum(Available_Stock* Standard_Cost) ' \
+                      'as Stock_Value FROM oneclick_inventory WHERE Business_Unit = \"%s\" ' \
+                      'GROUP BY Business_Unit, Date ORDER BY Date' % self._bu_name
+        else:
+            sql_cmd = 'SELECT Date, sum(Available_Stock) as Stock_Qty, sum(Available_Stock* Standard_Cost) ' \
+                      'as Stock_Value FROM oneclick_inventory WHERE Hierarchy_5 = \"%s\" ' \
+                      'GROUP BY Date, Hierarchy_5 ORDER BY Date' % h5_input
+        df_h5_result = pd.read_sql(sql=sql_cmd, con=_conn, index_col='Date').astype('int32')
+        df_inventory = df_inventory.join(df_h5_result)
+        df_inventory.fillna(0, inplace=True)
+        chart_title = 'Inventory Trend of %s (Two Dimension)' % h5_input
+        chart.double_line_chart(h5_input, date_list, df_inventory['Stock_Qty'].values.tolist(),
+                                df_inventory['Stock_Value'].values.tolist(), 'Date', 'Qty', 'Value', chart_title)
+        pass
+
+    # show inventory detail of one hierarchy_5
+    def get_h5_inv_detail(self, h5_input, str_date_input):
+        str_date_input = self.get_newest_date() if str_date_input == 'newest' else str_date_input
+        # judge if this code exist
+        if not self.check_date_availability(str_date_input):
+            return 0
+        # generate title
+        table_title = [("Material", "Description", "CSC", "Available Stock", "Onhand_INV_Value", "Bonded Pending",
+                        "GIT_1_Week", "GIT_2_Week", "GIT_3_Week", "GIT_4_Week", "Open_PO"), ]
+        # Connect to database
+        _conn = sqlite3.connect(self.oneclick_database)
+        c = _conn.cursor()
+        sql_cmd = "SELECT Material, Description, CSC, Available_Stock, (Standard_Cost * Inventory_OnHand) as " \
+                  "Onhand_INV_Value, Pending_Inventory_Bonded_Total_Qty, GIT_1_Week, GIT_2_Week, GIT_3_Week, " \
+                  "GIT_4_Week, Open_PO FROM oneclick_inventory WHERE Hierarchy_5 = \"%s\" COLLATE NOCASE " \
+                  "AND Date = \"%s\" ORDER by Material" % (h5_input.upper(), str_date_input)
+        try:
+            c.execute(sql_cmd)
+        except sqlite3.OperationalError:
+            result = [(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)]
+        else:
+            result = c.fetchall()
+        # calculate total inventory value
+        total_inv_value = 0
+        for item in result:
+            total_inv_value += item[4]
+        # return value
+        return [table_title + result, total_inv_value]
+
+    # data mapping for a list of codes
+    def inventory_mapping(self, code_list, str_date_input) -> list:
+        str_date_input = self.get_newest_date() if str_date_input == 'newest' else str_date_input
+        # judge if this code exist
+        if not self.check_date_availability(str_date_input):
+            return 0
+        df_inventory = pd.DataFrame(index=code_list)
+        # get inventory list
+        _conn = sqlite3.connect(self.oneclick_database)
+        sql_cmd = "SELECT Material, Description, Hierarchy_5, CSC, Available_Stock, " \
+                  "Pending_Inventory_Bonded_Total_Qty, Pending_Inventory_NonB_Total_Qty, GIT_1_Week, GIT_2_Week, " \
+                  "GIT_3_Week, GIT_4_Week, Open_PO FROM oneclick_inventory WHERE Date = \"%s\"" % str_date_input
+        df_inventory_detail = pd.read_sql(sql=sql_cmd, con=_conn, index_col='Material')
+        df_inventory = df_inventory.join(df_inventory_detail)
+        df_inventory.fillna(0, inplace=True)
+        df_inventory.reset_index(inplace=True)
+        df_inventory.rename(columns={'index': 'Material'}, inplace=True)
+        lst_inventory_result = df_inventory.values.tolist()
+        lst_inventory_result.insert(0, df_inventory.columns.tolist())
+        return lst_inventory_result
+
     def get_newest_date(self) -> str:
         _conn = sqlite3.connect(self.oneclick_database)
         c = _conn.cursor()
@@ -262,5 +427,5 @@ if __name__ == "__main__":
     sync_test.bu_name = 'TU'
     sync_test.sync_days = 90
     sync_test.exception_list = []
-    print(sync_test.generate_backorder_trend())
+    sync_test.inventory_mapping(['440.834', '440.834S', '440.831', '440.ddd'], 'newest')
     pass
