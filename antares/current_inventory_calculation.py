@@ -20,6 +20,14 @@ class CurrentInventoryCalculation:
         pass
 
     @property
+    def bu_name(self):
+        return self._bu_name
+
+    @bu_name.setter
+    def bu_name(self, bu_name_input):
+        self._bu_name = bu_name_input
+
+    @property
     def sync_days(self):
         return self._sync_days
 
@@ -121,6 +129,126 @@ class CurrentInventoryCalculation:
         result = c.fetchone()[0]
         return True if result else False
 
+    # get inventory summary for single day
+    def get_current_inventory(self, str_date_input) -> list:
+        str_date_input = self.get_newest_date() if str_date_input == 'newest' else str_date_input
+        # judge if this code exist
+        if not self.check_date_availability(str_date_input):
+            return []
+        _conn = sqlite3.connect(self.oneclick_database)
+        sql_cmd = 'SELECT Hierarchy_5, sum(Available_Stock * Standard_Cost) AS Available_Stock, ' \
+                  'sum((GIT_1_Week + GIT_2_Week + GIT_3_Week + GIT_4_Week) * Standard_Cost) AS GIT_Inventory, ' \
+                  'sum(Open_PO * Standard_Cost) As Open_PO_Value, ' \
+                  'sum(Pending_Inventory_Bonded_Total_Qty * Standard_Cost) AS Bonding_Pending, ' \
+                  'sum(Pending_Inventory_NonB_Total_Qty * Standard_Cost) AS Non_bonded_Pending FROM oneclick_inventory ' \
+                  'WHERE Business_Unit =\"%s\" AND Date = \"%s\" GROUP BY Hierarchy_5 ' \
+                  'ORDER BY Available_Stock DESC' % (self._bu_name, str_date_input)
+        df_current_inventory = pd.read_sql(sql=sql_cmd, con=_conn)
+        total_available_stock_value = df_current_inventory['Available_Stock'].sum()
+        total_useful_stock_value = total_available_stock_value + df_current_inventory['GIT_Inventory'].sum() + df_current_inventory['Bonding_Pending'].sum()
+        total_stock_value = total_useful_stock_value = df_current_inventory['Non_bonded_Pending'].sum() + df_current_inventory['Open_PO_Value'].sum()
+        lst_result = [df_current_inventory.columns.tolist()] + df_current_inventory.values.tolist()
+        return [lst_result, [total_available_stock_value, total_useful_stock_value, total_stock_value]]
+
+    # get backorder summary for single day
+    def get_current_bo(self, str_date_input) -> list:
+        str_date_input = self.get_newest_date() if str_date_input == 'newest' else str_date_input
+        # judge if this code exist
+        if not self.check_date_availability(str_date_input):
+            return []
+        _conn = sqlite3.connect(self.oneclick_database)
+        sql_cmd = 'SELECT Material, Description, Hierarchy_5, CSC, Current_Backorder_Qty, Average_Selling_Price, ' \
+                  '(Current_Backorder_Qty * Average_Selling_Price) as Backorder_Value, GIT_1_Week, GIT_2_Week, ' \
+                  'GIT_3_Week, GIT_4_Week, Open_PO FROM oneclick_inventory WHERE Business_Unit=\"%s\" AND ' \
+                  'Current_Backorder_Qty > 0 AND Date = \"%s\" ORDER by CSC DESC, Backorder_Value DESC' \
+                  % (self._bu_name, str_date_input)
+        df_backorder = pd.read_sql(sql=sql_cmd, con=_conn)
+        # calculate GIT fulfillment
+        df_backorder['GIT_1_Fulfill'] = df_backorder[['Current_Backorder_Qty', 'GIT_1_Week']].min(axis=1)
+        df_backorder['GIT_1_Fulfill_Value'] = df_backorder['GIT_1_Fulfill'] * df_backorder['Average_Selling_Price']
+        df_backorder['GIT_1_Remain'] = df_backorder['Current_Backorder_Qty'] - df_backorder['GIT_1_Fulfill']
+        df_backorder['GIT_2_Fulfill'] = df_backorder[['GIT_1_Remain', 'GIT_2_Week']].min(axis=1)
+        df_backorder['GIT_2_Fulfill_Value'] = df_backorder['GIT_2_Fulfill'] * df_backorder['Average_Selling_Price']
+        df_backorder['GIT_2_Remain'] = df_backorder['GIT_1_Remain'] - df_backorder['GIT_2_Fulfill']
+        df_backorder['GIT_3_Fulfill'] = df_backorder[['GIT_2_Remain', 'GIT_3_Week']].min(axis=1)
+        df_backorder['GIT_3_Fulfill_Value'] = df_backorder['GIT_3_Fulfill'] * df_backorder['Average_Selling_Price']
+        df_backorder['GIT_3_Remain'] = df_backorder['GIT_2_Remain'] - df_backorder['GIT_3_Fulfill']
+        df_backorder['GIT_4_Fulfill'] = df_backorder[['GIT_3_Remain', 'GIT_4_Week']].min(axis=1)
+        df_backorder['GIT_4_Fulfill_Value'] = df_backorder['GIT_4_Fulfill'] * df_backorder['Average_Selling_Price']
+        df_backorder['GIT_4_Remain'] = df_backorder['GIT_3_Remain'] - df_backorder['GIT_4_Fulfill']
+        df_backorder['Open_PO_Fulfill'] = df_backorder[['GIT_4_Remain', 'Open_PO']].min(axis=1)
+        df_backorder['Open_PO_Fulfill_Value'] = df_backorder['Open_PO_Fulfill'] * df_backorder['Average_Selling_Price']
+        lst_summary = ["-", "-", "-", "Total", df_backorder['Current_Backorder_Qty'].sum(),
+                       df_backorder['Backorder_Value'].sum(), df_backorder['GIT_1_Fulfill_Value'].sum(),
+                       df_backorder['GIT_2_Fulfill_Value'].sum(), df_backorder['GIT_3_Fulfill_Value'].sum(),
+                       df_backorder['GIT_4_Fulfill_Value'].sum(), df_backorder['Open_PO_Fulfill_Value'].sum()]
+        # remove additional column
+        lst_title = ['Material', 'Description', 'Hierarchy_5', 'CSC', 'Current_Backorder_Qty', 'Backorder_Value',
+                     'GIT_1_Week', 'GIT_2_Week', 'GIT_3_Week', 'GIT_4_Week', 'Open_PO']
+        df_backorder_final = df_backorder[lst_title]
+        final_output_list = df_backorder_final.values.tolist()
+        final_output_list.insert(0, lst_title)
+        final_output_list.append(lst_summary)
+        return final_output_list
+
+    # export backorder list
+    def export_backorder_data(self, str_date_input) -> pd.DataFrame:
+        str_date_input = self.get_newest_date() if str_date_input == 'newest' else str_date_input
+        # judge if this code exist
+        if not self.check_date_availability(str_date_input):
+            return 0
+        _conn = sqlite3.connect(self.oneclick_database)
+        sql_cmd = 'SELECT Material, Description, Hierarchy_5, Current_Backorder_Qty, ' \
+                  '(Current_Backorder_Qty * Average_Selling_Price) AS bo_value, GIT_1_Week, GIT_2_Week, GIT_3_Week, ' \
+                  'GIT_4_Week, Open_PO FROM oneclick_inventory WHERE Business_Unit=\"%s\" AND ' \
+                  'Current_Backorder_Qty > 0 ORDER by bo_value DESC' % self._bu_name
+        df_backorder = pd.read_sql(sql=sql_cmd, con=_conn)
+        df_backorder.drop(columns=['bo_value'], inplace=True)
+        if self._bu_name == 'TU':
+            df_backorder.rename(columns={"Material": "代码", "Description": "英文描述", "Hierarchy_5": "产品分类",
+                                         "Current_Backorder_Qty": "缺货数量", "GIT_1_Week": "2周左右",
+                                         "GIT_2_Week": "3-4周", "GIT_3_Week": "4-6周", "GIT_4_Week": "6-8周",
+                                         "Open_PO": "已下订单"},
+                                inplace=True)
+        return df_backorder
+
+    # export inventory list to customer
+    def export_inventory_data(self, str_date_input) ->pd.DataFrame:
+        str_date_input = self.get_newest_date() if str_date_input == 'newest' else str_date_input
+        # judge if this code exist
+        if not self.check_date_availability(str_date_input):
+            return 0
+        _conn = sqlite3.connect(self.oneclick_database)
+        if self._bu_name == 'TU':
+            sql_cmd = 'SELECT Material, Description, Available_Stock FROM oneclick_inventory ' \
+                      'WHERE Available_Stock !=0 AND Business_Unit = \"%s\" AND Date=\"%s\"' % (self._bu_name, str_date_input)
+        else:
+            sql_cmd = 'SELECT Material, Description, CSC, Available_Stock, Pending_Inventory_Bonded_Total_Qty, ' \
+                      'GIT_1_Week, GIT_2_Week, GIT_3_Week, GIT_4_Week, Open_PO FROM oneclick_inventory WHERE ' \
+                      'Business_Unit = \"%s\" AND Date=\"%s\"' % (self._bu_name, str_date_input)
+        df_inventory = pd.read_sql(sql=sql_cmd, con=_conn)
+        if self._bu_name == "TU":
+            df_inventory.rename(columns={"Material": "代码", "Description": "英文描述",
+                                         "Available_Stock": "可用数量"}, inplace=True)
+        return df_inventory
+
+    # display backorder value trend by day
+    def generate_backorder_trend(self) -> list:
+        _conn = sqlite3.connect(self.oneclick_database)
+        sql_cmd = 'SELECT Date, CSC, sum(Current_Backorder_Qty * Average_Selling_Price) as Backorder_Value ' \
+                  'FROM oneclick_inventory WHERE Business_Unit=\"%s\" GROUP BY Date, CSC ORDER by Date' % self._bu_name
+        df_backorder_detail = pd.read_sql(sql=sql_cmd, con=_conn)
+        df_backorder_detail.fillna('ND', inplace=True)
+        df_backorder_summary = pd.pivot_table(df_backorder_detail, values='Backorder_Value', index='CSC',
+                                              columns='Date').reindex(['IND', 'ROP', 'ND'])
+        return [df_backorder_summary.columns.tolist(), df_backorder_summary.values.tolist()]
+
+    # generate aging backorder list by pandas
+    # return the list of information by row including title and the length of data
+    def generate_aging_backorder_list(self, exception_list=[]) -> list:
+
+        pass
+
     def get_newest_date(self) -> str:
         _conn = sqlite3.connect(self.oneclick_database)
         c = _conn.cursor()
@@ -131,7 +259,8 @@ class CurrentInventoryCalculation:
 
 if __name__ == "__main__":
     sync_test = CurrentInventoryCalculation()
+    sync_test.bu_name = 'TU'
     sync_test.sync_days = 90
     sync_test.exception_list = []
-    sync_test.start_synchronize()
+    print(sync_test.generate_backorder_trend())
     pass
