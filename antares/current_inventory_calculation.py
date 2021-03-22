@@ -414,6 +414,39 @@ class CurrentInventoryCalculation:
         lst_inventory_result.insert(0, df_inventory.columns.tolist())
         return lst_inventory_result
 
+    # data mapping with ned inventory for list of codes
+    def inventory_mapping_with_ned_inv(self, code_list, str_date_input):
+        str_date_input = self.get_newest_date() if str_date_input == 'newest' else str_date_input
+        # judge if this code exist
+        if not self.check_date_availability(str_date_input):
+            return 0
+        df_inventory = pd.DataFrame(index=code_list)
+        # get inventory list
+        _conn = sqlite3.connect(self.oneclick_database)
+        sql_cmd = "SELECT Material, Description, Hierarchy_5, CSC, Available_Stock, " \
+                  "Pending_Inventory_Bonded_Total_Qty, Pending_Inventory_NonB_Total_Qty, GIT_1_Week, GIT_2_Week, " \
+                  "GIT_3_Week, GIT_4_Week, Open_PO FROM oneclick_inventory WHERE Date = \"%s\"" % str_date_input
+        df_inventory_detail = pd.read_sql(sql=sql_cmd, con=_conn, index_col='Material')
+        df_inventory = df_inventory.join(df_inventory_detail)
+        # get ned inventory
+        df_ned_inventory = self._get_lp_inventory_quantity_list(month='newest')
+        # combine total inventory
+        df_total_inventory = df_inventory.join(df_ned_inventory)
+        # get output
+        lst_columns = df_total_inventory.columns.values.tolist()
+        lst_value = df_total_inventory.values.tolist()
+        lst_value.insert(0, lst_columns)
+        return lst_value
+
+    # get lp inventory
+    def _get_lp_inventory_quantity_list(self, month='newest') -> pd.DataFrame:
+        lp_inventory_db_fullname = self.__class__.db_path + self._bu_name + '_LP_CRT_INV.db'
+        _conn = sqlite3.connect(lp_inventory_db_fullname)
+        str_date = self.get_newest_date() if month == 'newest' else month
+        sql_cmd = 'SELECT Material, Quantity as NED_INV FROM ned_current_inventory WHERE Date=\"%s\"' % str_date
+        df_lp_inv = pd.read_sql(sql=sql_cmd, con=_conn, index_col='Material')
+        return df_lp_inv
+
     def get_newest_date(self) -> str:
         _conn = sqlite3.connect(self.oneclick_database)
         c = _conn.cursor()
@@ -422,10 +455,77 @@ class CurrentInventoryCalculation:
         return str_newest_date
 
 
+# calculation module for Trauma
+class TraumaCurrentInventoryCalculation(CurrentInventoryCalculation):
+
+    def __init__(self):
+        self._bu_name = 'TU'
+        pass
+
+    # sync NED real time inventory
+    def sync_ned_inventory(self) -> bool:
+        source_file_path = self.__class__.update_file_path + 'NED_INV/'
+        # get file under that folder
+        filename_list = []
+        try:
+            for file_name in os.listdir(source_file_path):
+                filename_list.append(file_name)
+        except FileNotFoundError:
+            return False
+        # get date list in file
+        ned_inv_file_list = [item[8:16] for item in filename_list]
+        # get table list in database
+        database_name = self.__class__.db_path + self.bu_name + '_LP_CRT_INV.db'
+        conn = sqlite3.connect(database_name)
+        c = conn.cursor()
+        try:
+            c.execute('SELECT DISTINCT(Date) FROM ned_current_inventory')
+            result = c.fetchall()
+            ned_inv_db_list = [item[0] for item in result]
+        except sqlite3.OperationalError:
+            ned_inv_db_list = []
+        # import data if file not in database
+        for inventory_date in ned_inv_file_list:
+            if inventory_date not in ned_inv_db_list:
+                self.import_ned_current_inventory(inventory_date)
+            else:
+                pass
+        return True
+
+    # import ned weekly update data
+    def import_ned_current_inventory(self, inventory_date):
+        source_file_path = self.__class__.update_file_path + 'NED_INV/'
+        database_name = self.__class__.db_path + self.bu_name + '_LP_CRT_INV.db'
+        master_data_table_name = self.bu_name + '_Master_Data'
+        master_data_database_name = self.__class__.db_path + self.bu_name + '_Master_Data.db'
+        data_filename = 'NED_INV_%s.xlsx' % inventory_date
+        df_lp_inv = pd.read_excel(source_file_path + data_filename, engine='openpyxl').rename(columns={'型号': 'Material', '数量': 'Quantity'})
+        df_lp_inv.dropna(inplace=True)
+        df_lp_inv.set_index('Material', inplace=True)
+        # mapping with master data
+        conn = sqlite3.connect(master_data_database_name)
+        sql_cmd = 'SELECT Material, Description, Hierarchy_5, Phoenix_Status, Standard_Cost, SAP_Price FROM ' + \
+                  master_data_table_name
+        df_master_data = pd.read_sql(sql=sql_cmd, con=conn, index_col='Material')
+        df_lp_inv = df_lp_inv.join(df_master_data)
+        df_lp_inv['Value_Standard_Cost'] = df_lp_inv['Quantity'] * df_lp_inv['Standard_Cost']
+        df_lp_inv['Value_SAP_Price'] = df_lp_inv['Quantity'] * df_lp_inv['SAP_Price']
+        df_lp_inv.reset_index(inplace=True)
+        # reset column sequence
+        cols_new = ['Material', 'Description', 'Hierarchy_5', 'Phoenix_Status', 'Standard_Cost', 'SAP_Price',
+                    'Quantity', 'Value_Standard_Cost', 'Value_SAP_Price']
+        df_lp_inv = df_lp_inv[cols_new]
+        df_lp_inv.insert(0, 'Date', inventory_date)
+        # write into database
+        conn = sqlite3.connect(database_name)
+        df_lp_inv.to_sql(con=conn, name='ned_current_inventory', if_exists='append', index=None)
+        print('NED Inventory of %s Imported' % inventory_date)
+
+
 if __name__ == "__main__":
-    sync_test = CurrentInventoryCalculation()
-    sync_test.bu_name = 'TU'
+    sync_test = TraumaCurrentInventoryCalculation()
+    # sync_test.bu_name = 'TU'
     sync_test.sync_days = 90
     sync_test.exception_list = []
-    sync_test.inventory_mapping(['440.834', '440.834S', '440.831', '440.ddd'], 'newest')
+    print(sync_test.inventory_mapping_with_ned_inv(['440.834', '440.831'], 'newest'))
     pass

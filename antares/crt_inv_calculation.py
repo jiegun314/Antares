@@ -603,7 +603,7 @@ class CurrentInventoryCalculation:
         conn = sqlite3.connect(lp_inventory_db_fullname)
         c = conn.cursor()
         if month == 'newest':
-            sql_cmd = 'SELECT name FROM Sqlite_master WHERE type=\'table\' ORDER by name DESC LIMIT 1'
+            sql_cmd = 'SELECT name FROM Sqlite_master WHERE type=\'table\' AND name LIKE \"NED_INV%\" ORDER by name DESC LIMIT 1'
             c.execute(sql_cmd)
             table_name = c.fetchall()[0][0]
         else:
@@ -841,9 +841,6 @@ class TraumaCurrentInventoryCalculation(CurrentInventoryCalculation):
 
 
 if __name__ == "__main__":
-    test = CurrentInventoryCalculation('TU')
-    lst_date = ['20210104', '20210105', '20210106', '20210107', '20210108', '20210112', '20210113', '20210114', '20210115', '20210118']
-    for item_date in lst_date:
-        print(test.import_all_dps_oneclick_inventory(item_date))
-        print('%s done' % item_date)
+    test = TraumaCurrentInventoryCalculation()
+    test.get_current_bo('INV20210322')
     # test.inv_data_sync(50)
