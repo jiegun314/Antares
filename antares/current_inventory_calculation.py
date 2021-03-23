@@ -120,6 +120,7 @@ class CurrentInventoryCalculation:
         c.execute(sql_cmd)
         _conn.commit()
         _conn.close()
+        print('Inventory of %s has been deleted.' % inventory_date)
 
     # check if this date exist (date format YYYYMMDD)
     def check_date_availability(self, str_date_input):
@@ -239,6 +240,7 @@ class CurrentInventoryCalculation:
                   'FROM oneclick_inventory WHERE Business_Unit=\"%s\" GROUP BY Date, CSC ORDER by Date' % self._bu_name
         df_backorder_detail = pd.read_sql(sql=sql_cmd, con=_conn)
         df_backorder_detail.fillna('ND', inplace=True)
+        df_backorder_detail = df_backorder_detail.astype({'Backorder_Value': 'int32'})
         df_backorder_summary = pd.pivot_table(df_backorder_detail, values='Backorder_Value', index='CSC',
                                               columns='Date').reindex(['IND', 'ROP', 'ND'])
         return [df_backorder_summary.columns.tolist(), df_backorder_summary.values.tolist()]
@@ -450,9 +452,20 @@ class CurrentInventoryCalculation:
     def get_newest_date(self) -> str:
         _conn = sqlite3.connect(self.oneclick_database)
         c = _conn.cursor()
-        c.execute('SELECT DISTINCT(Date) FROM oneclick_inventory ORDER BY Date DESC LIMIT 1')
+        c.execute('SELECT Date FROM oneclick_inventory ORDER BY Date DESC LIMIT 1')
         str_newest_date = c.fetchone()[0]
         return str_newest_date
+
+    # check code availability
+    def check_code(self, material_code) -> bool:
+        conn = sqlite3.connect(self.__class__.db_path + "Master_Data.db")
+        c = conn.cursor()
+        sql_cmd = 'SELECT count(Material) FROM MATERIAL_MASTER WHERE Business_Unit=\"%s\" ' \
+                  'AND Material = \"%s\"' % (self.__class__.bu_name, material_code)
+        c.execute(sql_cmd)
+        result = c.fetchall()[0]
+        trigger = False if result == 0 else True
+        return trigger
 
 
 # calculation module for Trauma
@@ -527,5 +540,5 @@ if __name__ == "__main__":
     # sync_test.bu_name = 'TU'
     sync_test.sync_days = 90
     sync_test.exception_list = []
-    print(sync_test.inventory_mapping_with_ned_inv(['440.834', '440.831'], 'newest'))
+    print(sync_test.check_code('440.834'))
     pass
