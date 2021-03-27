@@ -597,9 +597,8 @@ class CurrentInventoryCalculation:
 
     # data mapping with ned inventory for list of codes
     def inventory_mapping_with_ned_inv(self, code_list, table_name):
-        jnj_inventory_database = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
         # get jnj inventory
-        conn = sqlite3.connect(jnj_inventory_database)
+        conn = sqlite3.connect(self.oneclick_database)
         sql_cmd = "SELECT Material, Description, Hierarchy_5, CSC, Available_Stock, " \
                   "Pending_Inventory_Bonded_Total_Qty as PD_BD_Qty, Pending_Inventory_NonB_Total_Qty as PD_NB_Qty, " \
                   "GIT_1_Week, GIT_2_Week, GIT_3_Week, GIT_4_Week, Open_PO FROM " + table_name
