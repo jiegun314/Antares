@@ -112,7 +112,7 @@ class MonthlyUpdate:
         # Get inventory month
         str_month = import_date[0:4] + "-" + import_date[4:6]
         import_tbl_name = "INV" + import_date
-        db_fullname = self.__class__.db_path + "TU_CRT_INV.db"
+        db_fullname = self.__class__.db_path + "dps_oneclick_inventory.db"
         # check if this date is available in list
         conn = sqlite3.connect(db_fullname)
         c = conn.cursor()
@@ -125,7 +125,7 @@ class MonthlyUpdate:
         # read raw data
         sql_cmd = "SELECT Material, Inventory_OnHand, Available_Stock, Pending_Inventory_Bonded_Total_Qty, " \
                   "Pending_Inventory_Bonded_Q_Hold_Qty, Pending_Inventory_NonB_Total_Qty, SS as Safety_Stock FROM " \
-                  + import_tbl_name + " Order by Available_Stock DESC"
+                  + import_tbl_name + " WHERE Business_Unit = \"TU\" Order by Available_Stock DESC"
         df_jnj_inv = pd.read_sql(sql=sql_cmd, con=conn, index_col='Material')
         df_jnj_inv.fillna(0, inplace=True)
         df_jnj_inv = df_jnj_inv.astype('int')

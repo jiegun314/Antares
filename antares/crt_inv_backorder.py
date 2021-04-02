@@ -13,6 +13,7 @@ class CurrentInventoryBackorder:
     currency_rate = 7.0842
 
     def __init__(self, bu):
+        self.oneclick_database = self.__class__.db_path + 'dps_oneclick_inventory.db'
         self.__class__.bu_name = bu
 
     # calculate long aging backorders
@@ -20,14 +21,14 @@ class CurrentInventoryBackorder:
         # print title
         print("===Display Aging Backorder===")
         # get table list
-        db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
-        conn = sqlite3.connect(db_name)
+        conn = sqlite3.connect(self.oneclick_database)
         c = conn.cursor()
         c.execute("SELECT name FROM sqlite_master WHERE type=\"table\" ORDER BY name DESC")
         table_list = [item[0] for item in c.fetchall()]
         current_day_table = table_list.pop(0)
         # get newest backorder
-        sql_cmd = "SELECT Material FROM " + current_day_table + " WHERE Current_Backorder_Qty > 0"
+        sql_cmd = "SELECT Material FROM %s WHERE Business_Unit = \"%s\" AND Current_Backorder_Qty > 0" % \
+                  (current_day_table, self.__class__.bu_name)
         c.execute(sql_cmd)
         backorder_code_list = [item[0] for item in c.fetchall()]
         # set up tracing list with code, backorder days, open_status

@@ -13,16 +13,16 @@ class CurrentInventoryCalculation:
     backorder_path = "../data/_Backorder/"
     inventory_path = "../data/_INV_Export/"
     update_file_path = "../data/_Update/"
-    # oneclick_path = "L:\\COMPASS\\Oneclick Inventory Report\\Output\\"
     oneclick_path = '//jnjcnckapdfs11.ap.jnj.com/jnjcnmpdfsroot/COMPASS/Oneclick Inventory Report/Output/'
-    currency_rate = 7.0842
+    currency_rate = 6.9233
 
     def __init__(self, bu):
         self.__class__.bu_name = bu
+        self.oneclick_database = self.__class__.db_path + 'dps_oneclick_inventory.db'
 
     # 获取最新日期
     def get_newest_date(self):
-        conn = sqlite3.connect(self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db")
+        conn = sqlite3.connect(self.oneclick_database)
         c = conn.cursor()
         c.execute("select name from sqlite_master where type='table' order by name")
         lst_date = [item[0] for item in c.fetchall()]
@@ -33,8 +33,7 @@ class CurrentInventoryCalculation:
 
     # 检查日期是否存在
     def check_date_availability(self, table_name):
-        db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
-        conn = sqlite3.connect(db_name)
+        conn = sqlite3.connect(self.oneclick_database)
         c = conn.cursor()
         c.execute("select name from sqlite_master where type='table' order by name")
         result = c.fetchall()
@@ -46,7 +45,7 @@ class CurrentInventoryCalculation:
 
     # 获取所有表格的列表
     def get_tbl_list(self):
-        conn = sqlite3.connect(self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db")
+        conn = sqlite3.connect(self.oneclick_database)
         c = conn.cursor()
         c.execute("select name from sqlite_master where type='table' order by name")
         tbl_list = [item[0] for item in c.fetchall()]
@@ -69,33 +68,12 @@ class CurrentInventoryCalculation:
         return trigger
 
     def __remove_inv_tbl(self, db_date):
-        table_name = "INV" + db_date
-        conn = sqlite3.connect(self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db")
+        conn = sqlite3.connect(self.oneclick_database)
         c = conn.cursor()
-        sql_cmd = "DROP TABLE " + table_name
+        sql_cmd = "DROP TABLE INV%s" % db_date
         c.execute(sql_cmd)
         conn.commit()
         conn.close()
-
-    # import oneclick inventory data into database
-    def import_oneclick_inventory(self, str_date):
-        data_file_fullname = self.oneclick_path + str_date + "\\OneClick_Inventory_Projection_Report _" \
-                             + str_date + ".csv"
-        try:
-            df = pd.read_csv(data_file_fullname, sep='|', encoding='latin1')
-        except FileNotFoundError:
-            return -1
-        # combine dps spine and synthes spine
-        df.loc[df['Business_Unit'] == 'SP', 'Business_Unit'] = 'Spine'
-        df.loc[df['Business_Unit'] == 'SPINE', 'Business_Unit'] = 'Spine'
-        df_single_bu = df.loc[(df['Business_Unit'] == self.__class__.bu_name) & (df['Loc'] == "Total")]
-        # mapping local Hierarchy
-        if self.__class__.bu_name == 'JT':
-            df_single_bu = self.map_local_hierarchy(df_single_bu)
-        database_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
-        conn = sqlite3.connect(database_name)
-        df_single_bu.to_sql("INV" + str_date, con=conn, if_exists="replace", index=False)
-        return 1
 
     # import all dps inventory data to database
     def import_all_dps_oneclick_inventory(self, str_date):
@@ -121,40 +99,23 @@ class CurrentInventoryCalculation:
         df_dps.drop(columns=['Local_Hierarchy'], inplace=True)
         df_dps.reset_index(inplace=True)
         # export to database
-        database_output = self.__class__.db_path + "oneclick_inventory_dps.db"
-        conn = sqlite3.connect(database_output)
+        conn = sqlite3.connect(self.oneclick_database)
         df_dps.to_sql("INV" + str_date, con=conn, if_exists="replace", index=False)
+        print('Oneclick Inventory of %s was imported' % str_date)
         return 1
-
-    # mapping local hierarchy
-    def map_local_hierarchy(self, df_input):
-        # get local hierarchy
-        df_input.set_index('Material', inplace=True)
-        database_name = self.__class__.db_path + self.__class__.bu_name + '_Master_Data.db'
-        local_hierarchy_datasheet = self.__class__.bu_name + '_Local_Hierarchy'
-        conn = sqlite3.connect(database_name)
-        sql_cmd = 'SELECT Material, Local_Hierarchy FROM ' + local_hierarchy_datasheet
-        df_local_hierarchy = pd.read_sql(sql=sql_cmd, con=conn, index_col='Material')
-        # join the local hierarchy and replace current h5
-        df_output = df_input.join(df_local_hierarchy)
-        df_output.loc[df_output['Local_Hierarchy'].notnull(), 'Hierarchy_5'] = df_output['Local_Hierarchy']
-        df_output.drop(columns=['Local_Hierarchy'], inplace=True)
-        df_output.reset_index(inplace=True)
-        # print(df_output.head())
-        return df_output
 
     # calculate current inventory, return detail list and summary result
     def get_current_inventory(self, table_name):
-        db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
-        conn = sqlite3.connect(db_name)
+        conn = sqlite3.connect(self.oneclick_database)
         c = conn.cursor()
-        sql_cmd = '''SELECT Hierarchy_5, sum(Available_Stock * Standard_Cost) AS onhand_inv, 
-                        sum((GIT_1_Week + GIT_2_Week + GIT_3_Week + GIT_4_Week) * Standard_Cost) AS GIT_inv,
-                        sum(Open_PO * Standard_Cost) As Open_PO_inv, 
-                        sum(Pending_Inventory_Bonded_Total_Qty * Standard_Cost) AS BD_Pending_Value,
-                        sum(Pending_Inventory_NonB_Total_Qty * Standard_Cost) AS NB_Pending_Value from ''' + table_name + ''' 
-                        WHERE (Available_Stock + GIT_1_Week + GIT_2_Week + Pending_Inventory_Bonded_Total_Qty + Pending_Inventory_NonB_Total_Qty) > 0  
-                        GROUP BY Hierarchy_5 ORDER BY onhand_inv DESC'''
+        sql_cmd = 'SELECT Hierarchy_5, sum(Available_Stock * Standard_Cost) AS onhand_inv, ' \
+                  'sum((GIT_1_Week + GIT_2_Week + GIT_3_Week + GIT_4_Week) * Standard_Cost) AS GIT_inv, ' \
+                  'sum(Open_PO * Standard_Cost) As Open_PO_inv, ' \
+                  'sum(Pending_Inventory_Bonded_Total_Qty * Standard_Cost) AS BD_Pending_Value, ' \
+                  'sum(Pending_Inventory_NonB_Total_Qty * Standard_Cost) AS NB_Pending_Value from %s ' \
+                  'WHERE Business_Unit = \"%s\" AND (Available_Stock + GIT_1_Week + GIT_2_Week + ' \
+                  'Pending_Inventory_Bonded_Total_Qty + Pending_Inventory_NonB_Total_Qty) > 0 GROUP BY Hierarchy_5 ' \
+                  'ORDER BY onhand_inv DESC' % (table_name, self.__class__.bu_name)
         try:
             c.execute(sql_cmd)
         except sqlite3.OperationalError:
@@ -176,13 +137,12 @@ class CurrentInventoryCalculation:
     def get_current_bo(self, table_name):
         title = [('Material', 'Description', 'Hierarchy_5', 'CSC', 'Qty', 'Value', 'GIT_1', 'GIT_2', 'GIT_3', 'GIT_4',
                   'Open_PO')]
-        db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
-        conn = sqlite3.connect(db_name)
+        conn = sqlite3.connect(self.oneclick_database)
         c = conn.cursor()
-        sql_cmd = '''select Material, Description, Hierarchy_5, CSC, Current_Backorder_Qty, 
-                        (Current_Backorder_Qty * Standard_Cost) as bo_value, GIT_1_Week, GIT_2_Week, GIT_3_Week, 
-                        GIT_4_Week, Open_PO from ''' + table_name + ''' 
-                        WHERE Current_Backorder_Qty > 0 ORDER by CSC DESC, bo_value DESC'''
+        sql_cmd = 'select Material, Description, Hierarchy_5, CSC, Current_Backorder_Qty, ' \
+                  '(Current_Backorder_Qty * Average_Selling_Price) as bo_value, GIT_1_Week, GIT_2_Week, GIT_3_Week, ' \
+                  'GIT_4_Week, Open_PO from %s WHERE Business_Unit = \"%s\" AND Current_Backorder_Qty > 0 ' \
+                  'ORDER by CSC DESC, bo_value DESC' % (table_name, self.__class__.bu_name)
         try:
             c.execute(sql_cmd)
         except sqlite3.OperationalError:
@@ -236,17 +196,17 @@ class CurrentInventoryCalculation:
 
     # 导出backorder给平台
     def export_backorder_data(self, table_name):
-        db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
-        conn = sqlite3.connect(db_name)
+        conn = sqlite3.connect(self.oneclick_database)
         if self.__class__.bu_name == 'TU':
-            sql_cmd = '''SELECT Material, Description, Hierarchy_5, Current_Backorder_Qty,
-                        (Current_Backorder_Qty * Standard_Cost) AS bo_value, GIT_1_Week, GIT_2_Week, GIT_3_Week, 
-                        (GIT_4_Week + Open_PO) AS not_delivered_qty FROM ''' + table_name + ''' 
-                        WHERE Current_Backorder_Qty > 0 ORDER by bo_value DESC'''
+            sql_cmd = 'SELECT Material, Description, Hierarchy_5, Current_Backorder_Qty, ' \
+                      '(Current_Backorder_Qty * Average_Selling_Price) AS bo_value, GIT_1_Week, GIT_2_Week, ' \
+                      'GIT_3_Week, (GIT_4_Week + Open_PO) AS not_delivered_qty FROM %s WHERE Business_Unit = \"%s\" ' \
+                      'AND Current_Backorder_Qty > 0 ORDER by bo_value DESC' % (table_name, self.__class__.bu_name)
         else:
-            sql_cmd = '''SELECT Material, Description, Hierarchy_5, Current_Backorder_Qty, 
-            (Current_Backorder_Qty * Standard_Cost) AS bo_value, GIT_1_Week, GIT_2_Week, GIT_3_Week, GIT_4_Week, 
-            Open_PO FROM ''' + table_name + ''' WHERE Current_Backorder_Qty > 0 ORDER by bo_value DESC'''
+            sql_cmd = 'SELECT Material, Description, Hierarchy_5, Current_Backorder_Qty, ' \
+                      '(Current_Backorder_Qty * Average_Selling_Price) AS bo_value, GIT_1_Week, GIT_2_Week, ' \
+                      'GIT_3_Week, GIT_4_Week, Open_PO FROM %s WHERE Business_Unit = \"%s\" ' \
+                      'AND Current_Backorder_Qty > 0 ORDER by bo_value DESC' % (table_name, self.__class__.bu_name)
         try:
             df = pd.read_sql(sql=sql_cmd, con=conn)
         except pd.io.sql.DatabaseError:
@@ -261,14 +221,14 @@ class CurrentInventoryCalculation:
 
     # export inventory file
     def export_inventory_data(self, table_name):
-        db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
-        conn = sqlite3.connect(db_name)
+        conn = sqlite3.connect(self.oneclick_database)
         if self.__class__.bu_name == "TU":
-            sql_cmd = '''SELECT Material, Description, Available_Stock FROM ''' + table_name + \
-                      ''' WHERE Available_Stock !=0'''
+            sql_cmd = 'SELECT Material, Description, Available_Stock FROM %s WHERE Business_Unit = \"%s\" ' \
+                      'AND Available_Stock !=0' % (table_name, self.__class__.bu_name)
         else:
-            sql_cmd = '''SELECT Material, Description, CSC, Available_Stock, Pending_Inventory_Bonded_Total_Qty, 
-            GIT_1_Week, GIT_2_Week, GIT_3_Week, GIT_4_Week, Open_PO FROM ''' + table_name
+            sql_cmd = 'SELECT Material, Description, CSC, Available_Stock, Pending_Inventory_Bonded_Total_Qty, ' \
+                      'GIT_1_Week, GIT_2_Week, GIT_3_Week, GIT_4_Week, Open_PO FROM %s ' \
+                      'WHERE Business_Unit = \"%s\" ' % (table_name, self.__class__.bu_name)
         try:
             df = pd.read_sql(sql=sql_cmd, con=conn)
         except pd.io.sql.DatabaseError:
@@ -280,8 +240,7 @@ class CurrentInventoryCalculation:
 
     # display backorder value trend by day
     def generate_backorder_trend(self):
-        db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
-        conn = sqlite3.connect(db_name)
+        conn = sqlite3.connect(self.oneclick_database)
         c = conn.cursor()
         c.execute("SELECT name FROM sqlite_master WHERE type=\"table\" ORDER BY name")
         table_list = [item[0] for item in c.fetchall()]
@@ -289,8 +248,8 @@ class CurrentInventoryCalculation:
         # generate backorder summary data from every table
         daily_backorder_summary = []
         for table_name in table_list:
-            sql_cmd = "SELECT Material, CSC, Current_Backorder_Qty FROM " + table_name + \
-                      " WHERE Current_Backorder_Qty > 0"
+            sql_cmd = 'SELECT Material, CSC, Current_Backorder_Qty FROM %s WHERE Business_Unit = \"%s\" ' \
+                      'AND Current_Backorder_Qty > 0' % (table_name, self.__class__.bu_name)
             c.execute(sql_cmd)
             daily_backorder_summary.append(c.fetchall())
         conn.close()
@@ -331,8 +290,7 @@ class CurrentInventoryCalculation:
     # return the list of information by row including title and the length of data
     def generate_aging_backorder_list(self, exception_list=[]) -> list:
         # get table list
-        db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
-        conn = sqlite3.connect(db_name)
+        conn = sqlite3.connect(self.oneclick_database)
         c = conn.cursor()
         c.execute("SELECT name FROM sqlite_master WHERE type=\"table\" ORDER BY name DESC")
         table_list = [item[0] for item in c.fetchall()]
@@ -340,7 +298,8 @@ class CurrentInventoryCalculation:
         current_day_table = table_list.pop(0)
         sql_cmd = 'SELECT Material, Description, Hierarchy_5, CSC, Current_Backorder_Qty, ' \
                   '(GIT_1_Week + GIT_2_Week + GIT_3_Week + GIT_4_Week) as GIT_Qty, Open_PO ' \
-                  'FROM %s WHERE Current_Backorder_Qty > 0' % current_day_table
+                  'FROM %s WHERE Business_Unit = \"%s\" AND Current_Backorder_Qty > 0' % \
+                  (current_day_table, self.__class__.bu_name)
         df_aging_list = pd.read_sql(con=conn, sql=sql_cmd, index_col='Material')
         # add column for counting
         df_aging_list['BO Days'] = 1
@@ -349,7 +308,7 @@ class CurrentInventoryCalculation:
             if table_item in exception_list:
                 continue
             sql_cmd = 'SELECT Material, Current_Backorder_Qty as Ongoing_Backorder FROM %s ' \
-                      'WHERE Current_Backorder_Qty > 0' % table_item
+                      'WHERE Business_Unit = \"%s\" AND Current_Backorder_Qty > 0' % (table_item, self.__class__.bu_name)
             df_temp_list = pd.read_sql(con=conn, sql=sql_cmd, index_col='Material')
             # join and map with current dataframe
             df_aging_list = df_aging_list.join(df_temp_list)
@@ -368,7 +327,8 @@ class CurrentInventoryCalculation:
         # remove index and generate list
         df_aging_list.reset_index(inplace=True)
         # reset sequence by column name
-        lst_new_column = ["BO Days", "Alert", "Material", "Description", "Hierarchy_5", "CSC", "Current_Backorder_Qty", "GIT_Qty", "Open_PO"]
+        lst_new_column = ["BO Days", "Alert", "Material", "Description", "Hierarchy_5", "CSC",
+                          "Current_Backorder_Qty", "GIT_Qty", "Open_PO"]
         df_final = df_aging_list[lst_new_column]
         lst_result = [lst_new_column, ] + df_final.values.tolist()
         return [lst_result, len(table_list)]
@@ -381,17 +341,17 @@ class CurrentInventoryCalculation:
     def generate_pending_trend(self, data_type="value"):
         pending_result = []
         # 链接数据库
-        db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
-        conn = sqlite3.connect(db_name)
+        conn = sqlite3.connect(self.oneclick_database)
         c = conn.cursor()
         c.execute("SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name")
         tbl_list = c.fetchall()
         # generate date list in MMDD format for following chart display
         date_list = [item[0][-4:] for item in tbl_list]
         for table_name in tbl_list:
-            sql_cmd = '''SELECT sum(Pending_Inventory_Bonded_Total_Qty), sum(Pending_Inventory_NonB_Total_Qty), 
-            sum((Standard_Cost * Pending_Inventory_Bonded_Total_Qty)) As Pending_BD_Value, 
-            sum((Standard_Cost * Pending_Inventory_NonB_Total_Qty)) As Pending_NB_Value from ''' + table_name[0]
+            sql_cmd = 'SELECT sum(Pending_Inventory_Bonded_Total_Qty), sum(Pending_Inventory_NonB_Total_Qty), ' \
+                      'sum((Standard_Cost * Pending_Inventory_Bonded_Total_Qty)) As Pending_BD_Value, ' \
+                      'sum((Standard_Cost * Pending_Inventory_NonB_Total_Qty)) As Pending_NB_Value from %s ' \
+                      'WHERE Business_Unit = \"%s\"' % (table_name[0], self.__class__.bu_name)
             c.execute(sql_cmd)
             pending_result.append(c.fetchall()[0])
         # group data with different category
@@ -413,8 +373,7 @@ class CurrentInventoryCalculation:
 
     # 查询单个代码
     def get_code_inv(self, code_name, table_name):
-        db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
-        conn = sqlite3.connect(db_name)
+        conn = sqlite3.connect(self.oneclick_database)
         c = conn.cursor()
         sql_cmd = "SELECT Material, Description, Hierarchy_5, Available_Stock, Pending_Inventory_Bonded_Total_Qty, " \
                   "Pending_Inventory_NonB_Total_Qty, CSC, GIT_1_Week, GIT_2_Week, GIT_3_Week, GIT_4_Week, Open_PO, " \
@@ -450,8 +409,7 @@ class CurrentInventoryCalculation:
     def generate_code_inv_trend(self, code_name):
         # 获取日期清单
         tbl_list = self.get_tbl_list()
-        db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
-        conn = sqlite3.connect(db_name)
+        conn = sqlite3.connect(self.oneclick_database)
         c = conn.cursor()
         inv_result = []
         for tbl_item in tbl_list:
@@ -473,13 +431,13 @@ class CurrentInventoryCalculation:
         # 获取日期清单
         tbl_list = self.get_tbl_list()
         # 连接数据库
-        db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
-        conn = sqlite3.connect(db_name)
+        conn = sqlite3.connect(self.oneclick_database)
         c = conn.cursor()
         h5_inv_result = []
         for tbl_item in tbl_list:
             if h5_result == "ALL":
-                sql_cmd = "SELECT sum(Available_Stock * Standard_Cost) AS inv_value FROM " + tbl_item
+                sql_cmd = 'SELECT sum(Available_Stock * Standard_Cost) AS inv_value FROM %s ' \
+                          'WHERE Business_Unit = \"%s\"' % (tbl_item, self.__class__.bu_name)
             else:
                 sql_cmd = "SELECT sum(Available_Stock * Standard_Cost) AS inv_value FROM " + tbl_item + \
                           " WHERE Hierarchy_5 = \"" + h5_result.upper() + "\""
@@ -506,14 +464,13 @@ class CurrentInventoryCalculation:
         # get date list
         table_list = self.get_tbl_list()
         # link to database
-        db_name = self.__class__.db_path + self.__class__.bu_name + '_CRT_INV.db'
-        conn = sqlite3.connect(db_name)
+        conn = sqlite3.connect(self.oneclick_database)
         c = conn.cursor()
         h5_inv_result = []
         for table_item in table_list:
             if h5_result == 'ALL':
                 sql_cmd = 'SELECT sum(Available_Stock) AS inv_qty, sum(Available_Stock * Standard_Cost) AS inv_value ' \
-                          'FROM ' + table_item
+                          'FROM %s WHERE Business_Unit = \"%s\"' % (table_item, self.__class__.bu_name)
             else:
                 sql_cmd = 'SELECT sum(Available_Stock) AS inv_qty, sum(Available_Stock * Standard_Cost) AS inv_value ' \
                           'FROM ' + table_item + ' WHERE Hierarchy_5 = \"' + h5_result.upper() + '\" COLLATE NOCASE'
@@ -536,8 +493,7 @@ class CurrentInventoryCalculation:
         table_title = [("Material", "Description", "CSC", "Available Stock", "Onhand_INV_Value", "Bonded Pending",
                         "GIT_1_Week", "GIT_2_Week", "GIT_3_Week", "GIT_4_Week", "Open_PO"), ]
         # Connect to database
-        db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
-        conn = sqlite3.connect(db_name)
+        conn = sqlite3.connect(self.oneclick_database)
         c = conn.cursor()
         sql_cmd = "SELECT Material, Description, CSC, Available_Stock, (Standard_Cost * Inventory_OnHand) as " \
                   "Onhand_INV_Value, Pending_Inventory_Bonded_Total_Qty, GIT_1_Week, GIT_2_Week, GIT_3_Week, " \
@@ -561,7 +517,7 @@ class CurrentInventoryCalculation:
         # get ranking A, B code list
         master_data_db_fullname = self.__class__.db_path + self.__class__.bu_name + '_Master_Data.db'
         master_data_table_name = self.__class__.bu_name + '_Master_Data'
-        inventory_db_fullname = self.__class__.db_path + self.__class__.bu_name + '_CRT_INV.db'
+        # inventory_db_fullname = self.__class__.db_path + self.__class__.bu_name + '_CRT_INV.db'
         conn = sqlite3.connect(master_data_db_fullname)
         # get AB list
         sql_cmd = 'SELECT Material, Description, Hierarchy_5, Ranking FROM ' + master_data_table_name +\
@@ -572,10 +528,11 @@ class CurrentInventoryCalculation:
         df_ims_list = pd.read_sql(sql=sql_cmd, con=conn, index_col='Material')
         df_ab_list = df_ab_list.join(df_ims_list)
         # get current update inventory list
-        conn = sqlite3.connect(inventory_db_fullname)
+        conn = sqlite3.connect(self.oneclick_database)
         table_name = self.get_newest_date()
         sql_cmd = 'SELECT Material, Available_Stock, (Pending_Inventory_Bonded_Total_Qty + GIT_1_Week + ' \
-                  'GIT_2_Week + GIT_3_Week + GIT_4_Week) as GIT_Quantity, Open_PO FROM ' + table_name
+                  'GIT_2_Week + GIT_3_Week + GIT_4_Week) as GIT_Quantity, Open_PO FROM %s ' \
+                  'WHERE Business_Unit = \"%s\"' % (table_name, self.__class__.bu_name)
         df_inventory_list = pd.read_sql(sql=sql_cmd, con=conn, index_col='Material')
         # Join two list to get inventory of
         df_ab_list = df_ab_list.join(df_inventory_list)
@@ -617,8 +574,7 @@ class CurrentInventoryCalculation:
         # connect to database and get the inventory data
         inventory_result = [["Material", "Description", "Hierarchy_5", "CSC", "Available_Stock", "Pending_Qty_BD",
                              "Pending_Qty_NB", "GIT_1_Qty", "GIT_2_Qty", "GIT_3_Qty", "GIT_4_Qty", "Open_PO"], ]
-        db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
-        conn = sqlite3.connect(db_name)
+        conn = sqlite3.connect(self.oneclick_database)
         c = conn.cursor()
         for code_item in code_list:
             sql_cmd = "SELECT Material, Description, Hierarchy_5, CSC, Available_Stock, " \
@@ -641,9 +597,8 @@ class CurrentInventoryCalculation:
 
     # data mapping with ned inventory for list of codes
     def inventory_mapping_with_ned_inv(self, code_list, table_name):
-        jnj_inventory_database = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
         # get jnj inventory
-        conn = sqlite3.connect(jnj_inventory_database)
+        conn = sqlite3.connect(self.oneclick_database)
         sql_cmd = "SELECT Material, Description, Hierarchy_5, CSC, Available_Stock, " \
                   "Pending_Inventory_Bonded_Total_Qty as PD_BD_Qty, Pending_Inventory_NonB_Total_Qty as PD_NB_Qty, " \
                   "GIT_1_Week, GIT_2_Week, GIT_3_Week, GIT_4_Week, Open_PO FROM " + table_name
@@ -663,7 +618,7 @@ class CurrentInventoryCalculation:
         return lst_value
 
     # 数据同步
-    def inv_data_sync(self, sync_days, lst_xcpt):
+    def inv_data_sync(self, sync_days, list_exception=[]):
         lst_folder_temp = []
         import_success_count, import_fail_count = 0, 0
         # 读取oneclick目录下文件夹清单
@@ -689,8 +644,8 @@ class CurrentInventoryCalculation:
                 lst_current_database.remove(item)
         # 导入新的数据
         for item in lst_folder_sharepoint:
-            if (item not in lst_current_database) and (item not in lst_xcpt):
-                import_result = self.import_oneclick_inventory(item)
+            if (item not in lst_current_database) and (item not in list_exception):
+                import_result = self.import_all_dps_oneclick_inventory(item)
                 if import_result == 1:
                     import_success_count += 1
                 else:
@@ -765,12 +720,10 @@ class TraumaCurrentInventoryCalculation(CurrentInventoryCalculation):
     def get_current_bo(self, table_name) -> list:
         lst_title = ['Material', 'Description', 'Hierarchy_5', 'CSC', 'Qty', 'Value', 'GIT_1', 'GIT_2',
                      'GIT_3', 'GIT_4', 'Open_PO', 'NED_INV']
-        db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
-        conn = sqlite3.connect(db_name)
+        conn = sqlite3.connect(self.oneclick_database)
         sql_cmd = 'SELECT Material, Description, Hierarchy_5, CSC, Current_Backorder_Qty as Qty, ' \
-                  'GIT_1_Week as GIT_1, GIT_2_Week as GIT_2, ' \
-                  'GIT_3_Week as GIT_3, GIT_4_Week as GIT_4, Open_PO from %s WHERE Qty > 0 ' \
-                  'ORDER by CSC DESC' % table_name
+                  'GIT_1_Week as GIT_1, GIT_2_Week as GIT_2, GIT_3_Week as GIT_3, GIT_4_Week as GIT_4, ' \
+                  'Open_PO from %s WHERE Business_Unit = \"%s\" AND Qty > 0 ORDER by CSC DESC' % (table_name, self.__class__.bu_name)
         df_backorder = pd.read_sql(sql=sql_cmd, con=conn, index_col='Material')
         # get sap price
         master_data_db_name = self.__class__.db_path + self.__class__.bu_name + "_Master_Data.db"
@@ -818,8 +771,7 @@ class TraumaCurrentInventoryCalculation(CurrentInventoryCalculation):
         df_sap_price = pd.read_sql(sql=sql_cmd, con=conn, index_col='Material')
         # get current inventory backorder list
         # get table list
-        db_name = self.__class__.db_path + self.__class__.bu_name + "_CRT_INV.db"
-        conn = sqlite3.connect(db_name)
+        conn = sqlite3.connect(self.oneclick_database)
         c = conn.cursor()
         c.execute("SELECT name FROM sqlite_master WHERE type=\"table\" ORDER BY name")
         table_list = [item[0] for item in c.fetchall()]
@@ -828,7 +780,8 @@ class TraumaCurrentInventoryCalculation(CurrentInventoryCalculation):
         df_bo_value_summary = pd.DataFrame(index=['IND', 'ROP', 'None'])
         # get backorder data
         for table_item in table_list:
-            sql_cmd = "SELECT Material, CSC, Current_Backorder_Qty FROM %s WHERE Current_Backorder_Qty > 0" % table_item
+            sql_cmd = "SELECT Material, CSC, Current_Backorder_Qty FROM %s WHERE Business_Unit = \"%s\" " \
+                      "AND Current_Backorder_Qty > 0" % (table_item, self.__class__.bu_name)
             df_bo_list = pd.read_sql(sql=sql_cmd, con=conn, index_col='Material')
             df_bo_list = df_bo_list.join(df_sap_price)
             df_bo_list['Backorder_Value'] = df_bo_list['Current_Backorder_Qty'] * df_bo_list['Price']
@@ -842,5 +795,5 @@ class TraumaCurrentInventoryCalculation(CurrentInventoryCalculation):
 
 if __name__ == "__main__":
     test = TraumaCurrentInventoryCalculation()
-    test.get_current_bo('INV20210322')
+    test.get_current_bo()
     # test.inv_data_sync(50)
