@@ -183,7 +183,7 @@ class MonthlyUpdate:
         df_eso = pd.read_excel(file_fullname, index_col='Material', engine='openpyxl')
         df_eso.dropna(inplace=True)
         df_eso['Total_ESO_Quantity'] = df_eso['Excess_Quantity'] + df_eso['Obsolete_Quantity'] + df_eso[
-            'Slow_Moving_Quantity']
+            'Slow_Moving_Quantity'] + df_eso['NPI_Reverse_Quantity']
         # print(df_eso.head(), df_eso.info())
         # read master data
         conn = sqlite3.connect(master_data_filename)
