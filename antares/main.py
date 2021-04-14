@@ -171,7 +171,7 @@ class SystemIndex:
             if update_item in dict_master_data:
                 data_type = dict_master_data[update_item]
             elif update_item == '2':
-                master_data_update.import_sap_price()
+                master_data_update.import_sap_price_excel()
                 print("SAP_Price is imported")
             elif update_item == '5':
                 master_data_update.generate_tu_abc_ranking()

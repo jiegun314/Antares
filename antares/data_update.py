@@ -465,6 +465,15 @@ class MasterDataUpdate:
         conn = sqlite3.connect(db_fullname)
         df_total_price.to_sql(name=table_name, con=conn, if_exists='replace', index=False)
 
+    # import SAP_Price in Excel format
+    def import_sap_price_excel(self):
+        source_file_name = self.file_path + 'TU_SAP_Price.xlsx'
+        table_name = self.bu_name + '_SAP_Price'
+        db_fullname = self.__class__.db_path + self.__class__.bu_name + "_Master_Data.db"
+        df_sap_price = pd.read_excel(source_file_name)
+        conn = sqlite3.connect(db_fullname)
+        df_sap_price.to_sql(name=table_name, con=conn, if_exists='replace', index=False)
+
     def import_public_master_data(self, master_data_filename):
         master_data_path = self.__class__.update_path + "Public/"
         master_data_file = master_data_path + master_data_filename + ".xlsx"
