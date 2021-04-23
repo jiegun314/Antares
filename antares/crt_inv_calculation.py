@@ -572,12 +572,12 @@ class CurrentInventoryCalculation:
     # data mapping for a list of codes
     def inventory_mapping(self, code_list, table_name):
         # connect to database and get the inventory data
-        inventory_result = [["Material", "Description", "Hierarchy_5", "CSC", "Available_Stock", "Pending_Qty_BD",
+        inventory_result = [["Material", "Description", "Hierarchy_5", "CSC", "Inventory_OnHand", "Available_Stock", "Pending_Qty_BD",
                              "Pending_Qty_NB", "GIT_1_Qty", "GIT_2_Qty", "GIT_3_Qty", "GIT_4_Qty", "Open_PO"], ]
         conn = sqlite3.connect(self.oneclick_database)
         c = conn.cursor()
         for code_item in code_list:
-            sql_cmd = "SELECT Material, Description, Hierarchy_5, CSC, Available_Stock, " \
+            sql_cmd = "SELECT Material, Description, Hierarchy_5, CSC, Inventory_OnHand, Available_Stock, " \
                       "Pending_Inventory_Bonded_Total_Qty, Pending_Inventory_NonB_Total_Qty, GIT_1_Week, GIT_2_Week, " \
                       "GIT_3_Week, GIT_4_Week, Open_PO FROM " + table_name + " WHERE Material = \'" + code_item.upper() + "\'"
             try:
