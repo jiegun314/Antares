@@ -183,7 +183,7 @@ class MonthlyUpdate:
         df_eso = pd.read_excel(file_fullname, index_col='Material', engine='openpyxl')
         df_eso.dropna(inplace=True)
         df_eso['Total_ESO_Quantity'] = df_eso['Excess_Quantity'] + df_eso['Obsolete_Quantity'] + df_eso[
-            'Slow_Moving_Quantity']
+            'Slow_Moving_Quantity'] + df_eso['NPI_Reverse_Quantity']
         # print(df_eso.head(), df_eso.info())
         # read master data
         conn = sqlite3.connect(master_data_filename)
@@ -464,6 +464,15 @@ class MasterDataUpdate:
         df_total_price['Material'] = df_total_price['Material'].str.strip()
         conn = sqlite3.connect(db_fullname)
         df_total_price.to_sql(name=table_name, con=conn, if_exists='replace', index=False)
+
+    # import SAP_Price in Excel format
+    def import_sap_price_excel(self):
+        source_file_name = self.file_path + 'TU_SAP_Price.xlsx'
+        table_name = self.bu_name + '_SAP_Price'
+        db_fullname = self.__class__.db_path + self.__class__.bu_name + "_Master_Data.db"
+        df_sap_price = pd.read_excel(source_file_name)
+        conn = sqlite3.connect(db_fullname)
+        df_sap_price.to_sql(name=table_name, con=conn, if_exists='replace', index=False)
 
     def import_public_master_data(self, master_data_filename):
         master_data_path = self.__class__.update_path + "Public/"
