@@ -226,9 +226,9 @@ class CurrentInventoryCalculation:
             sql_cmd = 'SELECT Material, Description, Available_Stock FROM %s WHERE Business_Unit = \"%s\" ' \
                       'AND Available_Stock !=0' % (table_name, self.__class__.bu_name)
         else:
-            sql_cmd = 'SELECT Material, Description, CSC, Available_Stock, Pending_Inventory_Bonded_Total_Qty, ' \
-                      'GIT_1_Week, GIT_2_Week, GIT_3_Week, GIT_4_Week, Open_PO FROM %s ' \
-                      'WHERE Business_Unit = \"%s\" ' % (table_name, self.__class__.bu_name)
+            sql_cmd = 'SELECT Material, Description, CSC, Inventory_OnHand, Available_Stock, ' \
+                      'Pending_Inventory_Bonded_Total_Qty, GIT_1_Week, GIT_2_Week, GIT_3_Week, GIT_4_Week, ' \
+                      'Open_PO FROM %s WHERE Business_Unit = \"%s\" ' % (table_name, self.__class__.bu_name)
         try:
             df = pd.read_sql(sql=sql_cmd, con=conn)
         except pd.io.sql.DatabaseError:
