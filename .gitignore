@@ -1,7 +1,7 @@
 venv/
 
 *.pyc
-__pycache__/
+antares/__pycache__/
 .idea/
 
 instance/

@@ -32,7 +32,7 @@ import calculation
 import data_import
 import pandas as pd
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta
 from alive_progress import alive_bar
 
 
@@ -50,73 +50,49 @@ class GetStatisticalForecast:
     def get_current_month():
         return time.strftime("%Y-%m", time.localtime())
 
-    # 获取code by month的N个月的月份列表
-    def get_month_list(self, cclt_mode) -> list:
-        # cclt_mode计算模式，historical表示只要历史月份，future表示将来月份, all表示包含将来预计月份
-        # years表示历史数据的年份
-        # 获得当前月份
-        if cclt_mode == "historical":
-            months = self.__class__.base_year * 12
+    # get month list
+    # direction: forward, backward, backward does not includes current month, forward from this month
+    def get_month_list(self, month_qty, direction='backward') -> list:
+        current_month = datetime.today().strftime("%Y-%m")
+        start_day = datetime.today()
+        lst_month = []
+        if direction == 'backward':
+            for i in range(0, month_qty):
+                start_day = start_day.replace(day=1)
+                start_day = start_day - timedelta(days=1)
+                lst_month.insert(0, start_day.strftime("%Y-%m"))
+        elif direction == 'forward':
+            lst_month.append(current_month)
+            for i in range(0, month_qty - 1):
+                start_day = start_day.replace(day=28)
+                start_day = start_day + timedelta(days=5)
+                lst_month.append(start_day.strftime("%Y-%m"))
         else:
-            months = self.__class__.base_year * 12 + 24
-        crt_month = time.strftime("%Y-%m", time.localtime())
-        lst_month = crt_month.split("-")
-        # 计算开始年份
-        tmp_year = int(lst_month[0]) - self.__class__.base_year
-        tmp_month = int(lst_month[1])
-        # 生成result_month结果数组
-        result_month = []
-        # 转换成月份列表
-        i = 1
-        while i <= months:
-            t = (tmp_year, tmp_month, 1, 0, 0, 0, 0, 0, 0)
-            secs = time.mktime(t)
-            result_month.append(time.strftime("%Y-%m", time.localtime(secs)))
-            tmp_month = tmp_month + 1
-            if tmp_month == 13:
-                tmp_month = 1
-                tmp_year = tmp_year + 1
-            i = i + 1
-        result_month = result_month[-24:] if cclt_mode == 'future' else result_month
-        return result_month
+            pass
+        return lst_month
 
     # 获取每个月中的星期数
-    def week_in_month(self, first_month):
-        # 导入月份YYYY-MM
-        no_of_month = self.__class__.base_year * 12
-        # 截取月份数
-        month_index = int(first_month[-2:])
-        # 初始化列表
-        week_num = []
-        i = 1
-        while i <= no_of_month:
-            if month_index % 3 == 0:
-                week_num.append(5)
-            else:
-                week_num.append(4)
-            i = i + 1
-            month_index = month_index + 1
-        # 转换成元组
-        return tuple(week_num)
+    def week_in_month(self):
+        lst_month = self.get_month_list(month_qty=self.__class__.base_year * 12, direction='backward')
+        lst_wk_qty = []
+        for item_month in lst_month:
+            wk_qty = 5 if int(item_month[-2:]) % 3 == 0 else 4
+            lst_wk_qty.append(wk_qty)
+        return tuple(lst_wk_qty)
 
     # 获取春节的月份index
-    def cny_index(self, first_month):
-        # 导入月份YYYY-MM
-        no_of_month = self.__class__.base_year * 12
-        # 截取月份数
-        month_index = int(first_month[-2:])
-        # 初始化列表
-        cny_index = []
-        i = 1
-        while i <= no_of_month:
-            if month_index % 12 == 1:
-                cny_index.append(1)
+    def cny_index(self):
+        tup_cny = ('2016-02', '2017-01', '2018-02', '2019-02', '2020-01', '2021-02', '2022-02', '2023-01',
+                   '2024-02', '2025-01', '2026-02')
+        # lst_month = self.get_month_list(month_qty=self.__class__.base_year * 12, direction='backward')
+        lst_month = self.get_month_list(month_qty=36, direction='backward')
+        lst_cny_index = []
+        for item_month in lst_month:
+            if item_month in tup_cny:
+                lst_cny_index.append(1)
             else:
-                cny_index.append(0)
-            i = i + 1
-            month_index = month_index + 1
-        # 转换为元组
-        return tuple(cny_index)
+                lst_cny_index.append(0)
+        return tuple(lst_cny_index)
 
     # get sales quantity
     def get_historical_sales_qty(self, code_list, sales_type):
@@ -140,8 +116,12 @@ class GetStatisticalForecast:
         df_pivot = pd.pivot_table(df_qty, index='Material', columns='Month', values='Quantity')
         df_pivot.fillna(0, inplace=True)
         # fill the last month if no data
-        if mth_list[-1] not in df_pivot.columns.tolist():
-            df_pivot[mth_list[-1]] = df_pivot[mth_list[-2]]
+        lst_sales_month = df_pivot.columns.tolist()
+        for month_item in mth_list:
+            if month_item not in lst_sales_month:
+                df_pivot[month_item] = df_pivot[lst_sales_month[-1]]
+            else:
+                pass
         # mapping to the code list
         for code_item in code_list:
             try:
@@ -153,7 +133,6 @@ class GetStatisticalForecast:
     # new func to get minimum variance of legacy sales recorde in past months
     def func(self, args, mth_qty):
         week_num, cny_index, pre_volume = args
-        # _Season,_AS9,_AT9,_Base,_WeekNUM,_AS14,_Pre_Volume=args
 
         def v(x):
             ttl_rsl = 0
@@ -162,6 +141,7 @@ class GetStatisticalForecast:
                             (week_num[i] * x[i % 12] * x[16] + x[15] * cny_index[i]) - pre_volume[i]) ** 2
             ttl_rsl = ttl_rsl / mth_qty
             return ttl_rsl
+
         return v
 
     def con(self, args):
@@ -299,49 +279,6 @@ class GetStatisticalForecast:
         df_fcst.to_sql(name=table_name, con=conn, index=False, if_exists='replace')
         print("=== %s Updated ===" % table_name)
 
-    # write into database
-    def export_to_database_old(self, lst_data):
-        # get month list
-        month_list = lst_data.pop(0)
-        month_list.pop(0)
-        tbl_result = [["Material", "Hierarchy_5", "Month", "Quantity", "Value_SAP_Price"]]
-        db_mm_fullname = self.__class__.db_path + self.__class__.bu_name + "_Master_Data.db"
-        filename = self.__class__.bu_name + "_Master_Data"
-        conn = sqlite3.connect(db_mm_fullname)
-        c = conn.cursor()
-        # get forecast data
-        for code_fcst in lst_data:
-            # get forecast for one code
-            lst_code = []
-            code_name = code_fcst.pop(0)
-            # read hierarchy_5 and sap price from master data
-            sql_cmd = "SELECT Hierarchy_5, SAP_Price from " + filename + " WHERE Material = \'" + code_name + "\'"
-            c.execute(sql_cmd)
-            try:
-                h5, sap_price = c.fetchall()[0]
-            except IndexError:
-                h5, sap_price = "0", 0
-            index = 0
-            for qty in code_fcst:
-                sap_price = 0 if sap_price is None else sap_price
-                lst_code.append([code_name, h5, month_list[index], int(round(qty)), int(round(qty) * sap_price)])
-                index += 1
-            tbl_result.extend(lst_code)
-        # 写入数组
-        np_data = np.array(tbl_result)
-        # get data frame
-        df = pd.DataFrame(data=np_data[1:, 0:], columns=np_data[0, 0:])
-        df = df.astype(dtype={"Quantity": "int64", "Value_SAP_Price": "int64"})
-        # write to statistical forecast
-        tbl_statis_fcst = self.__class__.bu_name + "_Statistical_Forecast"
-        db_statis_fcst_fullname = self.__class__.db_path + tbl_statis_fcst + ".db"
-        tbl_name = tbl_statis_fcst + "_" + time.strftime("%Y%m", time.localtime())
-        conn = sqlite3.connect(db_statis_fcst_fullname)
-        df.to_sql(tbl_name, conn, index=False, if_exists='replace')
-        conn.commit()
-        conn.close()
-        print("=== Statistical Forecast Updated %s ===" % db_statis_fcst_fullname)
-
     # fcst程序入口
     def get_forecast_entrance(self):
         # 打印标题
@@ -371,9 +308,9 @@ class GetStatisticalForecast:
         # 获取月份列表
         # lst_month = self.get_month_list("all")
         # 月份星期数统计
-        lst_week_in_month = self.week_in_month(self.get_current_month())
+        lst_week_in_month = self.week_in_month()
         # 春节索引表
-        lst_cny_index = self.cny_index(self.get_current_month())
+        lst_cny_index = self.cny_index()
         # 开始计算
         # 开始计时
         start_time = datetime.now()
@@ -391,7 +328,7 @@ class GetStatisticalForecast:
         print("====== Simulation Done, Start Writing Data to System ======")
         # 数据整合
         # Make table head with Material title and future 24 month calendar
-        lst_title = ['Material'] + self.get_month_list("future")
+        lst_title = ['Material'] + self.get_month_list(month_qty=24, direction='forward')
         for i in range(len(active_code_list)):
             fcst_result[i].insert(0, active_code_list[i])
         fcst_result.insert(0, lst_title)
@@ -414,4 +351,5 @@ class GetStatisticalForecast:
 if __name__ == '__main__':
     bu_name = input('Please input BU name: ')
     new_fcst = GetStatisticalForecast(bu_name)
-    new_fcst.get_forecast_entrance()
+    # new_fcst.get_forecast_entrance()
+    print(new_fcst.cny_index())
