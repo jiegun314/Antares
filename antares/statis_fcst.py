@@ -28,7 +28,6 @@
 from scipy.optimize import minimize
 import numpy as np
 import time
-import calculation
 import data_import
 import pandas as pd
 import sqlite3
@@ -97,16 +96,14 @@ class GetStatisticalForecast:
     # get sales quantity
     def get_historical_sales_qty(self, code_list, sales_type):
         print("====== Read %s Historical Data======" % sales_type)
-        crt_mth = time.strftime("%Y-%m", time.localtime())
-        mth_list = calculation.InfoCheck.get_time_list(crt_mth, 0 - self.__class__.base_year * 12)
-        lst_blank = [0 * item for item in range(0, self.__class__.base_year * 12)]
+        mth_list = self.get_month_list(month_qty=self.__class__.base_year * 12, direction='backward')
         str_mth_list = '('
         for i in range(len(mth_list)):
             if i != (len(mth_list) - 1):
                 str_mth_list = str_mth_list + '\"' + mth_list[i] + '\",'
             else:
                 str_mth_list = str_mth_list + '\"' + mth_list[i] + '\")'
-        sales_qty_result = []
+        df_sales_result = pd.DataFrame(index=code_list)
         # connect to database
         database_fullname = self.__class__.db_path + self.__class__.bu_name + '_' + sales_type + '.db'
         table_name = self.__class__.bu_name + '_' + sales_type
@@ -123,12 +120,9 @@ class GetStatisticalForecast:
             else:
                 pass
         # mapping to the code list
-        for code_item in code_list:
-            try:
-                sales_qty_result.append(df_pivot.loc[code_item].values.tolist())
-            except KeyError:
-                sales_qty_result.append(lst_blank)
-        return sales_qty_result
+        df_sales_result = df_sales_result.join(df_pivot)
+        df_sales_result.fillna(0, inplace=True)
+        return df_sales_result.values.tolist()
 
     # new func to get minimum variance of legacy sales recorde in past months
     def func(self, args, mth_qty):
@@ -349,7 +343,9 @@ class GetStatisticalForecast:
 
 
 if __name__ == '__main__':
-    bu_name = input('Please input BU name: ')
-    new_fcst = GetStatisticalForecast(bu_name)
+    # bu_name = input('Please input BU name: ')
+    fcst_test = GetStatisticalForecast('TU')
+    fcst_test.__class__.base_year = 2
     # new_fcst.get_forecast_entrance()
-    print(new_fcst.cny_index())
+    test_result = fcst_test.get_historical_sales_qty(code_list=['440.834', '440.834S', 'XXX.XXX'], sales_type='IMS')
+    print(test_result)

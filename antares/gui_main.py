@@ -153,7 +153,7 @@ class DragonGUI(DragonFrame):
     def get_current_bo_list(self, event):
         self.clear_frame_content()
         data_trigger_point = 4
-        inventory_result = self.calculation_module.get_current_bo(self.table_to_use)
+        inventory_result = self.calculation_module.get_current_backorder(self.table_to_use)
         [backorder_total_qty, backorder_total_value] = inventory_result[-1][4:6]
         self.show_list(inventory_result, data_trigger_point)
         self.txtLog.write("Current Backorder List done, with data of %s." % self.table_to_use)

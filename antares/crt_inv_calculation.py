@@ -133,66 +133,42 @@ class CurrentInventoryCalculation:
         result = title + inventory_output
         return [result, [total_available_stock_value, total_useful_stock_value, total_stock_value]]
 
-    # 获取当前BO
-    def get_current_bo(self, table_name):
-        title = [('Material', 'Description', 'Hierarchy_5', 'CSC', 'Qty', 'Value', 'GIT_1', 'GIT_2', 'GIT_3', 'GIT_4',
-                  'Open_PO')]
-        conn = sqlite3.connect(self.oneclick_database)
-        c = conn.cursor()
-        sql_cmd = 'select Material, Description, Hierarchy_5, CSC, Current_Backorder_Qty, ' \
-                  '(Current_Backorder_Qty * Average_Selling_Price) as bo_value, GIT_1_Week, GIT_2_Week, GIT_3_Week, ' \
-                  'GIT_4_Week, Open_PO from %s WHERE Business_Unit = \"%s\" AND Current_Backorder_Qty > 0 ' \
-                  'ORDER by CSC DESC, bo_value DESC' % (table_name, self.__class__.bu_name)
-        try:
-            c.execute(sql_cmd)
-        except sqlite3.OperationalError:
-            return title + [tuple(["-", "-", "-", "Total", 0, 0, 0, 0, 0, 0])]
-        else:
-            bo_output = c.fetchall()
-        # 连接master data数据库
-        master_data_db_name = self.__class__.db_path + self.__class__.bu_name + "_Master_Data.db"
-        master_data_table_name = self.__class__.bu_name + "_SAP_Price"
-        conn = sqlite3.connect(master_data_db_name)
-        c = conn.cursor()
-        # create list for final total
-        # format - [ttl_qty, ttl_value, git1_fulfill, git2_fulfill, git3_fulfill, git4_fulfill, oo_fulfill]
-        backorder_summary_list = [0, 0, 0, 0, 0, 0, 0]
-        # 读取SAP Price并计算价格
-        bo_result = []
-        for bo_item in bo_output:
-            bo_material, bo_qty, git1_fulfill_qty, git2_fulfill_qty, git3_fulfill_qty, git4_fulfill_qty, oo_fulfill_qty \
-                = bo_item[0], bo_item[4], bo_item[6], bo_item[7], bo_item[8], bo_item[9], bo_item[10]
-            sql_cmd = "SELECT Price from " + master_data_table_name + " WHERE Material = \'" + bo_material + "\'"
-            c.execute(sql_cmd)
-            result = c.fetchall()
-            try:
-                bo_price = result[0][0]
-            except IndexError:
-                bo_price = 0
-            bo_item_list = list(bo_item)
-            bo_item_list[5] = bo_item_list[4] * bo_price
-            bo_result.append(tuple(bo_item_list))
-            # calculate total
-            backorder_summary_list[0] += bo_qty
-            backorder_summary_list[1] += bo_item_list[5]
-            # git1 fulfill
-            backorder_summary_list[2] += min([bo_qty, git1_fulfill_qty]) * bo_price
-            # git2 fulfill
-            backorder_summary_list[3] += min([max(bo_qty - git1_fulfill_qty, 0), git2_fulfill_qty]) * bo_price
-            # git3 fulfill
-            backorder_summary_list[4] += min(
-                [max(bo_qty - git1_fulfill_qty - git2_fulfill_qty, 0), git3_fulfill_qty]) * bo_price
-            # git4 fulfill
-            backorder_summary_list[5] += min(
-                [max(bo_qty - git1_fulfill_qty - git2_fulfill_qty - git3_fulfill_qty, 0), git4_fulfill_qty]) * bo_price
-            # open order fulfill
-            backorder_summary_list[6] += min(
-                [max(bo_qty - git1_fulfill_qty - git2_fulfill_qty - git3_fulfill_qty - git4_fulfill_qty, 0),
-                 oo_fulfill_qty]) * bo_price
-
-        conn.commit()
-        conn.close()
-        return title + bo_result + [tuple(["-", "-", "-", "Total"] + backorder_summary_list)]
+    # ues pandas to get the backorder
+    def get_current_backorder(self, table_name) -> list:
+        _conn = sqlite3.connect(self.oneclick_database)
+        sql_cmd = 'SELECT Material, Description, Hierarchy_5, CSC, Current_Backorder_Qty, Average_Selling_Price, ' \
+                  '(Current_Backorder_Qty * Average_Selling_Price) as Backorder_Value, GIT_1_Week, GIT_2_Week, ' \
+                  'GIT_3_Week, GIT_4_Week, Open_PO FROM %s WHERE Business_Unit=\"%s\" AND ' \
+                  'Current_Backorder_Qty > 0 ORDER by CSC DESC, Backorder_Value DESC' \
+                  % (table_name, self.__class__.bu_name)
+        df_backorder = pd.read_sql(sql=sql_cmd, con=_conn)
+        # calculate GIT fulfillment
+        df_backorder['GIT_1_Fulfill'] = df_backorder[['Current_Backorder_Qty', 'GIT_1_Week']].min(axis=1)
+        df_backorder['GIT_1_Fulfill_Value'] = df_backorder['GIT_1_Fulfill'] * df_backorder['Average_Selling_Price']
+        df_backorder['GIT_1_Remain'] = df_backorder['Current_Backorder_Qty'] - df_backorder['GIT_1_Fulfill']
+        df_backorder['GIT_2_Fulfill'] = df_backorder[['GIT_1_Remain', 'GIT_2_Week']].min(axis=1)
+        df_backorder['GIT_2_Fulfill_Value'] = df_backorder['GIT_2_Fulfill'] * df_backorder['Average_Selling_Price']
+        df_backorder['GIT_2_Remain'] = df_backorder['GIT_1_Remain'] - df_backorder['GIT_2_Fulfill']
+        df_backorder['GIT_3_Fulfill'] = df_backorder[['GIT_2_Remain', 'GIT_3_Week']].min(axis=1)
+        df_backorder['GIT_3_Fulfill_Value'] = df_backorder['GIT_3_Fulfill'] * df_backorder['Average_Selling_Price']
+        df_backorder['GIT_3_Remain'] = df_backorder['GIT_2_Remain'] - df_backorder['GIT_3_Fulfill']
+        df_backorder['GIT_4_Fulfill'] = df_backorder[['GIT_3_Remain', 'GIT_4_Week']].min(axis=1)
+        df_backorder['GIT_4_Fulfill_Value'] = df_backorder['GIT_4_Fulfill'] * df_backorder['Average_Selling_Price']
+        df_backorder['GIT_4_Remain'] = df_backorder['GIT_3_Remain'] - df_backorder['GIT_4_Fulfill']
+        df_backorder['Open_PO_Fulfill'] = df_backorder[['GIT_4_Remain', 'Open_PO']].min(axis=1)
+        df_backorder['Open_PO_Fulfill_Value'] = df_backorder['Open_PO_Fulfill'] * df_backorder['Average_Selling_Price']
+        lst_summary = ["-", "-", "-", "Total", df_backorder['Current_Backorder_Qty'].sum(),
+                       df_backorder['Backorder_Value'].sum(), df_backorder['GIT_1_Fulfill_Value'].sum(),
+                       df_backorder['GIT_2_Fulfill_Value'].sum(), df_backorder['GIT_3_Fulfill_Value'].sum(),
+                       df_backorder['GIT_4_Fulfill_Value'].sum(), df_backorder['Open_PO_Fulfill_Value'].sum()]
+        # remove additional column
+        lst_title = ['Material', 'Description', 'Hierarchy_5', 'CSC', 'Current_Backorder_Qty', 'Backorder_Value',
+                     'GIT_1_Week', 'GIT_2_Week', 'GIT_3_Week', 'GIT_4_Week', 'Open_PO']
+        df_backorder_final = df_backorder[lst_title]
+        final_output_list = df_backorder_final.values.tolist()
+        final_output_list.insert(0, lst_title)
+        final_output_list.append(lst_summary)
+        return final_output_list
 
     # 导出backorder给平台
     def export_backorder_data(self, table_name):
@@ -717,7 +693,7 @@ class TraumaCurrentInventoryCalculation(CurrentInventoryCalculation):
         pass
 
     # get the backorder list of backorder information
-    def get_current_bo(self, table_name) -> list:
+    def get_current_backorder(self, table_name) -> list:
         lst_title = ['Material', 'Description', 'Hierarchy_5', 'CSC', 'Qty', 'Value', 'GIT_1', 'GIT_2',
                      'GIT_3', 'GIT_4', 'Open_PO', 'NED_INV']
         conn = sqlite3.connect(self.oneclick_database)
@@ -795,5 +771,4 @@ class TraumaCurrentInventoryCalculation(CurrentInventoryCalculation):
 
 if __name__ == "__main__":
     test = TraumaCurrentInventoryCalculation()
-    test.get_current_bo()
     # test.inv_data_sync(50)

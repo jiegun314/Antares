@@ -94,7 +94,7 @@ class CurrentInventoryDisplay:
         inventory_date = self.oneclickcalculation.get_newest_date() if date_input == '' else date_input
         print("===== <Result of %s> =====" % inventory_date)
         # backorder_result = CodeCalculation.get_current_bo(table_name)
-        backorder_result = self.oneclickcalculation.get_current_bo(inventory_date)
+        backorder_result = self.oneclickcalculation.get_current_backorder(inventory_date)
         print(tabulate(backorder_result, headers="firstrow", tablefmt="github",
                        showindex=range(1, len(backorder_result)), floatfmt=",.0f"))
 
@@ -353,7 +353,7 @@ class TraumaCurrentInventoryDisplay(CurrentInventoryDisplay):
         date_input = input("Inventory Data (YYYYMMDD, Press Enter to get newest) : ")
         inventory_date = self.oneclickcalculation.get_newest_date() if date_input == '' else date_input
         print("===== <Result of %s> =====" % date_input)
-        backorder_result = self.oneclickcalculation.get_current_bo(inventory_date)
+        backorder_result = self.oneclickcalculation.get_current_backorder(inventory_date)
         print(tabulate(backorder_result, headers="firstrow", tablefmt="github",
                        showindex=range(1, len(backorder_result)), floatfmt=",.0f"))
 
