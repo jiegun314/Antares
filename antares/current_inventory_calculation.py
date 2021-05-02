@@ -11,7 +11,7 @@ class CurrentInventoryCalculation:
     backorder_path = "../data/_Backorder/"
     inventory_path = "../data/_INV_Export/"
     update_file_path = "../data/_Update/"
-    oneclick_database = db_path + 'oneclick_dps_inventory.db'
+    oneclick_database = db_path + 'dps_oneclick_inventory.db'
     currency_rate = 6.9233
     _sync_days = 0
     _exception_list = []

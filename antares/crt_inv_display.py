@@ -1,6 +1,5 @@
 from crt_inv_calculation import CurrentInventoryCalculation as CIC
 from crt_inv_calculation import TraumaCurrentInventoryCalculation as TU_CIC
-from current_inventory_calculation import CurrentInventoryCalculation as OCLK, TraumaCurrentInventoryCalculation as TU_OCLK
 from tabulate import tabulate
 import public_function as pb_func
 import draw_chart as chart
@@ -17,14 +16,10 @@ class CurrentInventoryDisplay:
     currency_rate = 6.9233
 
     def __init__(self):
-        pass
+        self.initiate_calculation()
 
     def initiate_calculation(self):
-        if self.__class__.bu_name == 'TU':
-            self.oneclickcalculation = TU_OCLK()
-        else:
-            self.oneclickcalculation = OCLK()
-            self.oneclickcalculation.bu_name = self.__class__.bu_name
+        self.oneclickcalculation = TU_CIC() if self.__class__.bu_name == 'TU' else CIC(self.__class__.bu_name)
 
     def display_code_status(self):
         CodeCalculation = CIC(self.__class__.bu_name)
@@ -126,13 +121,7 @@ class CurrentInventoryDisplay:
 
     # display inventory alert with low inventory
     def display_low_inventory_alert(self):
-        # print title
-        print("===Display Low Inventory Alert===")
-        # get low inventory result
-        CodeCalculation = CIC(self.__class__.bu_name)
-        low_inventory_list = CodeCalculation.get_low_inventory_alert()
-        print(tabulate(low_inventory_list, headers="keys", tablefmt="psql", showindex="always",
-                       floatfmt=(".0f", ".0f", ".1f", ".1f", ".0f", ".1f", ".0f", ".0f", ".0f")))
+        print("!!Warning. This function is not available for %s." % self.__class__.bu_name)
 
     def display_current_inventory(self):
         # CodeCalculation = CIC(self.__class__.bu_name)
@@ -294,9 +283,8 @@ class CurrentInventoryDisplay:
 
 class TraumaCurrentInventoryDisplay(CurrentInventoryDisplay):
     def __init__(self):
-        super().__init__()
         self.__class__.bu_name = "TU"
-        self.initiate_calculation()
+        super().__init__()
 
     def display_code_status(self):
         # CodeCalculation = CIC(self.__class__.bu_name)
@@ -369,6 +357,16 @@ class TraumaCurrentInventoryDisplay(CurrentInventoryDisplay):
         print(tabulate(backorder_result, headers="firstrow", tablefmt="github",
                        showindex=range(1, len(backorder_result)), floatfmt=",.0f"))
 
+    # display inventory alert with low inventory
+    def display_low_inventory_alert(self):
+        # print title
+        print("===Display Low Inventory Alert===")
+        # get low inventory result
+        CodeCalculation = CIC(self.__class__.bu_name)
+        low_inventory_list = CodeCalculation.get_low_inventory_alert()
+        print(tabulate(low_inventory_list, headers="keys", tablefmt="psql", showindex="always",
+                       floatfmt=(".0f", ".0f", ".1f", ".1f", ".0f", ".1f", ".0f", ".0f", ".0f")))
+
     def display_backorder_trend(self):
         # print title
         print("===Display Backorder Trend===")
@@ -382,47 +380,32 @@ class TraumaCurrentInventoryDisplay(CurrentInventoryDisplay):
 
 class PowerToolCurrentInventoryDisplay(CurrentInventoryDisplay):
     def __init__(self):
-        super().__init__()
         self.__class__.bu_name = "PT"
-
-    def display_low_inventory_alert(self):
-        print("!!Warning. This function is not available for PT.")
+        super().__init__()
 
 
 class CMFTCurrentInventoryDisplay(CurrentInventoryDisplay):
     def __init__(self):
-        super().__init__()
         self.__class__.bu_name = "CMF"
-
-    def display_low_inventory_alert(self):
-        print("!!Warning. This function is not available for CMFT.")
+        super().__init__()
 
 
 class JointCurrentInventoryDisplay(CurrentInventoryDisplay):
     def __init__(self):
-        super().__init__()
         self.__class__.bu_name = "JT"
-
-    def display_low_inventory_alert(self):
-        print("!!Warning. This function is not available for Joint.")
+        super().__init__()
 
 
 class MitekCurrentInventoryDisplay(CurrentInventoryDisplay):
     def __init__(self):
-        super().__init__()
         self.__class__.bu_name = "MT"
-
-    def display_low_inventory_alert(self):
-        print("!!Warning. This function is not available for Mitek.")
+        super().__init__()
 
 
 class SpineCurrentInventoryDisplay(CurrentInventoryDisplay):
     def __init__(self):
-        super().__init__()
         self.__class__.bu_name = "Spine"
-
-    def display_low_inventory_alert(self):
-        print("!!Warning. This function is not available for Spine.")
+        super().__init__()
 
 
 if __name__ == "__main__":
