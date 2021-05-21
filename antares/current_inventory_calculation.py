@@ -473,6 +473,7 @@ class TraumaCurrentInventoryCalculation(CurrentInventoryCalculation):
 
     def __init__(self):
         self._bu_name = 'TU'
+        super.__init__()
         pass
 
     # sync NED real time inventory

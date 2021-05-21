@@ -229,8 +229,8 @@ class CurrentInventoryDisplay:
             print(">> Synchronization succeed!")
             print(">> %s days succeed, %s days fail. Updated to %s" % (sync_result[0], sync_result[1], sync_result[2]))
         # sync to new database
-        self.oneclickcalculation.sync_days = 90
-        self.oneclickcalculation.start_synchronize()
+        # self.oneclickcalculation.sync_days = 90
+        self.oneclickcalculation.inv_data_sync(90, lst_xcpt)
 
     def sync_ned_inventory(self):
         CodeCalculation = CIC(self.__class__.bu_name)
